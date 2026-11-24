@@ -1,0 +1,21 @@
+.warga-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.warga-bar .profile-chip{margin-left:auto;min-width:0}
+.warga-bar .chip-text{min-width:0}
+.warga-bar #warga-hub,.warga-bar #warga-close{display:none}
+html.from-arked .warga-bar #warga-hub{display:grid}
+html.in-appswarga:not(.from-arked) .warga-bar #warga-close{display:grid}
+body{background:var(--bg)}
+body>header{background:var(--surface);color:var(--ink)}
+body>header h1{color:var(--primary)}
+body>header p,body>footer{color:var(--muted)}
+#difficultyBar,body>nav{background:var(--surface-2);color:var(--ink)}
+#difficultyBar label{color:var(--ink)}
+#difficultyHelp{color:var(--muted)}
+#hint{background:var(--surface);color:var(--ink);border-left-color:var(--primary)}
+#warga-submit{min-height:1.5em;text-align:center;color:var(--ink-2);font-size:13px;padding:0 14px}
+#warga-board-dialog{width:min(520px,calc(100vw - 24px));max-height:85vh;border:0;border-radius:20px;padding:0;background:var(--surface);color:var(--ink);box-shadow:0 24px 80px #0008}
+#warga-board-dialog::backdrop{background:#10121caa}
+#warga-board-dialog .warga-board-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+#warga-board-dialog h2{font-size:20px;margin:0}
+#warga-board-dialog .lb-body{max-height:55vh;overflow:auto}
+@media(max-width:420px){.warga-bar{gap:6px;padding:8px}.warga-bar .profile-chip{padding:5px}.warga-bar .warga-board{font-size:12px;padding:9px}}

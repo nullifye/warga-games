@@ -1,0 +1,1492 @@
+<!doctype html><html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>🔵 Congkak — Legenda Zaman Kecik 3D</title><meta name="theme-color" content="#8054b1"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../shared/base.css"><style>*{box-sizing:border-box}body{margin:0;background:#101c22;color:#fff;font:15px system-ui,sans-serif}header{padding:15px 14px 9px;text-align:center;background:#152630}h1{font-size:24px;margin:0;color:#ffdb90}header p{margin:4px;color:#bed1d5}nav{display:flex;gap:7px;justify-content:center;padding:10px;background:#152630}button{border:0;border-radius:12px;padding:11px 14px;background:#e5c27f;color:#17202a;font-weight:800;cursor:pointer}nav button{flex:1;max-width:180px}button.active{background:#5de3b0}#stage{position:relative;width:100%;height:min(62vh,540px);min-height:320px;overflow:hidden;background:#1b3234;touch-action:none}#stage canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}#hud{position:absolute;top:12px;left:12px;right:12px;pointer-events:none;display:flex;justify-content:space-between;gap:10px}#hud span{background:#14212bd9;border:1px solid #ffffff26;padding:8px 12px;border-radius:12px;font-weight:700;font-size:13px}#hint{padding:12px 16px;text-align:center;min-height:49px;color:#d6e5e8}#controls{display:flex;gap:10px;justify-content:center;padding:0 12px 16px}#controls button{min-width:125px}#reset{background:#b9cad0}#error{display:none;padding:24px;color:#ffd6c7;text-align:center}footer{text-align:center;color:#8ea5aa;font-size:12px;padding:8px} #stage canvas{touch-action:none;user-select:none;-webkit-user-select:none}
+/* V16: instruction system */
+#guideBar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;background:#152630;border-top:1px solid #ffffff1a}
+.guideTitle{font-weight:850;color:#ffe0a0;font-size:14px}.guideSub{font-size:12px;color:#b8d0d2;margin-top:3px}
+.switch{position:relative;display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:750;white-space:nowrap}
+.switch input{position:absolute;opacity:0}.track{width:45px;height:26px;background:#61747d;border-radius:20px;display:inline-flex;align-items:center;padding:3px;transition:background .2s}
+.track:after{content:'';width:20px;height:20px;border-radius:50%;background:white;transition:transform .2s}
+.switch input:checked+.track{background:#42d5a2}.switch input:checked+.track:after{transform:translateX(19px)}
+#guidePanel{background:linear-gradient(145deg,#243943,#172b35);margin:10px 12px 12px;border:1px solid #5b7b81;border-radius:18px;padding:15px;box-shadow:0 8px 22px #0003}
+#guidePanel[hidden]{display:none}#guideProgress{display:flex;gap:5px;margin-bottom:12px}#guideProgress i{height:5px;flex:1;border-radius:8px;background:#547079}#guideProgress i.done{background:#55e0ad}
+#guideHead{display:flex;align-items:center;gap:12px}#guideIcon{display:grid;place-items:center;flex:0 0 48px;height:48px;border-radius:14px;background:#38595b;font-size:26px}
+#guideName{font-size:17px;font-weight:850;color:#ffe3a4}#guideCount{font-size:11px;color:#b6cdd1}#guideText{color:#e1eeef;font-size:14px;line-height:1.5;margin:12px 0}
+#guideActions{display:flex;gap:8px;justify-content:flex-end}#guideActions button{padding:9px 13px;font-size:12px}#guideNext{background:#59e0ae}#guideSkip{background:#536b76;color:#fff}
+#hint{margin:8px 12px 10px;padding:12px 14px;border-radius:13px;background:#213640;color:#dcebed;text-align:left;font-size:13px;line-height:1.5;min-height:0;border-left:3px solid #e9c27b}
+#controls{padding-bottom:10px}#controls button{box-shadow:0 3px 0 #0003}
+#hud span{backdrop-filter:blur(6px);font-size:12px;line-height:1.4}#stage{height:min(56vh,500px)}
+#difficultyBar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;background:#152630;padding:10px 12px;border-top:1px solid #ffffff1a}#difficultyBar label{font-size:13px;font-weight:800;color:#ffe0a0}#difficulty{background:#253f49;color:#fff;border:1px solid #6b9398;border-radius:12px;padding:9px 12px;font-weight:800}#difficultyHelp{font-size:11px;color:#b6d2d7}#difficultyBar[hidden]{display:none}#stage{position:relative}#arenaAction{position:absolute;z-index:8;bottom:18px;left:50%;transform:translateX(-50%);padding:13px 24px;border-radius:22px;background:linear-gradient(135deg,#ffe3a1,#e9b967);color:#172b32;border:2px solid #fff6;font-weight:900;font-size:15px;box-shadow:0 6px 18px #0006;white-space:nowrap;touch-action:manipulation}#arenaAction[hidden],#controls[hidden],#reset[hidden]{display:none!important}#controls{justify-content:center}#reset{background:#e9c27b;color:#172b32;font-weight:850;padding:14px 24px;border-radius:16px}#arenaAction:active{transform:translateX(-50%) scale(.96)}
+
+/* V25: dashboard meters inside the arena */
+#meterLayer{position:absolute;inset:0;pointer-events:none;z-index:4}
+.spinMeter{position:absolute;top:61px;width:112px;padding:7px 8px 6px;background:#101d29dd;border:1px solid #ffffff33;border-radius:16px;box-shadow:0 7px 24px #0005;backdrop-filter:blur(8px);text-align:center}
+.spinMeter.player{left:9px}.spinMeter.ai{right:9px}
+.meterLabel{font-size:10px;font-weight:900;letter-spacing:1.1px;color:#dbeaf4}
+.meterDial{width:94px;height:57px;display:block;margin:1px auto -3px}
+.meterNumber{font-size:16px;font-weight:900;font-variant-numeric:tabular-nums}
+.meterUnit{font-size:9px;color:#b7c9d4}
+#windHud{position:absolute;bottom:74px;left:50%;transform:translateX(-50%);width:min(260px,78%);padding:9px 13px;background:#102b37ee;border:1px solid #f6d68b80;border-radius:14px;box-shadow:0 5px 20px #0005;text-align:center;transition:opacity .2s}
+#windHud[hidden]{display:none}
+#windText{font-size:11px;font-weight:900;letter-spacing:.6px}
+#windPercent{font-size:21px;color:#ffe08b;font-weight:950;font-variant-numeric:tabular-nums}
+#windTrack{height:9px;margin:5px 0;background:#324857;border-radius:20px;overflow:hidden}
+#windFill{height:100%;width:0;background:linear-gradient(90deg,#6ae7bb,#f7d27b);border-radius:20px;transition:width .09s}
+#windCoil{display:inline-block;margin-right:7px;font-size:18px;transform:rotate(var(--wind-angle,0deg));transition:transform .08s}
+@media(max-width:390px){.spinMeter{width:98px;top:57px;padding:5px}.meterDial{width:82px}.meterNumber{font-size:14px}#windHud{bottom:68px}}
+
+/* V29: minimal arena HUD, gauges at bottom corners */
+#stage.gasingMode #hud{display:none!important}
+#stage.gasingMode .spinMeter{top:auto;bottom:86px;background:rgba(16,29,41,.72);border-color:rgba(255,255,255,.22);box-shadow:0 4px 14px rgba(0,0,0,.25);backdrop-filter:blur(5px)}
+#stage.gasingMode .spinMeter.player{left:9px}
+#stage.gasingMode .spinMeter.ai{right:9px;top:12px;bottom:auto}
+@media(max-width:390px){#stage.gasingMode .spinMeter.player{bottom:82px}#stage.gasingMode .spinMeter.ai{top:12px;bottom:auto}}
+#rescuePrompt{position:absolute;top:12px;left:9px;width:min(205px,48%);z-index:6;padding:10px 12px;background:rgba(16,29,41,.83);border:1px solid rgba(255,215,125,.65);border-radius:14px;color:#fff4d8;font-weight:800;font-size:13px;line-height:1.4;box-shadow:0 4px 14px #0004;pointer-events:none}
+#rescuePrompt[hidden]{display:none}
+#rescuePrompt small{display:block;font-size:11px;font-weight:500;color:#d3e1e5;margin-top:4px}
+
+#stage.congkakMode #hud{display:none!important}
+#cgOverlay{position:absolute;inset:0;pointer-events:none;z-index:5}
+#cgOverlay[hidden]{display:none}
+.cgStore{position:absolute;top:12px;padding:9px 12px;border-radius:13px;background:rgba(13,30,39,.79);border:1px solid #ffffff55;color:white;font-size:12px;font-weight:800;box-shadow:0 3px 12px #0004}
+.cgStore.ai{left:9px;border-color:#ff9a8b80}
+.cgStore.player{right:9px;border-color:#64e0bd80}
+.cgStore strong{display:block;font-size:22px;line-height:1.3}
+#cgTurn{display:none!important;position:absolute;bottom:13px;left:50%;transform:translateX(-50%);border-radius:16px;padding:10px 18px;background:rgba(14,34,43,.83);border:1px solid #fff7;color:#fff;text-align:center;font-size:13px;font-weight:900;white-space:nowrap;max-width:94%}
+#cgTurn.player{border-color:#65dfbb}#cgTurn.ai{border-color:#ffa090}
+#cgTurn.over{border-color:#f5d785}
+#cgPitCounts{position:absolute;inset:0;pointer-events:none}
+.cgPitNum{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:900;color:white;text-shadow:0 1px 3px #000,0 0 5px #000;background:#102d36bd;border-radius:10px;padding:2px 5px;min-width:18px;text-align:center}
+
+/* Congkak V37: Osom before the first turn */
+#cgOsom{position:absolute;inset:0;z-index:12;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(9,25,29,.64);backdrop-filter:blur(3px)}
+#cgOsom[hidden]{display:none!important}
+#cgOsomCard{width:min(420px,96%);background:#142e36f2;color:#fff;border:2px solid #e4c487;border-radius:22px;padding:20px 16px;text-align:center;box-shadow:0 14px 38px #0008}
+#cgOsomCard h2{margin:0 0 8px;font-size:25px;color:#f7dc9d}
+#cgOsomCard p{margin:8px 0 15px;font-size:14px;color:#dce8e7}
+#cgOsomChoices{display:flex;gap:9px;justify-content:center}
+#cgOsomChoices button{flex:1;min-width:0;padding:13px 5px;border:1px solid #b7d5c5;border-radius:14px;background:#244b55;color:white;font-weight:800;font-size:14px;touch-action:manipulation}
+#cgOsomChoices button span{display:block;font-size:32px;margin-bottom:5px}
+#cgOsomChoices button:disabled{opacity:.45}
+#cgOsomResult{min-height:48px;margin-top:16px;font-size:16px;font-weight:800;line-height:1.5}
+#cgOsomResult small{display:block;color:#d6e4df;font-size:12px;font-weight:500}
+#cgOsomCard.resultMode{width:min(490px,98%);padding:30px 18px;animation:osomPop .32s ease-out}
+#cgOsomCard.resultMode #cgOsomChoices,#cgOsomCard.resultMode p,#cgOsomCard.resultMode h2{display:none}
+#cgOsomCard.resultMode #cgOsomResult{font-size:clamp(27px,6vw,44px);font-weight:1000;line-height:1.2;margin:0;text-shadow:0 3px 10px #0006}
+#cgOsomResult .osomHands{display:block;font-size:clamp(32px,9vw,62px);margin-bottom:15px}
+#cgOsomResult .osomWinner{display:block;color:#ffdf84}
+#cgOsomResult .osomSub{display:block;font-size:15px;font-weight:700;margin-top:14px;color:#d9f5eb}
+#cgOsomCard.resultMode.tie #cgOsomResult .osomWinner{color:#d8e6ed}
+@keyframes osomPop{from{opacity:.5;transform:scale(.84)}to{opacity:1;transform:scale(1)}}
+
+#pmOsom{position:absolute;inset:0;z-index:19;display:flex;align-items:center;justify-content:center;background:#071a24b8;backdrop-filter:blur(5px)}
+#pmOsom[hidden]{display:none}
+#pmOsomCard{width:min(420px,92%);background:#15323e;border:1px solid #ffffff66;border-radius:22px;padding:25px 16px;text-align:center;color:white;box-shadow:0 20px 60px #0007}
+#pmOsomCard h2{font-size:29px;margin:0 0 9px}
+#pmOsomChoices{display:flex;justify-content:center;gap:9px;margin:20px 0}
+#pmOsomChoices button{font-size:19px;padding:12px;border-radius:13px;background:#e6f2ed;color:#142b35;border:0;font-weight:900}
+#pmOsomResult{font-size:18px;font-weight:900;line-height:1.6}
+#pmTurn{position:absolute;bottom:13px;left:50%;transform:translateX(-50%);background:#102b38db;color:white;border:1px solid #ffffff66;border-radius:14px;padding:9px 18px;font-size:14px;font-weight:900;pointer-events:none;z-index:6;white-space:nowrap}
+#pmTurn[hidden]{display:none}
+#stage.pemadamMode #hud{display:none!important}
+
+#pmScoreboard{position:absolute;z-index:7;top:12px;left:10px;right:10px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;gap:6px;pointer-events:none;color:#fff}
+#pmScoreboard[hidden],#pmFinish[hidden]{display:none!important}
+.pmName{background:rgba(12,33,43,.76);border-radius:12px;padding:10px 8px;font-size:clamp(11px,2.7vw,16px);font-weight:900;min-width:0;box-shadow:0 3px 14px #0003}
+.pmName.player{border:1px solid #4eafff;color:#7bc4ff;text-align:left}
+.pmName.ai{border:1px solid #ff707a;color:#ff939b;text-align:right}
+.pmName.player.pmActive{background:#147ee8;color:#fff;border-color:#b4e3ff;box-shadow:0 0 24px #1a92ffb0,0 0 0 2px #73c9ff70;transition:background .25s,box-shadow .25s,color .25s}
+.pmName.ai.pmActive{background:#d62843;color:#fff;border-color:#ffc0c7;box-shadow:0 0 24px #ff3855b0,0 0 0 2px #ff7d8b70;transition:background .25s,box-shadow .25s,color .25s}
+#stage.pemadamMode #pmTurn{display:none!important}
+#pmScoreCenter{background:rgba(12,33,43,.84);border:1px solid #ffffff66;border-radius:13px;padding:7px 12px;text-align:center;min-width:96px}
+#pmScoreCenter .pmScores{font-size:clamp(22px,6vw,36px);font-weight:1000;white-space:nowrap;line-height:1.15}
+#pmScoreCenter .pmScores .blue{color:#54b4ff}#pmScoreCenter .pmScores .red{color:#ff6375}
+#pmScoreCenter small{font-size:10px;letter-spacing:.8px;color:#e6f0f4}
+#pmFinish{position:absolute;inset:0;z-index:24;background:#061c29bb;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:14px}
+#pmFinishCard{width:min(420px,100%);background:#173340;border:1px solid #ffffff75;border-radius:24px;padding:30px 18px;text-align:center;color:white;box-shadow:0 15px 60px #0008;animation:pmVictoryPop .45s ease-out}
+#pmFinishTitle{font-size:clamp(26px,7vw,40px);font-weight:1000;margin-bottom:12px}
+#pmFinishScore{font-size:27px;font-weight:900;margin:10px 0}
+#pmFinishPoints{font-size:22px;font-weight:800;margin:15px 0 22px;color:#f6d88e}
+#pmReplay{background:linear-gradient(120deg,#f5dfaa,#e6b96b);border:0;border-radius:14px;padding:14px 28px;color:#182d35;font-weight:1000;font-size:18px;cursor:pointer}
+@keyframes pmVictoryPop{from{opacity:0;transform:scale(.8) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
+#pmCameraLock{display:flex;align-items:center;justify-content:center;width:52px;height:52px;line-height:1;padding:0!important;font-size:27px!important;position:absolute;z-index:12;right:14px;top:115px;border:1px solid #ffffff80;border-radius:15px;background:#17323de8;color:#fff;padding:10px 13px;font-size:16px;font-weight:900;box-shadow:0 5px 18px #0005;touch-action:manipulation;cursor:pointer}
+#pmCameraLock[hidden]{display:none!important}
+#pmCameraLock.unlocked{background:#9b4d24ed;border-color:#ffcf9c}#pmCameraLock svg{display:block;pointer-events:none}
+@media(max-width:420px){#pmCameraLock{top:112px;right:10px;font-size:27px;padding:0}}
+
+/* Congkak: turn indicator lives in the existing store panels. */
+.cgStore{transition:background .25s ease,box-shadow .25s ease,border-color .25s ease,color .25s ease;}
+.cgStore.player.turnActive{background:rgba(19,120,232,.97);border-color:#b5e3ff;color:white;box-shadow:0 0 0 2px #74c6ff,0 0 22px #168bffbb;}
+.cgStore.ai.turnActive{background:rgba(211,35,64,.97);border-color:#ffc2c8;color:white;box-shadow:0 0 0 2px #ff8395,0 0 22px #ed315bba;}
+</style><link rel="stylesheet" href="../shared/nostalgia.css"><script type="module" src="../shared/nostalgia.js"></script></head><body data-game="congkak"><div class="warga-bar"><button type="button" class="icon-btn" id="warga-hub" aria-label="Kembali ke Arked Warga">‹</button><button type="button" class="profile-chip" id="profile-chip"><span class="avatar" id="chip-avatar">?</span><span class="chip-text"><strong id="chip-name">Tetapkan profil</strong><small id="chip-meta">Nama, kategori &amp; kampus</small></span></button><button type="button" class="btn btn-ghost warga-board" id="warga-board">Papan Markah</button><button type="button" class="icon-btn" id="warga-close" aria-label="Tutup permainan">×</button></div><header><h1>🔵 Congkak</h1><p>Legenda Zaman Kecik 3D</p></header><nav><span>🔵 Congkak</span></nav><section id="difficultyBar"><label for="difficulty">🤖 Tahap AI</label><select id="difficulty"><option value="easy">🟢 Mudah</option><option value="medium">🟡 Sederhana</option><option value="hard">🔴 Susah</option><option value="admin">⚡ Admin</option></select><span id="difficultyHelp">Maksimum 90 mata</span></section><div id="stage"><div id="hud"><span id="status">Loading...</span><span id="score"></span></div><div id="pmScoreboard" hidden><div class="pmName player">🔵 PLAYER</div><div id="pmScoreCenter"><small>SKOR · PERTAMA 5</small><div class="pmScores"><span class="blue" id="pmScorePlayer">0</span> <span style="color:#dce9ed">/</span> <span class="red" id="pmScoreAI">0</span></div></div><div class="pmName ai" id="pmAiName">🔴 AI (MUDAH)</div></div><button id="pmCameraLock" type="button" aria-pressed="true" hidden aria-label="Buka kunci kamera"></button><div id="pmFinish" hidden><div id="pmFinishCard"><div id="pmFinishTitle">🏆 PLAYER MENANG!</div><div id="pmFinishScore">5 – 0</div><div id="pmFinishPoints">500 MATA</div><button id="pmReplay" type="button">🔄 MAIN SEMULA</button></div></div><div id="pmTip" hidden style="position:absolute;z-index:18;left:50%;bottom:85px;transform:translateX(-50%);background:#14313fee;color:white;padding:15px;border-radius:15px;text-align:center;width:min(340px,85%)"><div class="pmTipText">Pemadam mendarat di sisi.</div><div style="display:flex;gap:10px;justify-content:center;margin-top:10px"><button data-pmtip="left" style="padding:10px;border-radius:9px">⬅️ Jatuh kiri</button><button data-pmtip="right" style="padding:10px;border-radius:9px">Jatuh kanan ➡️</button></div></div><div id="pmOsom" hidden><div id="pmOsomCard"><h2>✊ OSOM PEMADAM</h2><p>Pilih untuk tentukan siapa jentik dahulu</p><div id="pmOsomChoices"><button data-pmosom="gunting">✌️ Gunting</button><button data-pmosom="batu">✊ Batu</button><button data-pmosom="kain">✋ Kain</button></div><div id="pmOsomResult">Batu &gt; Gunting · Gunting &gt; Kain · Kain &gt; Batu</div></div></div><div id="pmTurn" hidden>🔵 GILIRAN PLAYER</div><div id="cgOsom" hidden><div id="cgOsomCard"><h2>✊ OSOM!</h2><p>Pilih Gunting, Batu atau Kain untuk tentukan siapa jalan dahulu.</p><div id="cgOsomChoices"><button type="button" data-osom="gunting"><span>✌️</span>Gunting</button><button type="button" data-osom="batu"><span>✊</span>Batu</button><button type="button" data-osom="kain"><span>✋</span>Kain</button></div><div id="cgOsomResult">Batu kalahkan Gunting · Gunting kalahkan Kain · Kain kalahkan Batu</div></div></div><div id="cgOverlay" hidden><div class="cgStore ai">🔴 RUMAH AI · KIRI<strong id="cgAiStore">0 guli</strong></div><div class="cgStore player">🔵 RUMAH PLAYER · KANAN<strong id="cgPlayerStore">0 guli</strong></div><div id="cgPitCounts"></div><div id="cgTurn" class="player">🔵 GILIRAN PLAYER</div></div><div id="meterLayer" hidden><div id="rescuePrompt" hidden></div>
+ <div class="spinMeter player"><div class="meterLabel">🔵 PLAYER</div><svg class="meterDial" viewBox="0 0 120 72"><path d="M12 61 A48 48 0 0 1 108 61" fill="none" stroke="#3a5260" stroke-width="11" stroke-linecap="round"/><path id="playerArc" d="M12 61 A48 48 0 0 1 108 61" fill="none" stroke="#52dcb8" stroke-width="11" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/><line id="playerNeedle" x1="60" y1="61" x2="60" y2="18" stroke="#fff1c5" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="61" r="5" fill="#fff1c5"/></svg><div class="meterNumber" id="playerRPM">0%</div><div class="meterUnit">TENAGA PUTARAN</div></div>
+ <div class="spinMeter ai"><div class="meterLabel">🔴 AI</div><svg class="meterDial" viewBox="0 0 120 72"><path d="M12 61 A48 48 0 0 1 108 61" fill="none" stroke="#3a5260" stroke-width="11" stroke-linecap="round"/><path id="aiArc" d="M12 61 A48 48 0 0 1 108 61" fill="none" stroke="#ff8875" stroke-width="11" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/><line id="aiNeedle" x1="60" y1="61" x2="60" y2="18" stroke="#fff1c5" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="61" r="5" fill="#fff1c5"/></svg><div class="meterNumber" id="aiRPM">0%</div><div class="meterUnit">TENAGA PUTARAN</div></div>
+ </div><button id="arenaAction" type="button" hidden>✅ SIAP CAS</button><div id="error">Three.js gagal dimuatkan. Pastikan telefon ada internet untuk muatkan library dari CDN.</div></div><section id="guideBar"><div><div class="guideTitle">📖 Panduan Cara Main</div><div class="guideSub">Tutorial langkah demi langkah · Gasing Pangkah</div></div><label class="switch"><input type="checkbox" id="tutorialToggle"><span class="track"></span><span id="tutorialToggleText">OFF</span></label></section><section id="guidePanel"><div id="guideProgress"></div><div id="guideHead"><span id="guideIcon">🌀</span><div><div id="guideCount">LANGKAH 1 / 7</div><div id="guideName">Cas tali</div></div></div><p id="guideText"></p><div id="guideActions"><button id="guideSkip" type="button">Tutup tutorial</button><button id="guideNext" type="button">Seterusnya →</button></div></section><div id="hint"></div><div id="controls"><button id="action">MAIN</button><button id="reset">MULA SEMULA</button></div><footer>3D Pemadam V54 • Three.js + Rapier Physics • Perlukan internet semasa load pertama</footer><div id="warga-submit" role="status" aria-live="polite"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js"></script><script>
+(()=>{'use strict';const $=s=>document.querySelector(s),stage=$('#stage'),status=$('#status'),score=$('#score'),hint=$('#hint'),action=$('#action');if(!window.THREE){$('#error').style.display='block';return}const T=THREE,scene=new T.Scene();scene.background=new T.Color(0x9ab7b1);const camera=new T.PerspectiveCamera(42,1,.1,100);camera.position.set(0,10,14);camera.lookAt(0,0,0);const renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;stage.prepend(renderer.domElement);scene.add(new T.HemisphereLight(0xffffff,0x566b62,2));const sun=new T.DirectionalLight(0xffe4bb,2.5);sun.position.set(-5,12,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;scene.add(sun);const root=new T.Group();scene.add(root);const mat=(color,metalness=0)=>new T.MeshStandardMaterial({color,roughness:.55,metalness});function mesh(geo,m,x=0,y=0,z=0,parent=root){const o=new T.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}function box(w,h,d,color,x,y,z,parent=root){return mesh(new T.BoxGeometry(w,h,d),mat(color),x,y,z,parent)}function cyl(rt,rb,h,color,x,y,z,parent=root,n=32){return mesh(new T.CylinderGeometry(rt,rb,h,n),mat(color),x,y,z,parent)}function ball(r,color,x,y,z,parent=root){return mesh(new T.SphereGeometry(r,12,10),mat(color,.1),x,y,z,parent)}function ring(r,t,color,x,y,z){let o=mesh(new T.TorusGeometry(r,t,8,80),mat(color),x,y,z);o.rotation.x=Math.PI/2;return o}function clear(){while(root.children.length){const c=root.children[0];root.remove(c);c.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}})}}function ground(color=0x698568){box(40,.25,40,color,0,-.22,0)}let wargaRound=0,wargaRoundSent=false,wargaStarted=performance.now();let difficulty='easy',mode='congkak',difficultyByGame={gasing:'easy',congkak:'easy',pemadam:'easy'},state={},tops=[],erasers=[],pits=[],stones=[],particles=[],anim=0;const rand=(a,b)=>a+Math.random()*(b-a);function setHUD(a,b,h,btn){status.textContent=a;score.textContent=b;hint.textContent=h;action.textContent=btn;syncGameButtons();const finished=mode==='gasing'?(state.phase==='won'||state.phase==='lost'):mode==='congkak'?(state.over&&!state.busy):Boolean(state.won);if(finished&&!wargaRoundSent){wargaRoundSent=true;const points=mode==='gasing'?state.scoreEarned||0:mode==='congkak'?state.cgResult||0:state.winner===0?Math.max(0,500-state.score[1]*100):0;window.dispatchEvent(new CustomEvent('warga-round',{detail:{round:wargaRound,points,seconds:Math.max(1,Math.ceil((performance.now()-wargaStarted)/1000))}}))}}
+function syncGameButtons(){const isG=mode==='gasing',phase=isG&&state?state.phase:'';stage.classList.toggle('gasingMode',isG);stage.classList.toggle('congkakMode',mode==='congkak');stage.classList.toggle('pemadamMode',mode==='pemadam');if(mode!=='congkak')document.getElementById('cgOsom').hidden=true;document.getElementById('cgOverlay').hidden=mode!=='congkak';const end=phase==='won'||phase==='lost';$('#difficultyBar').hidden=!(isG||mode==='congkak'||mode==='pemadam');const canCas=phase==='charge'||phase==='recharge';$('#arenaAction').hidden=!isG||!(canCas||end);$('#arenaAction').textContent=end?'🔄 MAIN SEMULA':phase==='recharge'?'🌀 SIAP CAS SEMULA':'✅ SIAP CAS';$('#controls').hidden=isG;$('#action').hidden=isG;$('#reset').textContent=isG?'🔄 MAIN SEMULA':'MULA SEMULA'}function cameraAt(x,y,z,lookY=0){camera.position.set(x,y,z);camera.lookAt(0,lookY,0)}
+function makeTop(x,color){let g=new T.Group();root.add(g);g.position.set(x,.48,0);cyl(.45,.12,.38,color,0,0,0,g);cyl(.32,.44,.18,0xf0c582,0,.25,0,g);cyl(.09,.09,.42,0xeee7d0,0,.5,0,g);cyl(.03,.0,.24,0x4a3a30,0,-.3,0,g);for(let j=0;j<6;j++){const a=j*Math.PI/3;ball(.045,0xffe1aa,Math.cos(a)*.31,.22,Math.sin(a)*.31,g)}return g}function buildGasing(){
+ ground(0x66835d);cyl(5.2,5.2,.23,0x9b7853,0,.02,0);cyl(4.85,4.85,.08,0xc3a27b,0,.19,0);ring(4.45,.045,0xf7e3ba,0,.25,0);
+ tops=[makeTop(0,0xdf6667),makeTop(0,0x438ee0)];
+ if(window.aimGuide){root.remove(window.aimGuide)}
+ window.aimGuide=new T.ArrowHelper(new T.Vector3(0,0,-1),new T.Vector3(0,.35,5.35),3.2,0xffe474,.5,.28);root.add(window.aimGuide);window.aimGuide.visible=false;
+ state={phase:'charge',aiThrowTime:0,aiThrowStarted:false,landed:false,playerThrown:false,impact:false,hasThrown:false,charge:0,aim:0,power:0,shots:0,drag:false,swirls:0,gesture:[],ai:{x:0,z:-5.8,vx:0,vz:0,spin:0,angle:0,dead:false,fall:0,fallDirection:0},player:{x:0,z:5.7,vx:0,vz:0,spin:0,angle:0,dead:false,fall:0,fallDirection:0},message:'AI sedang melontar gasing...',time:0,aiExpired:false,aiKnockedOut:false,scoreEarned:0,rescue:null,rescueUsed:false,rescueCooldown:0,rescueCount:0,rescueTarget:1+Math.floor(Math.random()*3),rescueTurns:0,rescueAngle:0};
+ tops[0].position.set(0,1.7,-5.8);tops[1].position.set(0,.48,5.7);cameraAt(0,11,12);
+ setHUD('CAS GASING ANDA','Cas: 0% · AI Power 100%','Cas wajib lebih 0%. Cas menentukan RPM, flick menentukan kelajuan lontaran. Tekan SIAP CAS bila bersedia. AI akan baling, kemudian aim dan flick ke atas.','✅ SIAP CAS');
+}
+
+function updateGasingMeters(){
+ const active=mode==='gasing'&&state&&state.ai;
+ const layer=document.getElementById('meterLayer');
+ layer.hidden=!active;if(!active)return;
+ const prompt=document.getElementById('rescuePrompt');
+ const phase=state.phase;
+ const rescueActive=phase==='rescueSpin'||phase==='rescueAir';
+ prompt.hidden=!rescueActive;
+ if(rescueActive){
+  if(phase==='rescueSpin'){
+   const target=Math.max(1,state.rescueTarget||1);
+   const done=Math.min(target,Math.floor(state.rescueTurns||0));
+   prompt.innerHTML='🌀 RESCUE · '+done+'/'+target+' PUTARAN<small>Putar jari di atas gasing biru '+target+' kali, kemudian flick ke atas.</small>';
+  }else if(phase==='rescueAir'){
+   prompt.innerHTML='✋ TANGKAP GASING!<small>Tap gasing biru sebelum jatuh untuk baling semula.</small>';
+  }else{
+   prompt.innerHTML='⏳ GASING JATUH<small>Tunggu momentum menentukan sama ada gasing keluar atau kekal dalam arena.</small>';
+  }
+ }
+ const a=state.ai,p=state.player;
+ const chargePhase=state.phase==='charge'||state.phase==='recharge';
+ // Before the first throw, the meter holds the wound charge even during AI throw/aim.
+ // After launch, the same meter displays remaining rotation as a percentage of full charge.
+ const playerValue=(!state.playerThrown && ['charge','recharge','aiThrow','aim'].includes(state.phase))
+  ? state.charge
+  : Math.max(0,Math.min(100,100*(p.spin||0)/31));
+ const aiValue=state.landed?Math.max(0,Math.min(100,100*(a.spin||0)/Math.max(.01,a.launchSpin||32))):state.phase==='aiThrow'?100:0;
+ for(const [name,value] of [['player',playerValue],['ai',aiValue]]){
+  const v=Math.max(0,Math.min(100,value));
+  document.getElementById(name+'RPM').textContent=Math.round(v)+'%';
+  document.getElementById(name+'Arc').setAttribute('stroke-dasharray',v+' 100');
+  document.getElementById(name+'Needle').setAttribute('transform','rotate('+(-90+v*1.8)+' 60 61)');
+ }
+
+}
+function gHUD(){
+ const s=state,ai=s.ai,pl=s.player;
+ let msg=(s.phase==='charge'||s.phase==='recharge')?'PUTAR TALI DAN TEKAN SIAP CAS':s.phase==='aiThrow'?'AI MEMBALING — POWER 100%!':s.phase==='aim'?'AIM kiri/kanan, kemudian FLICK KE ATAS untuk baling':s.phase==='rescueSpin'?`PUTAR ${s.rescueTarget} KALI DI ATAS GASING BIRU (${Math.floor(s.rescueTurns)}/${s.rescueTarget})`:s.phase==='rescueAir'?'TAP GASING BIRU SEBELUM JATUH!':s.phase==='rescueLand'?'Gasing jatuh — tunggu momentum berhenti':s.phase==='flight'?'Gasing berlaga — rescue boleh berulang; kedua-dua gasing terus bergerak!':s.phase==='won'?`ANDA MENANG! ${s.scoreEarned} MATA (${s.shots} BALINGAN)`:s.phase==='lost'?'ANDA KALAH!':'AI sedang baling...';
+ setHUD(msg,`${s.phase==='won'||s.phase==='lost'?`🏆 Markah ${s.scoreEarned||0} · `:''}Balingan ${s.shots} · Cas ${Math.round(s.charge)}% · Flick ${s.power||0}% · AI POWER 100% · AI Spin ${Math.ceil(ai.spin)} · Player Spin ${Math.ceil(pl.spin)} · Lilitan ${Math.round(s.charge)}%`,(s.phase==='charge'||s.phase==='recharge')?'Cas 0% tidak boleh baling. Putar tali, kemudian tekan SIAP CAS. Lagi banyak lilitan = lagi lama berpusing. Tekan SIAP CAS bila bersedia.':s.phase==='rescueSpin'?'Putar 1–3 kali (rawak), kemudian flick ke atas. Flick kuat = gasing terbang lebih tinggi.':s.phase==='rescueAir'?'Tap gasing semasa melayang. Jika berjaya, boleh baling lagi dan rescue boleh berulang.':s.phase==='rescueLand'?'Jika berhenti dalam bulatan, kalah. Jika keluar, boleh baling lagi.':s.phase==='aim'?'Seret kiri/kanan untuk aim. Lepaskan jari, kemudian flick ke atas dengan pantas untuk baling. Kekuatan ikut kelajuan flick.':s.phase==='flight'?'Pada 35% spin gasing mula wobble; pada 20% ia tumbang dan bergolek mengikut momentum. Jika gasing anda keluar ketika masih hidup, boleh baling semula.':'Keluarkan AI dengan pangkah SEBELUM AI tamat putaran. AI mati sendiri = AI menang, walaupun bergolek keluar.',s.phase==='rescueSpin'?'🌀 PUTAR & FLICK':s.phase==='rescueAir'?'✋ TANGKAP!':s.phase==='rescueLand'?'⏳ MENUNGGU':s.phase==='aim'?'☝️ FLICK KE ATAS':s.phase==='aiThrow'?'⏳ AI BALING':s.phase==='won'||s.phase==='lost'?'🔄 MAIN LAGI':'✅ SIAP CAS');
+}
+function gThrow(flickPower){
+ const s=state;if(s.phase!=='aim'||s.charge<=0){if(s.phase==='aim'&&s.charge<=0){status.textContent='CAS DIPERLUKAN — putar tali dahulu!';}return;}
+ const p=s.player;p.x=0;p.z=5.45;
+ const power=Math.max(0.12,Math.min(1,flickPower));
+ s.power=Math.round(power*100);
+ p.spin=+(s.charge*.31).toFixed(2); p.launchSpin=p.spin; p.dead=false; p.fall=0; p.tilt=0; p.fallDirection=0; p.wobble=false;
+ // Negative Z is toward the AI. Aim offset is relative to straight ahead.
+ const a=s.aim;
+ const speed=2+power*15; // Flick controls travel speed only; charge controls rotation only.
+ p.vx=Math.sin(a)*speed;p.vz=-Math.cos(a)*speed;
+ window.aimGuide.visible=false;s.phase='flight';s.playerThrown=true;s.hasThrown=true;s.impact=false;
+ s.shots++;s.flightElapsed=0;s.throwArc=0.42;totalAngle=0;gHUD();
+}
+function gRecoveryReady(){
+ const s=state,p=s.player;
+ p.x=0;p.z=5.45;p.vx=0;p.vz=0;p.spin=0;p.dead=false;p.fall=0;p.rollAngle=0;
+ tops[1].rotation.set(0,0,0);tops[1].position.set(0,.48,5.45);
+ window.aimGuide.visible=false;s.phase='recharge';s.charge=0;s.playerThrown=false;s.power=0;
+ s.rescueUsed=false;s.rescue=null;s.rescueCooldown=0;totalAngle=0;s.aim=0;gHUD();syncGameButtons();
+}
+function gRescueCatch(){
+ if(state.phase!=='rescueAir')return;
+ const p=state.player,world=tops[1].position.clone();world.project(camera);
+ // Successful catch returns the top to the hand for another throw.
+ sCatchEffect();
+ gRecoveryReady();
+}
+function sCatchEffect(){
+ const s=state;s.rescueCount=(s.rescueCount||0)+1;
+}
+function aiWander(dt){
+ const s=state,a=s.ai;
+ if(!s.landed||a.dead||a.spin<=0)return;
+ const t=s.time,rad=Math.hypot(a.x,a.z);
+ // Difficulty controls speed, acceleration, unpredictability and burst attacks.
+ // Even Admin uses continuous velocity and remains inside the arena.
+ const profiles={
+  easy:{speed:1.35,accel:2.6,freq:1.15,roam:1.8,burst:0},
+  medium:{speed:2.4,accel:4.5,freq:2.0,roam:2.65,burst:.25},
+  hard:{speed:3.8,accel:7.5,freq:3.2,roam:3.15,burst:.65},
+  admin:{speed:6.0,accel:12,freq:5.1,roam:3.45,burst:1.8}
+ };
+ const c=profiles[difficulty]||profiles.easy;
+ const phase=t*c.freq;
+ let tx=c.roam*(.72*Math.sin(phase)+.28*Math.sin(phase*2.37+.8));
+ let tz=c.roam*(.7*Math.cos(phase*.91)+.3*Math.sin(phase*1.83));
+ // Hard/Admin zigzag and surge toward the player's current position.
+ if(difficulty==='hard'||difficulty==='admin'){
+  const pulse=Math.max(0,Math.sin(t*(difficulty==='admin'?7.2:4.1)));
+  const attacking=pulse>.72 && s.player && !s.player.dead;
+  if(attacking){tx=tx*(1-c.burst*.28)+s.player.x*c.burst*.28;
+    tz=tz*(1-c.burst*.28)+s.player.z*c.burst*.28;}
+ }
+ const targetRadius=Math.hypot(tx,tz);
+ if(targetRadius>3.65){tx*=3.65/targetRadius;tz*=3.65/targetRadius}
+ let dx=tx-a.x,dz=tz-a.z;
+ const d=Math.hypot(dx,dz)||1;
+ const speed=c.speed*(1+(difficulty==='admin'?.55:.22)*Math.max(0,Math.sin(t*(difficulty==='admin'?9:4))));
+ let vx=dx/d*Math.min(speed,d*3),vz=dz/d*Math.min(speed,d*3);
+ // Strong inward steering near the edge prevents AI from escaping on its own.
+ if(rad>3.3){const edge=Math.min(1,(rad-3.3)/.45);vx-=a.x/rad*speed*edge*1.8;vz-=a.z/rad*speed*edge*1.8}
+ const alpha=Math.min(1,dt*c.accel);
+ a.vx+=(vx-a.vx)*alpha;a.vz+=(vz-a.vz)*alpha;
+ const v=Math.hypot(a.vx,a.vz),cap=speed*1.3;
+ if(v>cap){a.vx*=cap/v;a.vz*=cap/v}
+}
+function gStep(dt){
+ const s=state;if(!s.ai)return;
+ dt=Math.min(dt,.04);s.time+=dt;if(s.throwArc>0)s.throwArc=Math.max(0,s.throwArc-dt);s.rescueCooldown=Math.max(0,(s.rescueCooldown||0)-dt);
+ if(s.phase==='aiThrow'){
+  s.aiThrowTime+=dt;
+  const t=Math.min(1,s.aiThrowTime/1.55),smooth=t*t*(3-2*t),ai=s.ai;
+  ai.x=.15*Math.sin(t*Math.PI);ai.z=-5.8+5.1*smooth;
+  const y=.48+1.2*(1-t)+2.1*Math.sin(Math.PI*t);
+  tops[0].position.set(ai.x,y,ai.z);
+  tops[0].rotation.x+=dt*13;tops[0].rotation.y+=dt*30;
+  if(t>=1){ai.x=0;ai.z=-.7;ai.spin=32;ai.launchSpin=32;ai.vx=0;ai.vz=.25;ai.dead=false;ai.fall=0;s.landed=true;s.phase='aim';window.aimGuide.visible=true;tops[0].rotation.x=0;tops[0].position.set(0,.48,-.7);gHUD()}
+  return; // No collisions or winning checks during airborne animation
+ }
+
+ if(s.phase==='rescueAir'){
+  const r=s.rescue;r.t+=dt;const t=Math.min(1,r.t/r.duration);
+  const pl=s.player,top=tops[1];
+  // Ballistic flight with slight lateral drift; position is projected for tap detection.
+  pl.x=r.x+r.vx*t;pl.z=r.z+r.vz*t;
+  top.position.set(pl.x,.48+r.height*4*t*(1-t),pl.z);
+  top.rotation.x+=dt*11;top.rotation.y+=dt*18;
+  if(t>=1){s.phase='rescueLand';pl.fallEnergy=pl.spin;pl.launchSpin=Math.max(pl.launchSpin||0,pl.spin);pl.spin=0;pl.dead=true;pl.fall=0;pl.rollSeed=Math.random()*6.283;pl.rollAngle=0;
+   pl.vx=r.vx*.9+Math.sin(r.direction)*(1.2+Math.random()*2.8);
+   pl.vz=r.vz*.9+Math.cos(r.direction)*(1.2+Math.random()*2.8);
+   pl.fallDirection=Math.atan2(pl.vx,pl.vz);s.rescue=null;gHUD()}
+  const ai=s.ai;aiWander(dt);ai.x+=ai.vx*dt;ai.z+=ai.vz*dt;ai.vx*=Math.exp(-.22*dt);ai.vz*=Math.exp(-.22*dt);ai.spin=Math.max(0,ai.spin-.64*dt);tops[0].position.set(ai.x,.48,ai.z);tops[0].rotation.y+=dt*ai.spin*2.5;
+  return;
+ }
+ // Rescue is an input mode, NOT a pause: both tops keep their velocity,
+ // spin, drag and collisions while the player draws circles on the screen.
+ // Continue the physical simulation even after a result, so falling tops can finish moving.
+ const ai=s.ai,pl=s.player;
+ if(['flight','aim','recharge','rescueSpin'].includes(s.phase))aiWander(dt);
+ for(const [i,b] of [ai,pl].entries()){
+  const top=tops[i];
+  if(i===1&&!s.playerThrown&&!b.dead)continue;
+  if(i===0&&!s.landed)continue;
+  if(b.dead){
+   // Rolling top is supported by the floor; no sinking through the arena.
+   b.fall=Math.min(1,(b.fall||0)+dt*1.75);
+   const eased=b.fall*b.fall*(3-2*b.fall);
+   const speed=Math.hypot(b.vx,b.vz);
+   b.x+=b.vx*dt;b.z+=b.vz*dt;
+   // Higher residual energy at collapse produces a longer, less predictable roll.
+   if(b.fall>.45 && speed>.015){
+    const energy=Math.min(1,(b.fallEnergy||0)/30);
+    const turn=Math.sin(s.time*(3+energy*8)+(b.rollSeed||0))*energy*.95*dt;
+    const cs=Math.cos(turn),sn=Math.sin(turn);
+    const vx=b.vx,vz=b.vz;b.vx=vx*cs-vz*sn;b.vz=vx*sn+vz*cs;
+   }
+   const friction=Math.exp((b.fall<.75?-.85:-1.5)*dt);
+   b.vx*=friction;b.vz*=friction;
+   if(Math.hypot(b.vx,b.vz)<.025){b.vx=0;b.vz=0}
+   // Sideways top has a larger footprint than its upright tip.
+   // Centre stays above the stage top (.23), avoiding mesh clipping.
+   top.position.set(b.x,.48+Math.sin(eased*Math.PI)*.045,b.z);
+   const direction=Math.atan2(b.vx,b.vz);
+   if(speed>.04)b.fallDirection=direction;
+   b.rollAngle=(b.rollAngle||0)+speed*dt/0.32;
+   top.rotation.order='YXZ';
+   top.rotation.y=b.fallDirection;
+   top.rotation.x=eased*1.48;
+   top.rotation.z=b.rollAngle*eased;
+   continue;
+  }
+  b.x+=b.vx*dt;b.z+=b.vz*dt;
+  const drag=Math.exp(-(i===0?.22:1.25)*dt);b.vx*=drag;b.vz*=drag;
+  const spinBefore=b.spin;
+  b.spin=Math.max(0,b.spin-dt*(i===0?.64:.95));
+  // Wobble begins at 35% of this top's OWN initial spin.
+  // At 20% it collapses sideways and enters momentum-driven rolling.
+  const original=Math.max(.01,b.launchSpin||spinBefore);
+  const ratio=b.spin/original;
+  b.wobble=ratio<=.35;
+  if(ratio<=.20 && !(i===1&&s.throwArc>0)){
+   if(i===0)s.aiExpired=true;
+   b.dead=true;b.fall=0;
+   // Keep the actual velocity. With little velocity, a small residual tip impulse
+   // makes some tops roll out and others remain within the arena.
+   const velocity=Math.hypot(b.vx,b.vz);
+   b.fallDirection=velocity>.08?Math.atan2(b.vx,b.vz):Math.random()*Math.PI*2;
+   b.fallEnergy=Math.max(0,spinBefore)+(Math.hypot(b.vx,b.vz)*2);
+   b.rollSeed=Math.random()*Math.PI*2;b.rollAngle=0;
+   const spinFactor=Math.min(1,(b.launchSpin||spinBefore)/30);
+   // More winding gives stronger, longer residual roll; direction follows current momentum
+   // with a small random deviation from the tipping point.
+   const tipImpulse=(.3+Math.random()*1.5)*spinFactor + Math.hypot(b.vx,b.vz)*.5;
+   b.vx+=Math.sin(b.fallDirection)*tipImpulse;
+   b.vz+=Math.cos(b.fallDirection)*tipImpulse;
+  }
+  const launchLift=i===1&&s.throwArc>0?Math.sin(Math.PI*(1-s.throwArc/.42))*.72:0;
+  top.position.set(b.x,.48+launchLift+Math.min(.08,Math.hypot(b.vx,b.vz)*.005),b.z);
+  top.rotation.y+=dt*b.spin*2.5;
+  const wobbleAmount=b.wobble?Math.min(.78,.12+(.35-ratio)/.15*.5):.035;
+  top.rotation.z=Math.sin(s.time*(5+b.spin*.7)+i)*wobbleAmount;
+ }
+ if(s.phase==='won'||s.phase==='lost')return;
+ if((s.phase==='flight'||s.phase==='rescueSpin')&&s.playerThrown){
+  s.flightElapsed=(s.flightElapsed||0)+dt;
+  const dx=pl.x-ai.x,dz=pl.z-ai.z,dist=Math.hypot(dx,dz);
+  if(dist<.85&&dist>.0001){
+   const nx=dx/dist,nz=dz/dist,relative=(pl.vx-ai.vx)*nx+(pl.vz-ai.vz)*nz;
+   if(relative<0){
+    const impulse=-(1+.78)*relative/2;
+    ai.vx-=impulse*nx;ai.vz-=impulse*nz;pl.vx+=impulse*nx;pl.vz+=impulse*nz;
+    ai.spin=Math.max(0,ai.spin-Math.abs(relative)*.25);
+    pl.spin=Math.max(0,pl.spin-Math.abs(relative)*.14);
+    s.impact=true;
+    const overlap=Math.max(0,.85-dist)/2;ai.x-=nx*overlap;ai.z-=nz*overlap;pl.x+=nx*overlap;pl.z+=nz*overlap;
+   }
+  }
+ }
+ // Let a fallen top settle before adjudication: its momentum can carry it out.
+ const radius=4.45;
+ if(s.landed&&s.impact&&!s.aiExpired&&!ai.dead&&Math.hypot(ai.x,ai.z)>radius){s.aiKnockedOut=true;s.scoreEarned=Math.max(0,Math.round(({easy:90,medium:490,hard:890,admin:1000}[difficulty]||90)*(1-.15*Math.max(0,s.shots-1))));s.phase='won';gHUD();return}
+ if(s.playerThrown&&pl.dead&&pl.fall>=1&&Math.hypot(pl.vx,pl.vz)<.08){
+  if(s.phase==='rescueLand'&&Math.hypot(pl.x,pl.z)>radius&&ai.spin>0){gRecoveryReady();return}
+  s.phase='lost';s.scoreEarned=0;gHUD();return}
+ if(s.landed&&ai.dead&&ai.fall>=1&&Math.hypot(ai.vx,ai.vz)<.08){
+  // Requested house rule: AI dying inside the circle means player failed to knock it out.
+  s.phase='lost';s.scoreEarned=0;gHUD();return;
+ }
+ if(s.phase==='rescueLand'){
+  if(pl.dead&&pl.fall>=1&&Math.hypot(pl.vx,pl.vz)<.08){
+   if(Math.hypot(pl.x,pl.z)>radius&&ai.spin>0)gRecoveryReady();else{s.phase='lost';s.scoreEarned=0;gHUD()}
+  }
+  return;
+ }
+ if(s.phase==='flight'&&s.rescueCooldown<=0&&pl.spin>1.5&&ai.spin>0&&Math.hypot(pl.x-ai.x,pl.z-ai.z)<1.7&&s.flightElapsed>.25){
+  s.phase='rescueSpin';s.rescueTarget=1+Math.floor(Math.random()*3);s.rescueTurns=0;s.rescueAngle=0;s.rescueUsed=true;s.rescueCooldown=1.1;s.drag=false;gHUD();return;
+ }
+ if(s.phase==='flight'){
+  const playerOutside=Math.hypot(pl.x,pl.z)>4.45;
+  if(s.flightElapsed>.45&&playerOutside&&pl.spin>1.2){
+   gRecoveryReady();return;
+  }
+ }
+ if(Math.floor(s.time*2)!==Math.floor((s.time-dt)*2))gHUD();
+}
+
+// CONGKAK V32 — standalone 3D rules, marble physics and strategic AI.
+// Gasing and Pemadam implementations are left unchanged.
+const colors=[0x5bb6e9,0xf1a5a6,0x81e2bd,0xf4d17c,0xc3a5ef,0xf5f0d6];
+const CG={max:{easy:100,medium:500,hard:800,admin:1000},
+ depth:{easy:0,medium:1,hard:2,admin:4},
+ width:{easy:1,medium:3,hard:5,admin:7}};
+let congkakFx=[],congkakHand=null,congkakPulse=0,congkakAiTimer=null,congkakToken=0;
+function pitPos(i){return {x:(i<7?i:13-i)*1.02-3.06,z:i<7?1.0:-1.0}}
+function cgPos(i){return i<14?pitPos(i):{x:i===14?4.25:-4.25,z:0}}
+function cgIsOwn(i,p){return i<14&&(p===0?i<7:i>=7)}
+function cgMoves(s,p){const out=[];for(let i=p*7;i<p*7+7;i++)if(s.holes[i]>0)out.push(i);return out}
+function cgClone(s){return {holes:s.holes.slice(),stores:s.stores.slice(),turn:s.turn,over:s.over}}
+function cgFinish(s,events=null){
+ if(!s.holes.slice(0,7).some(Boolean)||!s.holes.slice(7).some(Boolean)){
+  for(let i=0;i<14;i++){while(s.holes[i]>0){s.holes[i]--;const owner=i<7?0:1;s.stores[owner]++;if(events)events.push({type:"sweepDrop",index:14+owner,source:i,player:owner,snapshot:cgSnapshot(s)})}}
+  s.over=true;
+ }
+}
+function cgNext(pos,p){
+ // Physical board order: player holes -> player right store -> AI holes -> AI left store.
+ // Never place a marble in the opponent's store.
+ let next=pos===6?14:pos===14?7:pos===13?15:pos===15?0:pos+1;
+ if(next===(p===0?15:14))next=next===15?0:7;
+ return next;
+}
+function cgSnapshot(s){return {holes:s.holes.slice(),stores:s.stores.slice()}}
+function cgMove(s,origin,record=false){
+ const p=s.turn,events=[];let n=s.holes[origin],pos=origin,loops=0;
+ if(!cgIsOwn(origin,p)||!n||s.over)return events;
+ s.holes[origin]=0;
+ if(record)events.push({type:'pickup',index:origin,count:n,player:p,snapshot:cgSnapshot(s)});
+ while(n>0&&loops++<320){
+  pos=cgNext(pos,p);
+  if(pos<14)s.holes[pos]++;else s.stores[pos-14]++;
+  if(record)events.push({type:'drop',index:pos,player:p,snapshot:cgSnapshot(s)});
+  n--;
+  if(n===0){
+   if(pos===14+p){s.turn=p;break}
+   if(pos<14&&s.holes[pos]>1){n=s.holes[pos];s.holes[pos]=0;if(record)events.push({type:'pickup',index:pos,count:n,player:p,snapshot:cgSnapshot(s)});continue}
+   if(pos<14&&cgIsOwn(pos,p)&&s.holes[pos]===1){
+    const opposite=13-pos;
+    if(s.holes[opposite]>0){
+     const count=s.holes[opposite]+1;
+     // Transfer captured marbles one at a time so the store never jumps suddenly.
+     s.holes[pos]=0;
+     if(record)events.push({type:'capturePickup',index:pos,player:p,snapshot:cgSnapshot(s)});
+     s.stores[p]++;
+     if(record)events.push({type:'captureDrop',index:14+p,source:pos,player:p,snapshot:cgSnapshot(s)});
+     while(s.holes[opposite]>0){
+      s.holes[opposite]--;s.stores[p]++;
+      if(record)events.push({type:'captureDrop',index:14+p,source:opposite,player:p,snapshot:cgSnapshot(s)});
+     }
+    }
+   }
+   s.turn=1-p;
+  }
+ }
+ if(loops>=320)s.turn=1-p;
+ cgFinish(s,record?events:null);
+ return events;
+}
+function cgEval(s,p){
+ if(s.over)return (s.stores[p]-s.stores[1-p])*120;
+ const my=s.holes.slice(p*7,p*7+7),their=s.holes.slice((1-p)*7,(1-p)*7+7);
+ const count=a=>a.reduce((x,y)=>x+y,0);
+ return (s.stores[p]-s.stores[1-p])*14+(count(my)-count(their))*.65+
+  (my.filter(Boolean).length-their.filter(Boolean).length)*.4;
+}
+function cgSearch(s,depth,rootPlayer,alpha=-1e9,beta=1e9){
+ if(depth<=0||s.over)return cgEval(s,rootPlayer);
+ const moves=cgMoves(s,s.turn);if(!moves.length)return cgEval(s,rootPlayer);
+ const maximizing=s.turn===rootPlayer;let best=maximizing?-1e9:1e9;
+ for(const i of moves){
+  const child=cgClone(s);cgMove(child,i);
+  const value=cgSearch(child,depth-1,rootPlayer,alpha,beta);
+  best=maximizing?Math.max(best,value):Math.min(best,value);
+  if(maximizing)alpha=Math.max(alpha,best);else beta=Math.min(beta,best);
+  if(beta<=alpha)break;
+ }
+ return best;
+}
+function cgChoose(s){
+ const options=cgMoves(s,1);
+ if(!options.length)return -1;
+ if(difficulty==='easy')return options[Math.floor(Math.random()*options.length)];
+ const depth=CG.depth[difficulty],candidate=[];
+ for(const i of options){
+  const next=cgClone(s);cgMove(next,i);
+  const value=cgSearch(next,depth-1,1);
+  candidate.push({i,value:value+(next.turn===1?2:0)});
+ }
+ candidate.sort((a,b)=>b.value-a.value);
+ const width=Math.min(candidate.length,CG.width[difficulty]);
+ const pick=difficulty==='admin'?0:difficulty==='hard'?(Math.random()<.87?0:Math.floor(Math.random()*width)):Math.floor(Math.random()*width);
+ return candidate[pick].i;
+}
+function cgStone(x,y,z,i,parent=root){
+ const o=ball(.14,colors[i%colors.length],x,y,z,parent);
+ o.material.roughness=.16;o.material.metalness=.14;
+ o.scale.set(1,.92,1);
+ return o;
+}
+function cgClearStones(){
+ for(const o of stones){root.remove(o);o.geometry.dispose();o.material.dispose()}stones=[];
+}
+function cgStoneLayout(i,j,total){
+ const p=cgPos(i),a=j*2.399963,r=Math.sqrt(j)*.073;
+ const maxR=i<14?.29:.43,rr=Math.min(r,maxR);
+ return {x:p.x+Math.cos(a)*rr,z:p.z+Math.sin(a)*rr,y:.56+Math.floor(j/14)*.15};
+}
+function drawStones(){
+ cgClearStones();
+ for(let i=0;i<16;i++){
+  const shown=state.cgVisual||state;const n=i<14?shown.holes[i]:shown.stores[i-14];
+  for(let j=0;j<Math.min(n,95);j++){
+   const p=cgStoneLayout(i,j,n);
+   stones.push(cgStone(p.x,p.y,p.z,j+i*3));
+  }
+ }
+}
+function cgHandMake(){
+ congkakHand=new T.Group();root.add(congkakHand);
+ const skin=mat(0xe7b28e);
+ const palm=mesh(new T.SphereGeometry(.32,16,12),skin,0,.14,0,congkakHand);
+ palm.scale.set(1.15,.35,.75);
+ for(let i=0;i<4;i++){
+  const finger=mesh(new T.CapsuleGeometry(.065,.34,4,8),skin,(i-1.5)*.14,-.08,-.19,congkakHand);
+  finger.rotation.x=.55;
+ }
+ congkakHand.visible=false;
+}
+function buildCongkak(){
+ congkakToken++;if(congkakAiTimer){clearTimeout(congkakAiTimer);congkakAiTimer=null}
+ congkakFx=[];congkakHand=null;
+ ground(0x6c8975);
+ // Rich carved wooden board with raised outer frame and inset bowls.
+ const wood=mat(0x854524);wood.roughness=.48;
+ const board=mesh(new T.BoxGeometry(10.7,.44,3.75),wood,0,.12,0);
+ const top=box(10.38,.13,3.47,0xb8753d,0,.4,0);
+ box(10.5,.18,.17,0x67371f,0,.54,1.76);
+ box(10.5,.18,.17,0x67371f,0,.54,-1.76);
+ box(.18,.18,3.47,0x67371f,5.24,.54,0);
+ box(.18,.18,3.47,0x67371f,-5.24,.54,0);
+ pits=[];
+ for(let i=0;i<14;i++){
+  const p=pitPos(i);
+  const hole=cyl(.40,.40,.055,0x3c241b,p.x,.49,p.z);
+  hole.userData.pit=i;pits.push(hole);
+  ring(.42,.038,0xe3ac65,p.x,.53,p.z);
+  const inner=ring(.31,.017,0x61351e,p.x,.525,p.z);
+ }
+ for(let side=0;side<2;side++){
+  const x=side===0?4.25:-4.25;
+  cyl(.59,.59,.065,0x3c241b,x,.50,0);
+  ring(.60,.05,0xe3ac65,x,.55,0);
+ }
+ state={holes:Array(14).fill(7),stores:[0,0],turn:0,over:false,busy:false,
+  cgMoves:0,cgResult:0,cgMessage:'Pilih lubang baris dekat untuk mengagih guli'};
+ cgHandMake();drawStones();cameraAt(0,10.8,8.2);updateCongkak();cgStartOsom();
+}
+
+
+let cgOsomTimer=null;
+function cgStartOsom(){
+ if(cgOsomTimer){clearTimeout(cgOsomTimer);cgOsomTimer=null}
+ const panel=document.getElementById('cgOsom');panel.hidden=false;document.getElementById('cgOsomCard').className='';
+ const buttons=panel.querySelectorAll('[data-osom]');buttons.forEach(b=>b.disabled=false);
+ document.getElementById('cgOsomResult').textContent='Batu kalahkan Gunting · Gunting kalahkan Kain · Kain kalahkan Batu';
+ state.cgOsomPending=true;state.turn=0;
+ const label=document.getElementById('cgTurn');label.textContent='✊ OSOM — PILIH UNTUK MULA';label.className='over';
+}
+const cgOsomTypes=['gunting','batu','kain'];
+const cgOsomEmoji={gunting:'✌️',batu:'✊',kain:'✋'};
+function cgRandomInt(n){
+ const a=new Uint32Array(1);
+ if(window.crypto&&crypto.getRandomValues){crypto.getRandomValues(a);return a[0]%n}
+ return Math.floor(Math.random()*n);
+}
+function cgNextFairOsom(){
+ let bag=[];
+ try{bag=JSON.parse(sessionStorage.getItem('cgOsomDeck')||'[]')}catch(_){}
+ if(!Array.isArray(bag)||!bag.every(x=>cgOsomTypes.includes(x)))bag=[];
+ if(!bag.length){
+  bag=cgOsomTypes.slice();
+  for(let i=bag.length-1;i>0;i--){const j=cgRandomInt(i+1);[bag[i],bag[j]]=[bag[j],bag[i]]}
+ }
+ const next=bag.pop();
+ try{sessionStorage.setItem('cgOsomDeck',JSON.stringify(bag))}catch(_){}
+ return next;
+}
+function cgChooseOsom(choice){
+ if(mode!=='congkak'||!state.cgOsomPending||!cgOsomTypes.includes(choice))return;
+ // Fair randomized deck: each group of three AI throws contains all three choices.
+ // Persist between reloads so restarting cannot accidentally repeat one AI choice.
+ const ai=cgNextFairOsom();
+ const wins={batu:'gunting',gunting:'kain',kain:'batu'};
+ const result=document.getElementById('cgOsomResult');
+ const buttons=document.querySelectorAll('#cgOsomChoices button');buttons.forEach(b=>b.disabled=true);
+ const token=congkakToken;
+ const card=document.getElementById('cgOsomCard');
+ card.className='resultMode';
+ const hands='<span class="osomHands">'+cgOsomEmoji[choice]+' VS '+cgOsomEmoji[ai]+'</span>';
+ if(choice===ai){
+  card.classList.add('tie');
+  result.innerHTML=hands+'<span class="osomWinner">🤝 SERI!</span><span class="osomSub">Pilih semula untuk tentukan giliran</span>';
+  cgOsomTimer=setTimeout(()=>{
+   if(mode!=='congkak'||token!==congkakToken)return;
+   card.className='';
+   result.textContent='Seri! Pilih Gunting, Batu atau Kain sekali lagi.';
+   buttons.forEach(b=>b.disabled=false);
+  },1800);
+  return;
+ }
+ const playerWins=wins[choice]===ai;
+ result.innerHTML=hands+'<span class="osomWinner">'+(playerWins?'🏆 PLAYER MENANG!':'🤖 AI MENANG!')+'</span><span class="osomSub">'+(playerWins?'PLAYER JALAN DAHULU':'AI JALAN DAHULU')+'</span>';
+ cgOsomTimer=setTimeout(()=>{
+  if(mode!=='congkak'||token!==congkakToken)return;
+  state.cgOsomPending=false;state.turn=playerWins?0:1;
+  document.getElementById('cgOsom').hidden=true;
+  updateCongkak();if(!playerWins)cgScheduleAi();
+ },2600);
+}
+document.querySelectorAll('#cgOsomChoices [data-osom]').forEach(b=>b.addEventListener('click',()=>cgChooseOsom(b.dataset.osom)));
+
+function cgUpdatePitCounts(){
+ const holder=document.getElementById('cgPitCounts');
+ if(!holder||mode!=='congkak')return;
+ if(holder.children.length!==14){holder.replaceChildren();for(let i=0;i<14;i++){const node=document.createElement('span');node.className='cgPitNum';holder.appendChild(node)}}
+ // Project 3D pit centers into the canvas and place counts next to the holes.
+ const rect=renderer.domElement.getBoundingClientRect();
+ for(let i=0;i<14;i++){
+  const p=pitPos(i),v=new T.Vector3(p.x,.78,p.z).project(camera);
+  const node=holder.children[i];
+  node.textContent=(state.cgVisual||state).holes[i];
+  node.style.left=((v.x+1)*50)+'%';
+  node.style.top=((1-v.y)*50)+'%';
+ }
+
+}
+function updateCongkak(){
+ const s=state;const max=CG.max[difficulty];
+ const msg=s.over?(s.stores[0]===s.stores[1]?'Seri!':s.stores[0]>s.stores[1]?'ANDA MENANG!':'AI MENANG!')
+  :s.busy?'Guli sedang diagihkan...':s.turn===0?'Giliran ANDA · pilih lubang depan':'AI sedang berfikir...';
+ const result=s.over?(s.stores[0]>s.stores[1]?Math.max(1,Math.round(max*(.55+.45*s.stores[0]/98))):0):null;
+ s.cgResult=result||0;
+ const cgOverlay=document.getElementById('cgOverlay');
+ cgOverlay.hidden=mode!=='congkak';
+ document.getElementById('cgAiStore').textContent=(s.cgVisual||s).stores[1]+' guli';
+ document.getElementById('cgPlayerStore').textContent=(s.cgVisual||s).stores[0]+' guli';
+ const turn=document.getElementById('cgTurn');
+ const shownTurn=s.busy&&s.cgAnimatingPlayer!==undefined?s.cgAnimatingPlayer:s.turn;
+ turn.className=s.over&&!s.busy?'over':shownTurn===0?'player':'ai';
+ const playerPanel=document.querySelector('#cgOverlay .cgStore.player');
+ const aiPanel=document.querySelector('#cgOverlay .cgStore.ai');
+ playerPanel.classList.toggle('turnActive',!s.over&&shownTurn===0);
+ aiPanel.classList.toggle('turnActive',!s.over&&shownTurn===1);
+
+ turn.textContent=s.over&&!s.busy?(s.stores[0]>s.stores[1]?'🏆 PLAYER MENANG · '+result+' MATA':s.stores[0]===s.stores[1]?'🤝 SERI':'🤖 AI MENANG'):
+  s.busy?(shownTurn===0?'🔵 GILIRAN PLAYER':'🔴 GILIRAN AI'):
+  s.turn===0?'🔵 GILIRAN PLAYER':'🔴 GILIRAN AI';
+ cgUpdatePitCounts();
+ setHUD(msg,`🔵 Anda ${s.stores[0]}  ·  🤖 AI ${s.stores[1]}${s.over?'  ·  Markah '+result+'/'+max:''}`,
+  s.over?'Permainan tamat. Tekan MULA SEMULA untuk bermain lagi.':
+  'Pilih lubang depan. Tangan akan mengambil dan menjatuhkan guli satu demi satu. Guli terakhir di rumah sendiri memberi giliran tambahan.',
+  '🔵 CARA MAIN');
+ $('#difficultyHelp').textContent={easy:'Mudah · maks 100 mata',medium:'Sederhana · maks 500 mata',hard:'Susah · maks 800 mata',admin:'Admin · maks 1000 mata'}[difficulty];
+}
+function cgAnimateDrop(index,player,done){
+ const p=cgPos(index),origin=congkakHand.position.clone();
+ const marble=cgStone(origin.x,origin.y-.1,origin.z,Math.floor(Math.random()*6));
+ congkakFx.push({obj:marble,t:0,duration:.43,start:origin.clone(),target:new T.Vector3(p.x,.62,p.z),done});
+}
+function cgPlayEvents(events,token,after){
+ let k=0;
+ function next(){
+  if(mode!=='congkak'||token!==congkakToken)return;
+  if(k>=events.length){congkakHand.visible=false;state.cgVisual=null;state.busy=false;state.cgAnimatingPlayer=undefined;drawStones();updateCongkak();after();return}
+  const ev=events[k++],p=cgPos(ev.index);state.cgAnimatingPlayer=ev.player;
+  congkakHand.visible=true;congkakHand.position.set(p.x,1.25,p.z);const turnLabel=document.getElementById('cgTurn');turnLabel.className=ev.player===0?'player':'ai';turnLabel.textContent=ev.player===0?'🔵 GILIRAN PLAYER':'🔴 GILIRAN AI';
+  if(ev.type==='pickup'||ev.type==='capturePickup'){
+   state.cgVisual=ev.snapshot;drawStones();updateCongkak();
+   status.textContent=`${ev.player===0?'Anda':'AI'} mengambil ${ev.count} guli`;
+   setTimeout(next,330);
+  }else{
+   status.textContent=`${ev.player===0?'Anda':'AI'} menjatuhkan guli ${k}/${events.length}`;
+   if(ev.type==='captureDrop'||ev.type==='sweepDrop'){const from=cgPos(ev.source);congkakHand.position.set(from.x,1.25,from.z)}
+   cgAnimateDrop(ev.index,ev.player,()=>{state.cgVisual=ev.snapshot;drawStones();updateCongkak();setTimeout(next,75)});
+  }
+ }
+ next();
+}
+function cgScheduleAi(){
+ if(mode!=='congkak'||state.cgOsomPending||state.over||state.busy||state.turn!==1)return;
+ const token=congkakToken;
+ congkakAiTimer=setTimeout(()=>{
+  if(mode!=='congkak'||token!==congkakToken||state.busy||state.over||state.turn!==1)return;
+  const move=cgChoose(state);if(move>=0)sow(move);
+ },difficulty==='admin'?420:750);
+}
+function sow(i){
+ const s=state;
+ if(mode!=='congkak'||s.cgOsomPending||s.busy||s.over||!cgIsOwn(i,s.turn)||s.holes[i]===0)return;
+ const token=congkakToken,player=s.turn;
+ s.busy=true;s.cgAnimatingPlayer=player;
+ s.cgVisual=cgSnapshot(s);
+ const events=cgMove(s,i,true);
+ cgPlayEvents(events,token,()=>{if(mode!=='congkak'||token!==congkakToken)return;if(!s.over&&s.turn===1)cgScheduleAi()});
+}
+function cgStep(dt){
+ for(let i=congkakFx.length-1;i>=0;i--){
+  const f=congkakFx[i];f.t+=dt;const t=Math.min(1,f.t/f.duration);
+  f.obj.position.lerpVectors(f.start,f.target,t);
+  f.obj.position.y+=Math.sin(Math.PI*t)*.48;
+  f.obj.rotation.x+=dt*8;f.obj.rotation.z+=dt*6;
+  if(t>=1){root.remove(f.obj);f.obj.geometry.dispose();f.obj.material.dispose();congkakFx.splice(i,1);f.done()}
+ }
+}
+
+let pmLastSetFlag=null;
+function makeEraser(x,z,color,label){
+ const group=new T.Group();root.add(group);group.position.set(x,.36,z);
+ // School-era flag eraser: rectangular 1.30 x .85, 0.28 thick.
+ box(1.30,.28,.85,0xf7f5e9,0,0,0,group);
+ box(1.30,.018,.85,0xffffff,0,.149,0,group);
+ // Accurate Malaysian Jalur Gemilang: 14 alternating stripes, blue canton,
+ // yellow crescent and 14-point star. AI gets a random national flag.
+ const canvas=document.createElement('canvas');canvas.width=560;canvas.height=280;
+ const c=canvas.getContext('2d'),W=560,H=280;
+ const stripe=(colors,n)=>{for(let i=0;i<n;i++){c.fillStyle=colors[i%colors.length];c.fillRect(0,H*i/n,W,H/n)}};
+ const star=(cx,cy,outer,inner,points,rotation=-Math.PI/2)=>{
+  c.beginPath();for(let i=0;i<points*2;i++){const ang=rotation+i*Math.PI/points,r=i%2?inner:outer;
+   const x=cx+Math.cos(ang)*r,y=cy+Math.sin(ang)*r;
+   if(!i)c.moveTo(x,y);else c.lineTo(x,y)}c.closePath();c.fill();
+ };
+ function paintFlag(country){
+  c.clearRect(0,0,W,H);
+  if(country==='Malaysia'){
+   stripe(['#cc142b','#ffffff'],14);
+   c.fillStyle='#010066';c.fillRect(0,0,W*.5,H*8/14);
+   // Crescent opening toward the star.
+   c.fillStyle='#ffcc00';c.beginPath();c.arc(112,80,58,0,Math.PI*2);c.fill();
+   c.fillStyle='#010066';c.beginPath();c.arc(135,66,49,0,Math.PI*2);c.fill();
+   c.fillStyle='#ffcc00';star(218,80,47,21,14);
+  }else if(country==='Japan'){
+   c.fillStyle='#fff';c.fillRect(0,0,W,H);
+   c.fillStyle='#bc002d';c.beginPath();c.arc(W/2,H/2,82,0,Math.PI*2);c.fill();
+  }else if(country==='Indonesia'||country==='Poland'){
+   c.fillStyle=country==='Indonesia'?'#ce1126':'#fff';c.fillRect(0,0,W,H/2);
+   c.fillStyle=country==='Indonesia'?'#fff':'#dc143c';c.fillRect(0,H/2,W,H/2);
+  }else if(country==='Germany'||country==='Netherlands'||country==='France'||country==='Italy'){
+   const colors={Germany:['#111111','#dd0000','#ffce00'],Netherlands:['#ae1c28','#ffffff','#21468b'],
+    France:['#002395','#ffffff','#ed2939'],Italy:['#009246','#ffffff','#ce2b37']}[country];
+   for(let i=0;i<3;i++){c.fillStyle=colors[i];if(country==='France'||country==='Italy')c.fillRect(W*i/3,0,W/3,H);
+    else c.fillRect(0,H*i/3,W,H/3)}
+  }else if(country==='Ukraine'){
+   c.fillStyle='#0057b7';c.fillRect(0,0,W,H/2);c.fillStyle='#ffd700';c.fillRect(0,H/2,W,H/2);
+  }else if(country==='Thailand'){
+   const cols=['#a51931','#f4f5f8','#2d2a4a','#f4f5f8','#a51931'];
+   const units=[1,1,2,1,1];let y=0;for(let i=0;i<5;i++){let h=H*units[i]/6;c.fillStyle=cols[i];c.fillRect(0,y,W,h);y+=h}
+  }else if(country==='Bangladesh'){
+   c.fillStyle='#006a4e';c.fillRect(0,0,W,H);c.fillStyle='#f42a41';c.beginPath();c.arc(250,140,75,0,Math.PI*2);c.fill();
+  }else if(country==='Singapore'){
+   c.fillStyle='#ef3340';c.fillRect(0,0,W,H/2);c.fillStyle='#fff';c.fillRect(0,H/2,W,H/2);
+   c.beginPath();c.arc(98,68,46,0,Math.PI*2);c.fill();c.fillStyle='#ef3340';
+   c.beginPath();c.arc(116,54,40,0,Math.PI*2);c.fill();c.fillStyle='#fff';
+   for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5;star(174+Math.cos(a)*26,67+Math.sin(a)*26,9,4,5)}
+  }
+ }
+ const aiCountries=['Japan','Indonesia','Thailand','Singapore','Germany','France','Italy','Netherlands','Ukraine','Bangladesh','Poland'];
+ const country=label===1?'Malaysia':(()=>{
+  const options=aiCountries.filter(n=>n!==pmLastSetFlag);
+  const next=options[Math.floor(Math.random()*options.length)];
+  pmLastSetFlag=next;
+  return next;
+ })();
+ paintFlag(country);
+ const tex=new T.CanvasTexture(canvas);tex.colorSpace=T.SRGBColorSpace;
+ const sticker=new T.Mesh(new T.PlaneGeometry(1.20,.76),new T.MeshStandardMaterial({map:tex,roughness:.72}));
+ sticker.rotation.x=-Math.PI/2;sticker.position.y=.162;group.add(sticker);
+ group.userData={vx:0,vz:0,vy:0,flagCountry:country,flagCanvas:canvas,flagTexture:tex,paintFlag,aiCountries};return group;
+}
+let pmWorld=null,pmBodies=[],pmAccumulator=0,pmSettle=0,pmRallyClock=0,pmContactSeen=false;
+const PM_W=1.30,PM_H=.28,PM_D=.85,PM_BOARD=.21;
+function pmInitializePhysics(){
+ if(!window.pmRapier||mode!=='pemadam'||!erasers.length)return false;
+ const R=window.pmRapier;
+ if(pmWorld){try{pmWorld.free()}catch(_){}}
+ pmWorld=new R.World({x:0,y:-17,z:0});pmBodies=[];pmAccumulator=0;pmSettle=0;pmRallyClock=0;pmContactSeen=false;
+ const ground=pmWorld.createRigidBody(R.RigidBodyDesc.fixed().setTranslation(0,.17,0));
+ pmWorld.createCollider(R.ColliderDesc.cuboid(4.7,.04,3.25).setFriction(.84).setRestitution(.07),ground);
+ for(let i=0;i<2;i++){
+  const z=i===0?1.65:-1.65;
+  const body=pmWorld.createRigidBody(R.RigidBodyDesc.dynamic().setTranslation(0,PM_BOARD+PM_H/2+.005,z).setLinearDamping(.65).setAngularDamping(.95).setCcdEnabled(true));
+  pmWorld.createCollider(R.ColliderDesc.cuboid(PM_W/2,PM_H/2,PM_D/2).setDensity(1.2).setFriction(.78).setRestitution(.16),body);
+  pmBodies.push(body);
+ }
+ pmSyncMeshes();return true;
+}
+function pmSyncMeshes(){
+ if(!pmBodies.length)return;
+ pmBodies.forEach((body,i)=>{
+  const p=body.translation(),q=body.rotation();
+  erasers[i].position.set(p.x,p.y,p.z);
+  erasers[i].quaternion.set(q.x,q.y,q.z,q.w);
+ });
+}
+function pmReady(){return !!pmWorld&&pmBodies.length===2}
+function pmWakeAndLaunch(player,dx,dz,power){
+ const s=state;if(!pmReady()||s.pmOsomPending||s.busy||s.won||s.turn!==player)return;
+ const length=Math.hypot(dx,dz);if(length<.01)return;
+ const strength=Math.max(.15,Math.min(1,power)),body=pmBodies[player];
+ const vx=dx/length*(2.6+strength*7.2),vz=dz/length*(2.6+strength*7.2);
+ body.wakeUp();body.setLinvel({x:vx,y:2+strength*3.6,z:vz},true);
+ // Angular impulse makes the eraser visibly flip; collision impulses affect BOTH bodies.
+ const axis={x:vz/(Math.hypot(vx,vz)||1),y:0,z:-vx/(Math.hypot(vx,vz)||1)};
+ body.setAngvel({x:axis.x*(5+strength*11),y:strength*.7,z:axis.z*(5+strength*11)},true);
+ s.busy=true;s.pmShots++;s.flight={p:player,elapsed:0};pmRallyClock=0;pmSettle=0;pmContactSeen=false;
+ updatePemadam();
+}
+function pmFaceSupport(body){
+ const q=body.rotation(),qu=new T.Quaternion(q.x,q.y,q.z,q.w);
+ const x=new T.Vector3(1,0,0).applyQuaternion(qu),y=new T.Vector3(0,1,0).applyQuaternion(qu),z=new T.Vector3(0,0,1).applyQuaternion(qu);
+ return Math.abs(x.y)*PM_W/2+Math.abs(y.y)*PM_H/2+Math.abs(z.y)*PM_D/2;
+}
+function pmBodyResting(body){
+ const v=body.linvel(),w=body.angvel();
+ return Math.hypot(v.x,v.y,v.z)<.34&&Math.hypot(w.x,w.y,w.z)<.45;
+}
+function pmFootprint(body){
+ // Actual projected contact face (large face or either narrow side).
+ const q=body.rotation(),rot=new T.Quaternion(q.x,q.y,q.z,q.w);
+ const basis=[new T.Vector3(1,0,0),new T.Vector3(0,1,0),new T.Vector3(0,0,1)].map(v=>v.applyQuaternion(rot));
+ const half=[PM_W/2,PM_H/2,PM_D/2];
+ const vertical=basis.reduce((best,v,i)=>Math.abs(v.y)>Math.abs(basis[best].y)?i:best,0);
+ const planar=[0,1,2].filter(i=>i!==vertical);
+ const p=body.translation(),u=basis[planar[0]].clone().multiplyScalar(half[planar[0]]),v=basis[planar[1]].clone().multiplyScalar(half[planar[1]]);
+ return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>({x:p.x+a*u.x+b*v.x,z:p.z+a*u.z+b*v.z}));
+}
+function pmPolyArea(poly){
+ let a=0;for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length];a+=p.x*q.z-q.x*p.z}return Math.abs(a)*.5;
+}
+function pmFootprintOverlap(one,two){
+ // Sutherland-Hodgman convex polygon intersection, winding independent.
+ let poly=pmFootprint(one),clip=pmFootprint(two);
+ const signed=(p,q,r)=>(q.x-p.x)*(r.z-p.z)-(q.z-p.z)*(r.x-p.x);
+ const orientation=signed(clip[0],clip[1],clip[2])>=0?1:-1;
+ for(let i=0;i<clip.length;i++){
+  const a=clip[i],b=clip[(i+1)%clip.length],input=poly;poly=[];
+  if(!input.length)break;
+  for(let j=0;j<input.length;j++){
+   const p=input[j],q=input[(j+1)%input.length];
+   const dp=signed(a,b,p)*orientation,dq=signed(a,b,q)*orientation;
+   if(dp>=-1e-7)poly.push(p);
+   if((dp<0&&dq>0)||(dp>0&&dq<0)){
+    const t=dp/(dp-dq);poly.push({x:p.x+(q.x-p.x)*t,z:p.z+(q.z-p.z)*t});
+   }
+  }
+ }
+ const intersection=poly.length>=3?pmPolyArea(poly):0;
+ return intersection/Math.max(.001,Math.min(pmPolyArea(pmFootprint(one)),pmPolyArea(clip)));
+}
+function pmBodyOnTop(top,bottom){
+ const a=top.translation(),b=bottom.translation();
+ const upperBottom=a.y-pmFaceSupport(top);
+ const lowerTop=b.y+pmFaceSupport(bottom);
+ const heightGap=upperBottom-lowerTop;
+ const overlap=pmFootprintOverlap(top,bottom);
+ const topQ=top.rotation(),bottomQ=bottom.rotation();
+ const orientation=(q)=>{
+  const rot=new T.Quaternion(q.x,q.y,q.z,q.w);
+  return Math.max(...[new T.Vector3(1,0,0),new T.Vector3(0,1,0),new T.Vector3(0,0,1)]
+   .map(v=>Math.abs(v.applyQuaternion(rot).y)));
+ };
+ const v=top.linvel(),w=top.angvel(),bv=bottom.linvel(),bw=bottom.angvel();
+ const slow=Math.hypot(v.x,v.y,v.z)<.9&&Math.hypot(w.x,w.y,w.z)<1.25&&
+  Math.hypot(bv.x,bv.y,bv.z)<.9&&Math.hypot(bw.x,bw.y,bw.z)<1.25;
+ // A genuine upper face must be supported by the lower eraser.
+ // Projection overlap alone is never sufficient.
+ return a.y>b.y+.15 && heightGap>-.11 && heightGap<.17 &&
+  overlap>.10 && orientation(topQ)>.84 && orientation(bottomQ)>.84 && slow;
+}
+function pmPhysicsStep(dt){
+ if(mode!=='pemadam'||!pmReady()||state.pmOsomPending||state.won)return;
+ const s=state;
+ pmAccumulator=Math.min(pmAccumulator+dt,.08);
+ while(pmAccumulator>=1/120){pmWorld.timestep=1/120;pmWorld.step();pmAccumulator-=1/120;}
+ pmSyncMeshes();
+ if(!s.flight)return;
+ pmRallyClock+=dt;
+ const p=s.flight.p,top=pmBodies[p],other=pmBodies[1-p];
+ for(const b of pmBodies){const t=b.translation();if(Math.abs(t.x)>4.9||Math.abs(t.z)>3.48||t.y<-.8){pmEndRally(false);return}}
+ const scorer=pmBodyOnTop(top,other)?p:(pmBodyOnTop(other,top)?1-p:-1);
+ if(scorer>=0){pmSettle+=dt;pmContactSeen=scorer;}else{pmSettle=0;pmContactSeen=false}
+ if(pmSettle>.18){s.flight.p=pmContactSeen;pmEndRally(true);return}
+ if(pmRallyClock>2.8&&pmBodyResting(top)&&pmBodyResting(other)){pmFinishFlight();return}
+ // Allow a short settle window after the usual timeout, then evaluate
+ // physical support one last time before ending the turn.
+ if(pmRallyClock>7){
+  const finalScorer=pmBodyOnTop(top,other)?p:(pmBodyOnTop(other,top)?1-p:-1);
+  if(finalScorer>=0){s.flight.p=finalScorer;pmEndRally(true);return}
+  if(pmRallyClock>8.5)pmFinishFlight();
+ }
+}
+window.addEventListener('pm-rapier-ready',()=>{
+ if(mode==='pemadam'&&erasers.length){pmInitializePhysics();document.getElementById('pmOsom').hidden=false;updatePemadam()}
+});
+window.addEventListener('pm-rapier-error',()=>{
+ if(mode==='pemadam')document.getElementById('pmOsomResult').textContent='Rapier gagal dimuatkan. Semak sambungan internet dan refresh.';
+});
+let pmOpponentMotion=null,pmStableTime=0,pmToken=0,pmTimer=null,pmPointer=null,pmCameraDrag=null,pmCameraYaw=0,pmCameraPitch=.78,pmTipPending=false,pmTipAxis='x',pmLanding=null,pmCameraLocked=true;
+function pmClearTimer(){if(pmTimer){clearTimeout(pmTimer);pmTimer=null}}
+function pmUpdateScoreboard(){
+ const visible=mode==='pemadam';
+ document.getElementById('pmScoreboard').hidden=!visible;
+ if(!visible)return;
+ const s=state;
+ document.getElementById('pmScorePlayer').textContent=s.score?.[0]??0;
+ document.getElementById('pmScoreAI').textContent=s.score?.[1]??0;
+ const labels={easy:'MUDAH',medium:'SEDERHANA',hard:'SUSAH',admin:'ADMIN'};
+ document.getElementById('pmAiName').textContent='🔴 AI ('+(labels[difficulty]||'MUDAH')+')';
+ const playerName=document.querySelector('#pmScoreboard .pmName.player');
+ const aiName=document.getElementById('pmAiName');
+ const active=!s.pmOsomPending&&!s.won;
+ playerName.classList.toggle('pmActive',active&&s.turn===0);
+ aiName.classList.toggle('pmActive',active&&s.turn===1);
+ const modal=document.getElementById('pmFinish');
+ modal.hidden=!s.won;
+ if(s.won){
+  const playerWon=s.winner===0;
+  const earned=playerWon?Math.max(0,500-s.score[1]*100):0;
+  document.getElementById('pmFinishTitle').textContent=playerWon?'🏆 PLAYER MENANG!':'🤖 AI MENANG!';
+  document.getElementById('pmFinishTitle').style.color=playerWon?'#76c6ff':'#ff8790';
+  document.getElementById('pmFinishScore').textContent='🔵 '+s.score[0]+'  —  '+s.score[1]+' 🔴';
+  document.getElementById('pmFinishPoints').textContent=earned+' MATA DIPEROLEH';
+ }
+}
+document.getElementById('pmReplay').addEventListener('click',()=>{if(mode==='pemadam')reset()});
+function pmShowTurn(){
+ pmUpdateScoreboard();
+ const el=document.getElementById('pmTurn');
+ el.hidden=true;
+ if(!el.hidden)el.textContent=state.won?(state.winner===0?'🏆 PLAYER MENANG · '+Math.max(0,500-state.score[1]*100)+' MATA':'🤖 AI MENANG · 0 MATA'):state.turn===0?'🔵 GILIRAN PLAYER · '+state.score[0]+'/5':'🔴 GILIRAN AI · '+state.score[1]+'/5';
+}
+function buildPemadam(){
+ pmToken++;pmClearTimer();pmPointer=null;pmCameraDrag=null;pmCameraLocked=true;pmSyncCameraLock();pmTipPending=false;pmLanding=null;document.getElementById('pmTip').hidden=true;
+ ground(0x628a69);
+ box(10,.3,7,0x886543,0,.01,0);
+ box(9.4,.04,6.5,0xe7d2aa,0,.19,0);
+ // AI at the far end; player at the near end.
+ erasers=[makeEraser(0,1.65,0x388bd1,1),makeEraser(0,-1.65,0xe7b633,2)];
+ pmInitializePhysics();
+ state={turn:0,score:[0,0],busy:false,won:false,winner:-1,flight:null,pmOsomPending:true,pmShots:0};
+ pmCameraYaw=0;pmCameraPitch=.78;pmApplyCamera();
+ document.getElementById('pmOsom').hidden=false;
+ document.getElementById('pmOsomCard').querySelector('h2').textContent='✊ OSOM PEMADAM';
+ document.getElementById('pmOsomChoices').hidden=false;
+ document.querySelectorAll('[data-pmosom]').forEach(b=>b.disabled=false);
+ document.getElementById('pmOsomResult').textContent='Batu kalahkan Gunting · Gunting kalahkan Kain · Kain kalahkan Batu';
+ pmShowTurn();updatePemadam();
+}
+function updatePemadam(){
+ if(mode!=='pemadam')return;
+ const s=state;
+ const max=500;
+ const points=s.won?(s.winner===0?Math.max(0,500-s.score[1]*100):0):0;
+ setHUD(s.pmOsomPending?'OSOM — pilih dahulu':s.won?(s.winner===0?'PLAYER MENANG':'AI MENANG'):s.turn===0?'GILIRAN PLAYER':'GILIRAN AI',
+ `Player ${s.score[0]} · AI ${s.score[1]}${s.won?' · Markah '+points+'/'+max:''}`,
+ 'Flick ke empat arah. +1 mata HANYA jika pemadam benar-benar mendarat stabil di atas pemadam lawan, bukan sekadar bertindih atau bersentuhan. Pertama mencapai 5 mata menang; skor maksimum 500.',
+ s.won?'MAIN SEMULA':'FLICK PEMADAM');
+ pmShowTurn();pmUpdateScoreboard();
+}
+// Independent Pemadam OSOM deck: no dependence on the player's choice.
+const pmOsomChoices=['gunting','batu','kain'];
+let pmOsomDeck=[];
+function pmNextOsom(){
+ if(!pmOsomDeck.length){
+  pmOsomDeck=pmOsomChoices.slice();
+  for(let i=pmOsomDeck.length-1;i>0;i--){
+   const j=cgRandomInt(i+1);[pmOsomDeck[i],pmOsomDeck[j]]=[pmOsomDeck[j],pmOsomDeck[i]];
+  }
+ }
+ return pmOsomDeck.pop();
+}
+function pmChooseOsom(choice){
+ if(mode!=='pemadam'||!state.pmOsomPending)return;
+ if(!pmReady()){document.getElementById('pmOsomResult').textContent=window.pmRapierError||'Memuatkan enjin fizik Rapier...';return}
+ const ai=pmNextOsom();
+ const wins={batu:'gunting',gunting:'kain',kain:'batu'};
+ const result=document.getElementById('pmOsomResult');
+ const token=pmToken;
+ document.querySelectorAll('[data-pmosom]').forEach(b=>b.disabled=true);
+ const emojis={batu:'✊',gunting:'✌️',kain:'✋'};
+ if(ai===choice){
+  result.innerHTML='<div style="font-size:42px">'+emojis[choice]+' VS '+emojis[ai]+'</div>🤝 SERI!<div>Pilih semula</div>';
+  pmTimer=setTimeout(()=>{if(mode!=='pemadam'||token!==pmToken)return;document.querySelectorAll('[data-pmosom]').forEach(b=>b.disabled=false)},1250);
+  return;
+ }
+ const playerWins=wins[choice]===ai;
+ result.innerHTML='<div style="font-size:42px">'+emojis[choice]+' VS '+emojis[ai]+'</div><div style="font-size:29px">'+(playerWins?'🏆 PLAYER MENANG!':'🤖 AI MENANG!')+'</div><div>'+(playerWins?'PLAYER JALAN DAHULU':'AI JALAN DAHULU')+'</div>';
+ pmTimer=setTimeout(()=>{
+  if(mode!=='pemadam'||token!==pmToken)return;
+  state.pmOsomPending=false;state.turn=playerWins?0:1;
+  document.getElementById('pmOsom').hidden=true;updatePemadam();
+  if(!playerWins)pmScheduleAi();
+ },2200);
+}
+document.querySelectorAll('[data-pmosom]').forEach(b=>b.addEventListener('click',()=>pmChooseOsom(b.dataset.pmosom)));
+function pmScheduleAi(){
+ if(mode!=='pemadam'||state.pmOsomPending||state.busy||state.won||state.turn!==1)return;
+ const token=pmToken;
+ pmTimer=setTimeout(()=>{
+  if(mode!=='pemadam'||token!==pmToken||state.turn!==1||state.busy)return;
+  const from=erasers[1].position,to=erasers[0].position;
+  const error={easy:1.7,medium:.95,hard:.48,admin:.16}[difficulty]||1.7;
+  const dx=to.x-from.x+rand(-error,error),dz=to.z-from.z+rand(-error,error);
+  const norm=Math.hypot(dx,dz)||1;
+  const power={easy:.55,medium:.72,hard:.87,admin:1}[difficulty]||.55;
+  pmLaunch(1,dx/norm,dz/norm,power);
+ },550);
+}
+function pmLaunch(player,dx,dz,power){pmWakeAndLaunch(player,dx,dz,power)}
+function pmApplyCamera(){
+ const radius=13;
+ camera.position.set(Math.sin(pmCameraYaw)*radius*Math.cos(pmCameraPitch),Math.sin(pmCameraPitch)*radius,Math.cos(pmCameraYaw)*radius*Math.cos(pmCameraPitch));
+ camera.lookAt(0,.15,0);
+}
+function pmSupportY(o){
+ // Support mapping: eraser cannot rest on a corner or intersect the board.
+ const q=o.quaternion;
+ const x=new T.Vector3(1,0,0).applyQuaternion(q);
+ const y=new T.Vector3(0,1,0).applyQuaternion(q);
+ const z=new T.Vector3(0,0,1).applyQuaternion(q);
+ return .21+Math.abs(x.y)*.675+Math.abs(y.y)*.15+Math.abs(z.y)*.42+.006;
+}
+function pmSnapFace(o){
+ // Pick nearest flat resting orientation using the object's world-up vectors.
+ // For flat top/bottom: thickness is vertical. For narrow side: height is vertical.
+ const up=new T.Vector3(0,1,0);
+ const axes=[new T.Vector3(0,1,0),new T.Vector3(1,0,0),new T.Vector3(0,0,1)];
+ const dot=axes.map(v=>Math.abs(v.applyQuaternion(o.quaternion).dot(up)));
+ const best=dot.indexOf(Math.max(...dot));
+ const sign=axes[best].dot(up)>=0?1:-1;
+ if(best===0)o.rotation.set(sign>0?0:Math.PI,0,0);
+ else if(best===1)o.rotation.set(0,0,sign>0?-Math.PI/2:Math.PI/2);
+ else o.rotation.set(sign>0?Math.PI/2:-Math.PI/2,0,0);
+ o.position.y=pmSupportY(o);
+}
+function pmIsNarrowSide(o){
+ const up=new T.Vector3(0,1,0);
+ const axes=[new T.Vector3(0,1,0),new T.Vector3(1,0,0),new T.Vector3(0,0,1)];
+ const dot=axes.map(v=>Math.abs(v.applyQuaternion(o.quaternion).dot(up)));
+ const best=dot.indexOf(Math.max(...dot));
+ // Side is only valid when one lateral axis is clearly aligned with vertical.
+ return best!==0 && dot[best]>.87 && dot[best]-Math.max(...dot.filter((_,i)=>i!==best))>.35;
+}
+function pmAnimateRest(o,finalRotation,finalY,after){
+ pmLanding={obj:o,start:o.quaternion.clone(),end:new T.Quaternion().setFromEuler(finalRotation),
+  t:0,after};
+}
+function pmRandomizeAiFlag(){
+ const eraser=erasers&&erasers[1];if(!eraser||!eraser.userData.paintFlag)return;
+ const d=eraser.userData,choices=d.aiCountries.filter(n=>n!==d.flagCountry);
+ const country=choices[Math.floor(Math.random()*choices.length)];
+ d.paintFlag(country);d.flagCountry=country;d.flagTexture.needsUpdate=true;
+}
+function pmResetPositions(){
+ // Keep AI flag unchanged throughout the entire first-to-five set.
+ pmTipPending=false;pmLanding=null;pmOpponentMotion=null;pmStableTime=0;
+ document.getElementById('pmTip').hidden=true;
+ if(pmReady()){
+  pmBodies.forEach((body,i)=>{
+   body.setTranslation({x:0,y:PM_BOARD+PM_H/2+.005,z:i===0?1.65:-1.65},true);
+   body.setRotation({x:0,y:0,z:0,w:1},true);
+   body.setLinvel({x:0,y:0,z:0},true);body.setAngvel({x:0,y:0,z:0},true);
+   body.sleep();
+  });
+  pmSyncMeshes();
+ }
+ pmAccumulator=0;pmSettle=0;pmRallyClock=0;
+}
+function pmEndRally(scored){
+ const s=state,f=s.flight;if(!f)return;
+ s.flight=null;
+ if(scored)s.score[f.p]++;
+ const finished=s.score[0]>=5||s.score[1]>=5;
+ if(finished){s.won=true;s.winner=s.score[0]>=5?0:1;s.turn=s.winner;s.busy=false;updatePemadam();return}
+ // The same participant keeps the next rally after a score; out-of-bounds
+ // hands the next rally to the opponent. No new OSOM.
+ s.turn=scored?f.p:1-f.p;
+ s.busy=true;
+ updatePemadam();
+ const token=pmToken;
+ pmTimer=setTimeout(()=>{
+  if(mode!=='pemadam'||token!==pmToken)return;
+  pmResetPositions();s.busy=false;updatePemadam();
+  if(s.turn===1)pmScheduleAi();
+ },850);
+}
+function pmFinishFlight(){
+ const s=state,f=s.flight;if(!f)return;
+ s.flight=null;s.busy=false;
+ if(s.score[f.p]>=5){s.won=true;s.winner=f.p;s.turn=f.p}
+ else s.turn=1-f.p;
+ updatePemadam();
+ if(!s.won&&s.turn===1)pmScheduleAi();
+}
+function pmSideChoice(o){
+ // A side must be genuinely flat on the board, never a corner.
+ const xUp=Math.abs(new T.Vector3(1,0,0).applyQuaternion(o.quaternion).y);
+ pmTipAxis=xUp>.7?'x':'z';
+ pmSnapFace(o);
+ pmTipPending=true;
+ const panel=document.getElementById('pmTip');panel.hidden=false;
+ panel.querySelector('.pmTipText').textContent='Pemadam berada di sisi rata. Pilih arah untuk rebah.';
+}
+function pmTip(direction){
+ if(mode!=='pemadam'||!pmTipPending||!state.flight)return;
+ const o=state.flight.from;
+ const sign=direction==='left'?-1:1;
+ // Side resting on Z (long edge) -> roll about Z; on X (short edge) -> roll about X.
+ // Both resulting rotations end with the thin Y-axis vertical (flat broad face).
+ const current=o.rotation.clone();
+ const target=new T.Euler();
+ if(pmTipAxis==='x'){
+  target.set(0,0,sign<0?0:Math.PI);
+ }else{
+  target.set(sign<0?0:Math.PI,0,0);
+ }
+ pmTipPending=false;document.getElementById('pmTip').hidden=true;
+ pmAnimateRest(o,target,.366,pmFinishFlight);
+}
+document.querySelectorAll('[data-pmtip]').forEach(b=>b.addEventListener('click',()=>pmTip(b.dataset.pmtip)));
+// Oriented box vs oriented box (SAT): checks real 3D overlap, not just XZ distance.
+const pmHalf=[.685,.155,.425];
+function pmOBB(o){
+ const axes=[new T.Vector3(1,0,0),new T.Vector3(0,1,0),new T.Vector3(0,0,1)].map(v=>v.applyQuaternion(o.quaternion).normalize());
+ return {c:o.position.clone(),a:axes};
+}
+function pmCollision(a,b){
+ const A=pmOBB(a),B=pmOBB(b),delta=B.c.clone().sub(A.c);
+ const tests=[...A.a,...B.a];
+ for(const x of A.a)for(const y of B.a){
+  const z=x.clone().cross(y);if(z.lengthSq()>1e-7)tests.push(z.normalize());
+ }
+ let min=Infinity,normal=null;
+ for(const axis of tests){
+  const rA=A.a.reduce((r,v,i)=>r+pmHalf[i]*Math.abs(axis.dot(v)),0);
+  const rB=B.a.reduce((r,v,i)=>r+pmHalf[i]*Math.abs(axis.dot(v)),0);
+  const d=Math.abs(delta.dot(axis)),overlap=rA+rB-d;
+  if(overlap<=0)return null;
+  if(overlap<min){min=overlap;normal=axis.clone().multiplyScalar(delta.dot(axis)>=0?1:-1)}
+ }
+ return {normal,depth:min};
+}
+function pmFlatOnTop(a,b){
+ const up=new T.Vector3(0,1,0);
+ const aUp=new T.Vector3(0,1,0).applyQuaternion(a.quaternion);
+ const bUp=new T.Vector3(0,1,0).applyQuaternion(b.quaternion);
+ const horizontal=Math.hypot(a.position.x-b.position.x,a.position.z-b.position.z);
+ const expected=b.position.y+.155+.155;
+ return Math.abs(aUp.dot(up))>.93&&Math.abs(bUp.dot(up))>.93&&
+  horizontal<.53&&Math.abs(a.position.y-expected)<.16;
+}
+
+function pmAdvanceOpponent(dt){
+ const m=pmOpponentMotion;if(!m)return;
+ const o=m.obj;
+ m.vy-=16*dt;
+ o.position.addScaledVector(m.velocity,dt);
+ o.position.y+=m.vy*dt;
+ const spin=m.omega.length();
+ if(spin>.0001)o.rotateOnWorldAxis(m.omega.clone().normalize(),spin*dt);
+ m.velocity.multiplyScalar(Math.exp(-2.6*dt));
+ m.omega.multiplyScalar(Math.exp(-2.1*dt));
+ const floor=pmSupportY(o);
+ if(o.position.y<floor){
+  o.position.y=floor;
+  if(m.vy<0)m.vy=-m.vy*.14;
+  if(Math.abs(m.vy)<.18)m.vy=0;
+  // Resting torque: a side standing vertically is knocked over by impact.
+  if(m.omega.length()<.35&&m.age>.35){
+   const up=new T.Vector3(0,1,0);
+   const y=new T.Vector3(0,1,0).applyQuaternion(o.quaternion);
+   if(Math.abs(y.dot(up))<.85)m.omega.add(new T.Vector3(.45,0,.35));
+  }
+ }
+ m.age+=dt;
+ if(m.age>2.4||m.age>.5&&(m.velocity.length()<.09&&m.omega.length()<.12&&m.vy===0)){
+  pmSnapFace(o);pmOpponentMotion=null;
+ }
+}
+function pmImpactOpponent(other,contact,f){
+ // Contact normal points from moving eraser towards the opponent.
+ const n=contact.normal;
+ const v=new T.Vector3(f.vx,f.vy,f.vz);
+ const closing=Math.max(0,v.dot(n));
+ if(closing<.08)return;
+ const impulse=Math.min(13,closing*1.12);
+ const transfer=n.clone().multiplyScalar(impulse*.72);
+ // Lift and torque from an off-centre strike: the struck eraser can topple.
+ const lever=f.from.position.clone().sub(other.position);
+ const torque=lever.clone().cross(transfer).multiplyScalar(2.7);
+ if(torque.length()<.35)torque.add(new T.Vector3(n.z*2,0,-n.x*2));
+ if(!pmOpponentMotion||pmOpponentMotion.obj!==other){
+  pmOpponentMotion={obj:other,velocity:new T.Vector3(),vy:0,omega:new T.Vector3(),age:0};
+ }
+ pmOpponentMotion.velocity.add(new T.Vector3(transfer.x,0,transfer.z));
+ pmOpponentMotion.vy+=Math.max(.45,Math.abs(transfer.y)*.7+closing*.12);
+ pmOpponentMotion.omega.add(torque).clampLength(0,13);
+ // Both bodies exchange momentum; moving eraser rebounds.
+ v.addScaledVector(n,-1.38*closing);
+ f.vx=v.x*.72;f.vy=v.y;f.vz=v.z*.72;
+}
+function pmStackedStable(top,bottom){
+ const up=new T.Vector3(0,1,0);
+ const topFlat=Math.abs(new T.Vector3(0,1,0).applyQuaternion(top.quaternion).dot(up))>.94;
+ const bottomFlat=Math.abs(new T.Vector3(0,1,0).applyQuaternion(bottom.quaternion).dot(up))>.94;
+ const gap=top.position.y-bottom.position.y;
+ return topFlat&&bottomFlat&&Math.abs(gap-.31)<.12&&
+  Math.abs(top.position.x-bottom.position.x)<.46&&Math.abs(top.position.z-bottom.position.z)<.31;
+}
+function pmStep(dt){pmPhysicsStep(dt)}
+function pmSyncCameraLock(){
+ const b=document.getElementById('pmCameraLock');
+ b.hidden=mode!=='pemadam';
+ b.classList.toggle('unlocked',!pmCameraLocked);
+ b.setAttribute('aria-pressed',String(pmCameraLocked));
+ b.innerHTML=pmCameraLocked
+  ? '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2" fill="#1677df"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>'
+  : '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2" fill="#c45a24"/><path d="M8 10V7a4 4 0 0 1 7.6-1.7"/></svg>';
+ b.setAttribute('aria-label',pmCameraLocked?'Buka kunci kamera':'Kunci kamera');
+ b.title=pmCameraLocked?'Kamera terkunci — flick pemadam':'Kamera bebas — seret untuk pusing papan';
+}
+document.getElementById('pmCameraLock').addEventListener('click',()=>{
+ if(mode!=='pemadam')return;
+ pmPointer=null;pmCameraDrag=null;
+ pmCameraLocked=!pmCameraLocked;
+ pmPointer=null;pmCameraDrag=null;
+ pmSyncCameraLock();
+});
+function pmPointerDown(e){
+ if(mode!=='pemadam')return;
+ if(!pmCameraLocked){pmCameraDrag={id:e.pointerId,x:e.clientX,y:e.clientY};try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}return;}
+ if(state.pmOsomPending||state.busy||state.won||state.turn!==0)return;
+ const rect=renderer.domElement.getBoundingClientRect();
+ pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);
+ ray.setFromCamera(pointer,camera);
+ const hits=ray.intersectObject(erasers[0],true);
+ if(!hits.length)return;
+ pmPointer={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now()};
+ try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
+}
+function pmPointerUp(e){
+ if(pmCameraDrag&&e.pointerId===pmCameraDrag.id){pmCameraDrag=null;return}
+ if(mode!=='pemadam'||!pmCameraLocked||!pmPointer||e.pointerId!==pmPointer.id)return;
+ const start=pmPointer;pmPointer=null;
+ const dx=e.clientX-start.x,dy=start.y-e.clientY,dist=Math.hypot(dx,dy);
+ if(dist<12)return;
+ const dt=Math.max(60,performance.now()-start.t);
+ // Map finger direction from screen coordinates into the CURRENT camera orientation.
+ // The mapping updates whenever the player rotates the board/camera.
+ camera.updateMatrixWorld(true);
+ const right=new T.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+ const screenUp=new T.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+ right.y=0;screenUp.y=0;
+ right.normalize();screenUp.normalize();
+ const direction=right.multiplyScalar(dx).addScaledVector(screenUp,dy);
+ if(direction.lengthSq()<.0001)return;
+ pmLaunch(0,direction.x,direction.z,Math.min(1,dist/dt/1.7));
+}
+renderer.domElement.addEventListener('pointerdown',pmPointerDown);
+renderer.domElement.addEventListener('pointermove',e=>{if(mode!=='pemadam'||!pmCameraDrag||pmCameraDrag.id!==e.pointerId)return;const dx=e.clientX-pmCameraDrag.x,dy=e.clientY-pmCameraDrag.y;pmCameraDrag.x=e.clientX;pmCameraDrag.y=e.clientY;pmCameraYaw-=dx*.008;pmCameraPitch=Math.max(.25,Math.min(1.42,pmCameraPitch+dy*.006));pmApplyCamera()});
+renderer.domElement.addEventListener('pointerup',pmPointerUp);
+window.addEventListener('pointerup',pmPointerUp);
+renderer.domElement.addEventListener('pointercancel',e=>{
+ if(pmPointer&&pmPointer.id===e.pointerId)pmPointer=null;
+ if(pmCameraDrag&&pmCameraDrag.id===e.pointerId)pmCameraDrag=null;
+});
+// V16 guided onboarding. The guide is non-modal: the game continues while it is visible.
+const tutorialSteps=[
+ ['🌀','Cas tali gasing','Putar jari membulat pada arena untuk melilit tali. Lagi banyak lilitan, lagi laju dan lama gasing berpusing. Cas tidak wajib 100%.'],
+ ['🤖','AI baling dahulu','Tekan SIAP CAS bila bersedia. AI akan melontar gasing dengan kuasa 100% dan bergerak dalam arena.'],
+ ['🎯','Sasarkan gasing AI','Seret jari kiri atau kanan di arena untuk menentukan arah pangkah. Anak panah menunjukkan arah sasaran.'],
+ ['👆','Flick untuk membaling','Flick jari KE ATAS untuk baling. Flick kuat = lontaran lebih laju. Lilitan tali menentukan RPM, bukan kekuatan flick.'],
+ ['⚔️','Perlanggaran dan momentum','Kedua-dua gasing terus berpusing dan bergerak. Pada 35% baki spin, gasing mula wobble; pada 20%, ia tumbang ke sisi.'],
+ ['🛟','Rescue gasing','Semasa berlaga, buat 1–3 pusaran (mengikut arahan) di atas gasing biru dan flick ke atas. Tap gasing semasa melayang untuk menangkapnya. Rescue boleh berulang.'],
+ ['🏆','Menang atau kalah','Pangkah AI keluar sebelum ia mati untuk menang. AI mati sendiri tetap menang walaupun bergolek keluar. Markah tertinggi untuk satu balingan. Pilih tahap AI di atas arena.']
+];
+const tutorialsByGame={
+ gasing:tutorialSteps,
+ congkak:[
+ ['✊','Mulakan dengan OSOM','Pilih Batu, Gunting atau Kain. Batu mengalahkan Gunting, Gunting mengalahkan Kain dan Kain mengalahkan Batu. Pemenang jalan dahulu; jika seri, ulang OSOM.'],
+ ['🔵','Kenali papan','Tujuh lubang di baris dekat milik Player, tujuh lubang di baris jauh milik AI. Rumah Player di sebelah kanan dan rumah AI di sebelah kiri.'],
+ ['👆','Pilih lubang sendiri','Apabila GILIRAN PLAYER, sentuh lubang di baris dekat yang masih mempunyai guli. Semua guli di dalamnya akan diambil.'],
+ ['🟠','Agih guli satu demi satu','Guli dijatuhkan ke lubang berikutnya mengikut laluan papan. Rumah lawan dilangkau. Giliran kekal milik pemain yang sedang mengagihkan guli.'],
+ ['🔄','Sambung atau tukar giliran','Jika guli terakhir jatuh ke lubang yang masih berisi, ambil semua guli di situ dan sambung mengagih. Jika jatuh ke rumah sendiri, dapat giliran tambahan.'],
+ ['🏠','Tangkap guli','Jika guli terakhir jatuh di lubang kosong milik sendiri dan lubang bertentangan berisi, guli tersebut dan guli bertentangan masuk ke rumah sendiri.'],
+ ['🏆','Tentukan pemenang','Apabila permainan tamat, pemain dengan guli terbanyak di rumah menang. Markah maksimum mengikut tahap AI: Mudah 100, Sederhana 500, Susah 800, Admin 1000.']
+ ],
+ pemadam:[
+ ['✊','OSOM menentukan giliran','Pilih Batu, Gunting atau Kain. Pemenang OSOM menjentik dahulu. Jika seri, pilih semula.'],
+ ['🟥','Kenali pemadam','Player sentiasa menggunakan bendera Malaysia yang lengkap; bendera negara AI dipilih secara rawak dan kekal sepanjang satu set hingga 5 mata. Kedua-duanya mempunyai enam permukaan rata: dua besar dan empat sisi kecil.'],
+ ['👆','Flick dan fizik','Sentuh pemadam sendiri lalu flick ke atas, bawah, kiri atau kanan. Kelajuan flick menentukan kekuatan, jarak dan putaran. Pemadam boleh melantun atau terpelanting apabila berlanggar.'],
+ ['🎯','Syarat mendapat 1 mata','Pemadam anda MESTI benar-benar mendarat dan stabil DI ATAS pemadam lawan, dengan sokongan fizikal. Sekadar bertindih dalam pandangan kamera, tersentuh atau berlanggar tidak memberikan mata.'],
+ ['🔄','Reset setiap pusingan','Selepas mendapat mata atau pemadam keluar gelanggang, kedua-dua pemadam kembali ke kedudukan asal. Skor yang telah diperoleh tidak hilang. OSOM tidak diulang setiap pusingan.'],
+ ['🏆','Menang 5 mata','Pemain pertama mendapat 5 mata menang. Jika Player menang 5–0, dapat 500 mata; setiap mata AI mengurangkan 100 mata. Jika AI mencapai 5 dahulu, Player mendapat 0 mata.']
+ ]
+};
+const tutorialStateByGame={gasing:{enabled:false,index:0},congkak:{enabled:false,index:0},pemadam:{enabled:false,index:0}};
+let tutorialLastPhase='';
+const guidePanel=$('#guidePanel'),guideToggle=$('#tutorialToggle');guideToggle.checked=false;
+function drawTutorial(){
+ const saved=tutorialStateByGame[mode],steps=tutorialsByGame[mode];
+ guideToggle.checked=saved.enabled;
+ $('#tutorialToggleText').textContent=saved.enabled?'ON':'OFF';
+ $('#guideBar .guideSub').textContent='Tutorial langkah demi langkah · '+({gasing:'Gasing Pangkah',congkak:'Congkak',pemadam:'Pemadam'}[mode]);
+ guidePanel.hidden=!saved.enabled;
+ if(!saved.enabled)return;
+ const t=steps[saved.index];
+ $('#guideIcon').textContent=t[0];$('#guideName').textContent=t[1];$('#guideText').textContent=t[2];
+ $('#guideCount').textContent=`LANGKAH ${saved.index+1} / ${steps.length}`;
+ $('#guideProgress').innerHTML=steps.map((_,i)=>`<i class="${i<=saved.index?'done':''}"></i>`).join('');
+ $('#guideNext').textContent=saved.index===steps.length-1?'Selesai ✓':'Seterusnya →';
+}
+function tutorialAdvance(n){const saved=tutorialStateByGame[mode];saved.index=Math.max(0,Math.min(tutorialsByGame[mode].length-1,n));drawTutorial()}
+guideToggle.addEventListener('change',()=>{tutorialStateByGame[mode].enabled=guideToggle.checked;contextTutorialPhase='';drawTutorial()});
+$('#guideSkip').addEventListener('click',()=>{tutorialStateByGame[mode].enabled=false;drawTutorial()});
+$('#guideNext').addEventListener('click',()=>{const saved=tutorialStateByGame[mode];if(saved.index===tutorialsByGame[mode].length-1){saved.enabled=false;drawTutorial()}else tutorialAdvance(saved.index+1)});
+function tutorialSync(){
+ const saved=tutorialStateByGame.gasing;
+ if(!saved.enabled||mode!=='gasing'||!state||!state.phase)return;
+ const phase=state.phase;if(phase===tutorialLastPhase)return;tutorialLastPhase=phase;
+ const map={charge:0,recharge:0,aiThrow:1,aim:2,flight:4,rescueSpin:5,rescueAir:5,rescueLand:6,won:6,lost:6};
+ if(Object.hasOwn(map,phase))tutorialAdvance(map[phase]);
+}
+// Context-aware, non-modal tutorials for Congkak and Pemadam.
+let contextTutorialPhase='';
+function contextTutorialSync(){
+ const t=tutorialStateByGame[mode];
+ if(!t||!t.enabled||!state)return;
+ let phase='',idx=0;
+ if(mode==='congkak'){
+  if(state.cgOsomPending){phase='osom';idx=0}
+  else if(state.over){phase='finish';idx=6}
+  else if(state.busy){
+   phase='sowing';idx=3;
+  }else if(state.turn===0){
+   phase='player';idx=2;
+  }else{phase='ai';idx=4}
+ }else if(mode==='pemadam'){
+  if(state.pmOsomPending){phase='osom';idx=0}
+  else if(state.won){phase='finish';idx=5}
+  else if(state.busy){phase='flight';idx=3}
+  else if(state.pmShots>0){phase='next';idx=4}
+  else if(state.turn===0){phase='flick';idx=2}
+  else{phase='ai';idx=1}
+ }else return;
+ const token=mode+':'+phase;
+ if(token===contextTutorialPhase)return;
+ contextTutorialPhase=token;
+ t.index=idx;
+ drawTutorial();
+}
+function updateDifficultyUI(){
+ const select=$('#difficulty');
+ select.value=difficultyByGame[mode]||'easy';
+ difficulty=select.value;
+ const labels=mode==='gasing'
+  ?{easy:'AI aktif · maks 90 mata',medium:'AI agresif · maks 490 mata',hard:'AI laju · maks 890 mata',admin:'AI ekstrem · maks 1000 mata'}
+  :{easy:'Mudah · maks 100 mata',medium:'Sederhana · maks 500 mata',hard:'Susah · maks 800 mata',admin:'Admin · maks 1000 mata'};
+ $('#difficultyHelp').textContent=labels[difficulty];
+}
+$('#difficulty').addEventListener('change',e=>{
+ difficultyByGame[mode]=e.target.value;if(mode==='pemadam')pmUpdateScoreboard();
+ updateDifficultyUI();
+ if(mode==='gasing'||mode==='congkak')reset();
+});
+function reset(){wargaRound++;wargaRoundSent=false;wargaStarted=performance.now();document.getElementById('warga-submit').textContent='';document.getElementById('pmCameraLock').hidden=mode!=='pemadam';document.getElementById('pmFinish').hidden=true;document.getElementById('pmScoreboard').hidden=true;pmToken++;pmClearTimer();document.getElementById('pmOsom').hidden=true;document.getElementById('pmTurn').hidden=true;document.getElementById('cgOsom').hidden=true;if(cgOsomTimer){clearTimeout(cgOsomTimer);cgOsomTimer=null}congkakToken++;if(congkakAiTimer){clearTimeout(congkakAiTimer);congkakAiTimer=null}congkakFx=[];clear();anim=0;if(mode==='gasing')buildGasing();if(mode==='congkak')buildCongkak();if(mode==='pemadam')buildPemadam();tutorialLastPhase='';contextTutorialPhase='';drawTutorial();syncGameButtons()}document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;updateDifficultyUI();document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b));reset()}));$('#reset').onclick=reset;$('#arenaAction').onclick=()=>{if(mode==='gasing'&&(state.phase==='won'||state.phase==='lost')){reset();return;}if(mode==='gasing'&&(state.phase==='charge'||state.phase==='recharge')){if(state.charge<=0){status.textContent='PUTAR TALI DAHULU — cas mesti lebih 0%!';return;}state.phase=state.landed?'aim':'aiThrow';window.aimGuide.visible=state.landed;state.aiThrowTime=0;gHUD()}};action.onclick=()=>{if(mode==='gasing'){if(state.phase==='aim'){status.textContent='Flick ke ATAS pada arena untuk baling!'}else if(state.phase==='won'||state.phase==='lost')reset();else if((state.phase==='charge'||state.phase==='recharge')){if(state.charge<=0){status.textContent='PUTAR TALI DAHULU — cas mesti lebih 0%!';return;}state.phase=state.landed?'aim':'aiThrow';window.aimGuide.visible=state.landed;state.aiThrowTime=0;gHUD()}}else if(mode==='pemadam'){if(state.won)reset();else status.textContent='Flick pada pemadam biru di arena untuk bergerak!'}else alert('Congkak: Pemain 1 pilih lubang baris dekat, pemain 2 pilih baris jauh. Setiap guli diagihkan satu demi satu, melangkau rumah lawan. Pemain dengan guli terbanyak di rumah menang.')};const ray=new T.Raycaster(),pointer=new T.Vector2();renderer.domElement.addEventListener('pointerdown',e=>{if(mode!=='congkak')return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(pits);if(hits.length&&!state.cgOsomPending&&state.turn===0)sow(hits[0].object.userData.pit)});// Mobile-friendly input: accumulate actual circular angle instead of tiny cross products.
+let activePointer=null,lastAngle=null,totalAngle=0,lastAimX=null;
+let flickStart=null,flickSamples=[],aimPointerStart=null;
+renderer.domElement.style.touchAction='none';
+let rescuePointer=null;
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(mode!=='gasing')return;
+ if(state.phase==='rescueAir'){
+  const r=renderer.domElement.getBoundingClientRect();
+  const projected=tops[1].position.clone().project(camera);
+  const px=(projected.x+1)*r.width/2,py=(1-projected.y)*r.height/2;
+  const x=e.clientX-r.left,y=e.clientY-r.top;
+  if(Math.hypot(x-px,y-py)<Math.max(38,r.width*.075)){e.preventDefault();gRescueCatch()}
+  return;
+ }
+ if(state.phase==='rescueSpin'){
+  e.preventDefault();rescuePointer={id:e.pointerId,x:e.clientX,y:e.clientY,startY:e.clientY,flickStartTime:performance.now(),lastAngle:null,angle:0,lastX:e.clientX,lastY:e.clientY};
+  try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
+ }
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(mode!=='gasing'||state.phase!=='rescueSpin'||!rescuePointer||e.pointerId!==rescuePointer.id)return;
+ e.preventDefault();const q=rescuePointer;
+ const r=renderer.domElement.getBoundingClientRect(),p=tops[1].position.clone().project(camera);
+ const cx=r.left+(p.x+1)*r.width/2,cy=r.top+(1-p.y)*r.height/2;
+ const a=Math.atan2(e.clientY-cy,e.clientX-cx);
+ if(q.lastAngle!==null){let d=a-q.lastAngle;while(d>Math.PI)d-=Math.PI*2;while(d< -Math.PI)d+=Math.PI*2;
+  if(Math.abs(d)<1.25){q.angle+=Math.abs(d);state.rescueTurns=q.angle/(Math.PI*2)}
+ }
+ if(state.rescueTurns>=state.rescueTarget&&q.lastY-e.clientY>3){q.flickStartTime=performance.now()-50;q.startY=Math.max(q.startY,q.lastY)}
+ q.lastAngle=a;q.lastX=e.clientX;q.lastY=e.clientY;gHUD();
+});
+renderer.domElement.addEventListener('pointerup',e=>{
+ if(mode!=='gasing'||state.phase!=='rescueSpin'||!rescuePointer||e.pointerId!==rescuePointer.id)return;
+ const q=rescuePointer;rescuePointer=null;
+ const dy=q.startY-e.clientY;
+ if(state.rescueTurns>=state.rescueTarget&&dy>45){
+  const elapsed=Math.max(20,performance.now()-(q.flickStartTime||performance.now()-250));
+  const speed=Math.max(.1,Math.min(2.8,dy/elapsed));
+  const strength=Math.max(.08,Math.min(1,(speed-.12)/1.9));
+  const p=state.player;state.phase='rescueAir';state.rescue={t:0,duration:1.05+strength*.85,height:.75+strength*5.2,strength,x:p.x,z:p.z,vx:p.vx*.4+(Math.random()-.5)*1.5,vz:p.vz*.4-.3-strength*1.2,direction:Math.random()*Math.PI*2};
+  gHUD();
+ }else if(state.rescueTurns>=state.rescueTarget){status.textContent='Cukup putaran! FLICK KE ATAS';}
+});
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(mode!=='gasing'||!['charge','recharge','aim'].includes(state.phase))return;
+ e.preventDefault();activePointer=e.pointerId;state.drag=true;
+ const r=renderer.domElement.getBoundingClientRect();
+ const x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+ lastAngle=Math.atan2(y-.5,(x-.5)*r.width/r.height);lastAimX=x;
+ const t=performance.now();flickStart={x:e.clientX,y:e.clientY,t};
+ aimPointerStart={x:e.clientX,y:e.clientY};flickSamples=[{x:e.clientX,y:e.clientY,t}];
+ try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(mode!=='gasing'||!state.drag||e.pointerId!==activePointer)return;
+ e.preventDefault();const r=renderer.domElement.getBoundingClientRect();
+ const x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+ if(state.phase==='charge'||state.phase==='recharge'){
+  const angle=Math.atan2(y-.5,(x-.5)*r.width/r.height);
+  let delta=angle-lastAngle;
+  while(delta>Math.PI)delta-=2*Math.PI;
+  while(delta< -Math.PI)delta+=2*Math.PI;
+  if(Math.abs(delta)<1.15){totalAngle+=Math.abs(delta);state.charge=Math.min(100,totalAngle/(Math.PI*2*2.5)*100)}
+  lastAngle=angle;
+  if(state.charge>=100){state.charge=100;gHUD()}
+ }else if(state.phase==='aim'){
+  const t=performance.now();flickSamples.push({x:e.clientX,y:e.clientY,t});
+  flickSamples=flickSamples.filter(p=>t-p.t<=350);
+  const dx=e.clientX-aimPointerStart.x,dy=e.clientY-aimPointerStart.y;
+  // Horizontal movement adjusts aim; upward movement is reserved for throwing.
+  if(Math.abs(dx)>Math.abs(dy)*.55){
+   state.aim=Math.max(-1.15,Math.min(1.15,state.aim+(x-lastAimX)*2.8));
+   window.aimGuide.setDirection(new T.Vector3(Math.sin(state.aim),0,-Math.cos(state.aim)).normalize());
+  }
+  lastAimX=x;
+ }
+ gHUD();
+});
+function releaseGasing(e){
+ if(mode!=='gasing'||e.pointerId!==activePointer)return;
+ e.preventDefault();
+ if(state.phase==='aim'&&flickStart){
+  const endT=performance.now(),dy=flickStart.y-e.clientY,dx=e.clientX-flickStart.x;
+  // Require a deliberate upward flick, not a horizontal aim gesture.
+  const elapsed=Math.max(16,endT-flickStart.t);
+  const upward=dy>32&&dy>Math.abs(dx)*.7;
+  if(upward){
+   // Normalized velocity: ~0.3 px/ms weak, >=1.7 px/ms maximum.
+   const velocity=dy/elapsed;
+   const power=Math.max(.12,Math.min(1,(velocity-.15)/1.55));
+   gThrow(power);
+  }
+ }
+ state.drag=false;activePointer=null;lastAngle=null;flickStart=null;flickSamples=[];
+ // Cas hanya disahkan apabila pemain menekan SIAP CAS.
+ gHUD();
+}
+renderer.domElement.addEventListener('pointerup',releaseGasing);
+window.addEventListener('pointerup',e=>{if(activePointer===e.pointerId)releaseGasing(e)});
+
+renderer.domElement.addEventListener('pointercancel',e=>{state.drag=false;activePointer=null;flickStart=null});
+window.addEventListener('error',e=>{const el=document.querySelector('#status');if(el)el.textContent='Ralat permainan: '+e.message;console.error(e.error||e.message)});
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<600?53:42;camera.updateProjectionMatrix()}window.addEventListener('resize',resize);resize();let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000,.05);last=now;anim+=dt;if(mode==='gasing'){gStep(dt);tutorialSync();}if(mode==='congkak'){cgStep(dt);cgUpdatePitCounts();}updateGasingMeters();if(mode==='pemadam')pmStep(dt);if(mode==='congkak'||mode==='pemadam')contextTutorialSync();renderer.render(scene,camera)}updateDifficultyUI();reset();requestAnimationFrame(loop)})();
+</script><script type="module">
+import RAPIER from 'https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.17.3/+esm';
+try { await RAPIER.init(); window.pmRapier = RAPIER; window.dispatchEvent(new Event('pm-rapier-ready')); }
+catch(e) { window.pmRapierError=String(e); window.dispatchEvent(new Event('pm-rapier-error')); }
+</script><dialog id="warga-board-dialog"><div class="warga-board-head"><h2>Papan Markah</h2><div><button type="button" class="icon-btn" id="warga-board-refresh" aria-label="Muat semula">↻</button><button type="button" class="icon-btn" id="warga-board-close" aria-label="Tutup">×</button></div></div><div class="tabs" role="tablist"><button type="button" role="tab" data-tab="daily" aria-selected="true">Hari Ini</button><button type="button" role="tab" data-tab="alltime" aria-selected="false">Keseluruhan</button><button type="button" role="tab" data-tab="campus" aria-selected="false">Kampus</button></div><div class="lb-body" id="warga-board-body" role="tabpanel"></div></dialog>
+  <dialog id="dlg-profile" class="dialog">
+    <form id="profile-form" method="dialog" novalidate>
+      <h2>Profil Pemain</h2>
+      <p class="muted">Digunakan dalam semua permainan dan papan markah.</p>
+      <label class="field">
+        <span>Nama panggilan</span>
+        <input id="pf-name" name="nickname" maxlength="20" required autocomplete="nickname" placeholder="cth. Siti_FSKM">
+      </label>
+      <label class="field">
+        <span>Kategori</span>
+        <span class="select-wrap"><select id="pf-type" name="user_type" required aria-describedby="pf-type-hint"></select></span>
+        <small class="field-hint" id="pf-type-hint" hidden></small>
+      </label>
+      <label class="field">
+        <span>Kampus</span>
+        <span class="select-wrap"><select id="pf-campus" name="campus" required></select></span>
+      </label>
+      <p class="form-error" id="pf-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="pf-cancel">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+</body></html>
