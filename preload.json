@@ -218,6 +218,27 @@
       "shared/leaderboard.js",
       "shared/config.js",
       "shared/reload.js"
+    ],
+    "congak": [
+      "congak/",
+      "shared/base.css",
+      "shared/puzzle-page.css",
+      "congak/css/congak.css",
+      "shared/theme-boot.js",
+      "congak/js/main.js",
+      "congak/js/rules.js",
+      "shared/rng.js",
+      "congak/js/sound.js",
+      "shared/appswarga.js",
+      "shared/arked-link.js",
+      "shared/profile.js",
+      "shared/shared-store.js",
+      "shared/profile-options.js",
+      "shared/select.js",
+      "shared/uuid.js",
+      "shared/leaderboard.js",
+      "shared/config.js",
+      "shared/reload.js"
     ]
   }
 }

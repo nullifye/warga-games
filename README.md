@@ -15,6 +15,7 @@ AppsWarga app (hub repo: `nullifye/arcade`). Static site on GitHub Pages, no bui
 | Congkak (3D, against the AI) | [`congkak/`](congkak/) | https://nullifye.github.io/warga-games/congkak/ |
 | 9-Ball (pool, against the AI or a friend) | [`9balls/`](9balls/) | https://nullifye.github.io/warga-games/9balls/ |
 | Pemadam (3D eraser flicking, against the AI) | [`pemadam/`](pemadam/) | https://nullifye.github.io/warga-games/pemadam/ |
+| Congak Matematik (mental arithmetic on a blackboard) | [`congak/`](congak/) | https://nullifye.github.io/warga-games/congak/ |
 
 The site root redirects to the hub. Each game shows its version at the bottom of its home
 screen (tap it for a fresh reload); bump it when the game changes.
@@ -100,6 +101,7 @@ The hub's `supabase/arked.sql` explains each limit; keep it in step with any sco
 | Congkak | 1,000 | 60 |
 | 9-Ball | 2,000 | 400 |
 | Pemadam | 1,000 | 100 |
+| Congak Matematik | 8,000 | 150 |
 
 ## Teka Kata
 
@@ -351,3 +353,26 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   point is replayed in slow motion up close (**Ulang tayang**, on by default; tap to skip).
   Swipe off your eraser or the arrow keys turn the view (kept between games); ↺ or 0 puts it
   back. Based on PR #3 by Hijaz96.
+
+## Congak Matematik
+
+- Mental arithmetic on a blackboard: a sum at a time, four choices (tap, or 1–4 / A–D).
+  **Cabaran Harian**: the same questions for everyone that day (seeded by the date), one
+  60-second try at Sederhana; leaving early ends the try with the score so far. **Main Bebas**:
+  any level (Mudah: + and −; Sederhana: two digits and tables to 12; Susah: big numbers, all four
+  operations) and mode (**Masa**, 60 s; **Nyawa**, three sticks of chalk, one snaps at each wrong
+  answer, up to 60 questions).
+- The numbers grow with the streak (four tiers per level); the operations come round in turn,
+  shuffled, so the mix stays even; no sum repeats among the last five. Wrong choices are common
+  mistakes: a missed carry or borrow, the answer's digits swapped, off by 10, the wrong
+  operation, one row out in the times table.
+- Points: the level's 10, 15 or 20 a right answer, +50% within 2.5 s, times the combo (×2 from 2
+  in a row, ×3 from 5, ×4 from 8). Each sum shows for at least 0.9 s (written out, then the
+  feedback), which bounds a round to 8,000 points and 150 a second. Rules, questions and the
+  summary are in `congak/js/rules.js` (unit-tested).
+- The board: a wooden frame, a green board with chalk dust and old wiped smudges, the sum written
+  character by character, the duster sweeping it off between questions (leaving a faint ghost),
+  chalk dust bursts, the right answer chalked in, and three sticks of chalk on the ledge that
+  snap in Nyawa. Chalk sounds, synthesised, with a **Bunyi** switch. The result shows accuracy,
+  best combo, average time, accuracy by operation with a practice tip ("× 33%: latih sifir 7 dan
+  8"), and the wrong answers. The chalk is Cabin Sketch, on the board only.

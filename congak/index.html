@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Congak Matematik</title>
+  <meta name="description" content="Congak Matematik: jawab soalan matematik secepat mungkin di papan hitam. Cabaran Harian, mod Masa dan mod Nyawa.">
+  <meta name="theme-color" content="#7b1fa2">
+  <script src="../shared/theme-boot.js"></script>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Lexend for the interface; Cabin Sketch only for the chalk on the board. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&family=Lexend:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="../shared/puzzle-page.css">
+  <link rel="stylesheet" href="css/congak.css">
+  <!-- modulepreload:start (tools/preload.mjs) -->
+  <link rel="modulepreload" href="js/rules.js">
+  <link rel="modulepreload" href="../shared/rng.js">
+  <link rel="modulepreload" href="js/sound.js">
+  <link rel="modulepreload" href="../shared/appswarga.js">
+  <link rel="modulepreload" href="../shared/arked-link.js">
+  <link rel="modulepreload" href="../shared/profile.js">
+  <link rel="modulepreload" href="../shared/shared-store.js">
+  <link rel="modulepreload" href="../shared/profile-options.js">
+  <link rel="modulepreload" href="../shared/select.js">
+  <link rel="modulepreload" href="../shared/uuid.js">
+  <link rel="modulepreload" href="../shared/leaderboard.js">
+  <link rel="modulepreload" href="../shared/config.js">
+  <link rel="modulepreload" href="../shared/reload.js">
+  <!-- modulepreload:end -->
+  <script type="module" src="js/main.js"></script>
+</head>
+<body data-screen="home">
+  <div id="app">
+    <!-- Laman utama -->
+    <section id="screen-home" class="screen screen-home">
+      <header class="home-head">
+        <!-- Only when opened from Arked Warga (html.from-arked): back to the game hub. -->
+        <button type="button" class="icon-btn" id="btn-hub" aria-label="Kembali ke Arked Warga">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="profile-chip" id="profile-chip">
+          <span class="avatar" id="chip-avatar" aria-hidden="true">?</span>
+          <span class="chip-text">
+            <strong id="chip-name">Tetapkan profil</strong>
+            <small id="chip-meta">Nama, kategori &amp; kampus</small>
+          </span>
+        </button>
+        <div class="head-actions">
+          <button type="button" class="icon-btn" id="btn-help" aria-label="Cara bermain">?</button>
+          <!-- Only inside AppsWarga, unless opened from Arked Warga: leaves the webapp. -->
+          <button type="button" class="icon-btn" id="btn-close-app" aria-label="Tutup permainan">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="puzzle-brand">
+        <img src="icon.svg" alt="" width="84" height="84">
+        <h1>Congak Matematik</h1>
+        <p>Kira di kepala, jawab secepat mungkin di papan hitam.</p>
+      </div>
+
+      <div class="ck-cards">
+        <article class="ck-card ck-card-daily">
+          <div class="ck-card-top">
+            <span class="tag tag-gold">Cabaran Harian</span>
+            <span class="ck-card-date" id="daily-date"></span>
+          </div>
+          <p class="ck-card-text" id="daily-status">Soalan yang sama untuk semua pemain hari ini. 60 saat, satu cubaan.</p>
+          <button type="button" class="btn btn-gold" id="btn-daily">Main</button>
+        </article>
+        <article class="ck-card ck-card-free">
+          <div class="ck-card-top"><span class="tag">Main Bebas</span></div>
+          <p class="ck-card-text" id="free-text">Tahap dan mod pilihan anda, seberapa kerap yang anda mahu.</p>
+          <button type="button" class="btn btn-primary" id="btn-free">Mula</button>
+        </article>
+      </div>
+
+      <div class="puzzle-settings" role="group" aria-label="Tetapan Main Bebas">
+        <div class="ck-pick-row">
+          <div class="switch-text">
+            <strong id="level-label">Tahap</strong>
+            <small id="level-hint"></small>
+          </div>
+          <div class="ck-pick" role="group" aria-labelledby="level-label">
+            <button type="button" data-level="mudah" aria-pressed="true">Mudah</button>
+            <button type="button" data-level="sederhana" aria-pressed="false">Sederhana</button>
+            <button type="button" data-level="susah" aria-pressed="false">Susah</button>
+          </div>
+        </div>
+        <div class="ck-pick-row">
+          <div class="switch-text">
+            <strong id="mode-label">Mod</strong>
+            <small id="mode-hint"></small>
+          </div>
+          <div class="ck-pick ck-pick-2" role="group" aria-labelledby="mode-label">
+            <button type="button" data-mode="masa" aria-pressed="true">Masa 60 saat</button>
+            <button type="button" data-mode="nyawa" aria-pressed="false">Nyawa 3 kapur</button>
+          </div>
+        </div>
+        <button type="button" class="switch-row" id="set-sound" role="switch" aria-checked="true">
+          <span class="switch-text"><strong>Bunyi</strong><small id="set-sound-hint">Kapur, jawapan dan pemadam</small></span>
+          <span class="switch" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <dl class="puzzle-home-stats ck-stats">
+        <div><dt>Markah terbaik</dt><dd id="st-best">0</dd></div>
+        <div><dt>Kombo terbaik</dt><dd id="st-combo">0</dd></div>
+        <div><dt>Dimainkan</dt><dd id="st-played">0</dd></div>
+      </dl>
+
+      <button type="button" class="btn btn-ghost btn-wide" id="btn-board">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Papan Markah
+      </button>
+
+      <button type="button" class="app-version" id="btn-version" aria-label="Versi 1.0. Ketik untuk muat semula permainan.">Versi 1.0</button>
+    </section>
+
+    <!-- Permainan: the blackboard -->
+    <section id="screen-game" class="screen screen-game" hidden>
+      <header class="bar">
+        <button type="button" class="icon-btn" id="btn-quit" aria-label="Kembali ke laman utama">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="bar-mid">
+          <span class="bar-title">Congak Matematik</span>
+          <span class="bar-sub" id="game-mode"></span>
+        </div>
+        <button type="button" class="icon-btn" id="btn-game-help" aria-label="Cara bermain">?</button>
+      </header>
+
+      <div class="ck-frame">
+        <div class="ck-board" id="ck-board">
+          <div class="ck-hud">
+            <div class="ck-hud-cell">
+              <small>Skor</small>
+              <b class="ck-chalk-yellow" id="ck-score">0</b>
+            </div>
+            <div class="ck-hud-cell ck-hud-mid">
+              <span class="ck-combo" id="ck-combo" hidden></span>
+              <small id="ck-streak">Betul berturut: 0</small>
+            </div>
+            <div class="ck-hud-cell ck-hud-end">
+              <small id="ck-status-label">Masa</small>
+              <b class="ck-chalk-blue" id="ck-status">60</b>
+            </div>
+          </div>
+
+          <!-- Faint ghosts of sums wiped off earlier, as on a real board. -->
+          <div class="ck-ghosts" id="ck-ghosts" aria-hidden="true"></div>
+          <div class="ck-stage">
+            <p class="ck-feedback" id="ck-feedback" aria-live="polite"></p>
+            <div class="ck-question" id="ck-question" role="heading" aria-level="2"></div>
+          </div>
+          <div class="ck-answers" id="ck-answers" role="group" aria-label="Pilihan jawapan"></div>
+          <!-- The duster sweeping the last sum away. -->
+          <div class="ck-wiper" id="ck-wiper" aria-hidden="true"></div>
+          <canvas class="ck-dust" id="ck-dust" aria-hidden="true"></canvas>
+          <!-- For screen readers: each new sum and its choices, and "10 saat lagi". -->
+          <p class="ck-sr" id="ck-sr" aria-live="polite"></p>
+        </div>
+        <!-- The ledge: three sticks of chalk (your lives in Nyawa) and the duster. -->
+        <div class="ck-ledge" aria-hidden="true">
+          <div class="ck-sticks" id="ck-sticks">
+            <span class="ck-stick white"><i></i><i></i></span>
+            <span class="ck-stick yellow"><i></i><i></i></span>
+            <span class="ck-stick pink"><i></i><i></i></span>
+          </div>
+          <span class="ck-duster"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Keputusan -->
+    <section id="screen-result" class="screen screen-result" hidden>
+      <header class="bar">
+        <button type="button" class="icon-btn" id="res-home" aria-label="Kembali ke laman utama">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </header>
+      <div class="puzzle-result">
+        <img class="res-icon" src="icon.svg" alt="" width="72" height="72">
+        <h2 id="res-title"></h2>
+        <p id="res-detail"></p>
+        <p class="ck-res-level" id="res-level"></p>
+        <div class="score" id="res-score"></div>
+        <dl class="ck-res-stats">
+          <div><dt>Ketepatan</dt><dd id="res-accuracy">0%</dd></div>
+          <div><dt>Kombo terbaik</dt><dd id="res-combo">0</dd></div>
+          <div><dt>Purata masa</dt><dd id="res-avg">0 s</dd></div>
+        </dl>
+        <div class="ck-res-ops" id="res-ops"></div>
+        <p class="ck-res-tip" id="res-tip" hidden></p>
+        <details class="ck-review" id="res-review">
+          <summary id="res-review-title">Semakan jawapan</summary>
+          <ol class="ck-review-list" id="res-review-list"></ol>
+        </details>
+        <p id="res-time"></p>
+        <div class="res-submit" id="res-submit" role="status"></div>
+        <div class="puzzle-actions">
+          <button type="button" class="btn btn-primary" id="res-again">Main Lagi</button>
+          <button type="button" class="btn btn-ghost" id="res-board">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Papan Markah
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Papan markah -->
+    <section id="screen-board" class="screen screen-board" hidden>
+      <header class="bar">
+        <button type="button" class="icon-btn" id="btn-board-back" aria-label="Kembali">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="bar-mid"><span class="bar-title">Papan Markah</span><span class="bar-sub" id="board-sub"></span></div>
+        <button type="button" class="icon-btn" id="btn-board-refresh" aria-label="Muat semula">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </header>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="daily" aria-selected="true">Hari Ini</button>
+        <button type="button" role="tab" data-tab="alltime" aria-selected="false">Keseluruhan</button>
+        <button type="button" role="tab" data-tab="campus" aria-selected="false">Kampus</button>
+      </div>
+      <div class="lb-body" id="lb-body" role="tabpanel"></div>
+    </section>
+  </div>
+
+  <!-- Profil -->
+  <dialog id="dlg-profile" class="dialog">
+    <form id="profile-form" method="dialog" novalidate>
+      <h2>Profil Pemain</h2>
+      <p class="muted">Digunakan dalam semua permainan dan papan markah.</p>
+      <label class="field">
+        <span>Nama panggilan</span>
+        <input id="pf-name" name="nickname" maxlength="20" required autocomplete="nickname" placeholder="cth. Siti_FSKM">
+      </label>
+      <label class="field">
+        <span>Kategori</span>
+        <span class="select-wrap"><select id="pf-type" name="user_type" required aria-describedby="pf-type-hint"></select></span>
+        <small class="field-hint" id="pf-type-hint" hidden></small>
+      </label>
+      <label class="field">
+        <span>Kampus</span>
+        <span class="select-wrap"><select id="pf-campus" name="campus" required></select></span>
+      </label>
+      <p class="form-error" id="pf-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="pf-cancel">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Leaving Cabaran Harian: there is one try a day, so ask first. -->
+  <dialog id="dlg-leave" class="dialog" aria-labelledby="leave-title">
+    <h2 id="leave-title">Tamatkan Cabaran Harian?</h2>
+    <p class="muted">Anda hanya ada satu cubaan hari ini. Jika keluar sekarang, cubaan ini tamat dengan markah setakat ini.</p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="leave-go">Keluar</button>
+      <button type="button" class="btn btn-primary" id="leave-stay">Teruskan</button>
+    </div>
+  </dialog>
+
+  <!-- Cara bermain -->
+  <dialog id="dlg-help" class="dialog">
+    <h2>Cara Bermain</h2>
+    <ol class="help-list">
+      <li>Kira jawapan di kepala dan ketik pilihan yang betul (atau tekan <b>1–4</b> / <b>A–D</b>).</li>
+      <li>Betul berturut-turut: <b>kombo</b> ×2, ×3 hingga ×4. Jawab dalam 2.5 saat untuk bonus.</li>
+      <li>Lagi panjang kombo, lagi besar nombornya.</li>
+      <li><b>Masa</b>: seberapa banyak dalam 60 saat. <b>Nyawa</b>: setiap salah mematahkan sebatang kapur; tiga patah, tamat.</li>
+      <li><b>Cabaran Harian</b>: soalan yang sama untuk semua, satu cubaan sehari. Keluar di tengah jalan menamatkan cubaan.</li>
+    </ol>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-primary" id="help-close">Faham!</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
