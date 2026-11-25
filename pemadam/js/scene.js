@@ -419,7 +419,7 @@ export function createScene(stage, opts) {
   const scene = new THREE.Scene();
   scene.environment = environment(renderer);
   scene.environmentIntensity = 0.7;
-  scene.fog = new THREE.Fog(0x24201c, 18, 40); // the floor fades into the page's dark round the desk
+  scene.fog = new THREE.Fog(0x24201c, 18, 40); // the floor fades into the page's dark round the desk (distances set by fitOverview)
   const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 120);
   scene.add(new THREE.HemisphereLight(0xfff4e2, 0x4a3a2c, 0.8));
   // A window's light from the upper left: soft shadows (a wide blur on a fine map).
@@ -535,6 +535,11 @@ export function createScene(stage, opts) {
     fit.look.copy(look);
     fit.dist = dist;
     fit.pos.copy(look).addScaledVector(dir(), dist);
+    // The fog only fades the floor round the desk, never the desk: it starts past the desk's far
+    // edge. (Fixed at 18 it dimmed the whole desk on a phone, where the camera sits ~23 back to
+    // fit the desk across a narrow screen, most of all seen from the top.)
+    scene.fog.near = dist + 5;
+    scene.fog.far = dist + 27;
   }
   const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
   const wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();

@@ -444,10 +444,6 @@ async function endFlight(s, out) {
     world.reset();
     scene.setPoses(world.poses());
   }
-  if (!m.over && out.kind !== 'rest') {
-    const name = m.turn === PLAYER ? 'Anda' : 'AI';
-    toast(out.kind === 'point' ? `${name} jentik lagi.` : `Giliran ${name === 'Anda' ? 'anda' : 'AI'}.`);
-  }
   nextTurn();
 }
 
