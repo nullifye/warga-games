@@ -1,0 +1,365 @@
+/* 9-Ball. Builds on ../shared/base.css and ../shared/puzzle-page.css (home, settings, result),
+   so it looks like the other games; this file adds the mode and level pickers, the players bar,
+   the table with its power bar, and the fine-aim row. Nothing scrolls during play. */
+
+/* ---------- home ---------- */
+.pl-stats { grid-template-columns: repeat(3, 1fr); }
+.pl-set-row { padding: 12px 14px; display: grid; gap: 10px; border-bottom: 1px solid var(--track); }
+.pl-set-row[hidden] { display: none; }
+.pl-seg { display: grid; gap: 4px; padding: 4px; border-radius: 14px; background: var(--track); }
+.pl-seg.two { grid-template-columns: repeat(2, 1fr); }
+.pl-seg.three { grid-template-columns: repeat(3, 1fr); }
+.pl-seg button {
+  border: 0;
+  border-radius: 10px;
+  min-height: 40px;
+  padding: 6px 2px;
+  background: none;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: background 0.2s, color 0.2s;
+}
+.pl-seg button[aria-pressed='true'] { background: var(--key); color: var(--primary); box-shadow: var(--shadow); }
+
+/* ---------- game ---------- */
+/* During play the screen is dark slate round the table, as in a pool hall, whatever the
+   theme: the colour tokens are redefined for the game screen, and the page behind it (the
+   whole window, beyond the 520px column) goes dark too. The theme's primary colour stays for
+   highlights. */
+body[data-screen='game'] { background: radial-gradient(circle at 50% 45%, #1e293b 0%, #070b14 75%) fixed; }
+.screen-game {
+  --bg: #0b1220;
+  --surface: rgba(30, 41, 59, 0.88);
+  --surface-2: #1e293b;
+  --ink: #f1f5f9;
+  --ink-2: #94a3b8;
+  --muted: #64748b;
+  --line: rgba(148, 163, 184, 0.28);
+  --track: #1e293b;
+  --key: #334155;
+  --key-off: #334155;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  /* The theme colour, lightened so it stands out on the dark: the turn outline, buttons. */
+  --accent: color-mix(in srgb, var(--primary) 55%, #fff);
+  color: var(--ink);
+}
+.screen-game .btn-ghost { color: var(--accent); }
+.screen-game .icon-btn { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line), var(--shadow); }
+.screen-game .pl-player { border: 1px solid var(--line); }
+.screen-game { position: relative; height: 100dvh; min-height: 0; overflow: hidden; gap: 8px; }
+/* The cue's own layer over the whole screen: it isn't clipped to the table, passes under the
+   bar, the players and the aim row, and never takes a tap. */
+.pl-cue-layer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+.screen-game .bar, .pl-hud, .pl-strip, .pl-aim { position: relative; z-index: 2; }
+.screen-game,
+.screen-game * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+/* Players, side by side: [• Anda      2] [1      AI •]. The one to play is highlighted; the
+   number is how many balls each has potted, at the card's outer edge. */
+.pl-hud { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 8px; }
+.pl-player {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  opacity: 0.6;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+.pl-player.active { opacity: 1; box-shadow: inset 0 0 0 2px var(--accent, var(--primary)), var(--shadow); }
+.pl-name { flex: 1; min-width: 0; font-weight: 700; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-player.right .pl-name { text-align: right; }
+.pl-pots { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center; font-size: 0.78rem; background: var(--surface-2); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.pl-turn { width: 9px; height: 9px; border-radius: 50%; background: var(--key-off); flex: none; }
+.pl-player.active .pl-turn { background: var(--accent, var(--primary)); animation: pl-pulse 1.2s ease-in-out infinite; }
+@keyframes pl-pulse { 50% { opacity: 0.35; } }
+
+/* Ball badges in the balls' own colours, as little 3D balls: a white number circle, a sharp
+   highlight top left, shading from a lit centre to a darker rim, and a drop shadow. The 9 is
+   white with a yellow stripe under the same shading. Layers, top first. */
+.pl-dot-ball {
+  --ball: #facc15;
+  --shine: radial-gradient(circle closest-side at 34% 28%, rgba(255, 255, 255, 0.95) 0 14%, rgba(255, 255, 255, 0) 42%);
+  --disc: radial-gradient(circle closest-side, #fff 0 46%, rgba(255, 255, 255, 0) 49%);
+  --shade: radial-gradient(circle farthest-side at 38% 32%, rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.42) 100%);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 800;
+  line-height: 1;
+  color: #0f172a;
+  background: var(--shine), var(--disc), var(--shade),
+    radial-gradient(circle farthest-side at 38% 32%, color-mix(in srgb, var(--ball) 72%, #fff), var(--ball) 55%, color-mix(in srgb, var(--ball) 70%, #000));
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+}
+.pl-dot-ball.striped {
+  background: var(--shine), var(--disc), var(--shade),
+    linear-gradient(#f8fafc 0 22%, var(--ball) 22% 78%, #f8fafc 78%);
+}
+.pl-strip { display: flex; justify-content: center; gap: 5px; }
+.pl-dot-ball { width: 22px; height: 22px; font-size: 0.56rem; transition: opacity 0.2s, transform 0.2s; }
+.pl-dot-ball.gone { opacity: 0.2; transform: scale(0.8); }
+.pl-dot-ball.next { transform: scale(1.2); box-shadow: 0 0 0 2px var(--gold), 0 2px 3px rgba(0, 0, 0, 0.35); }
+
+/* The table, sized by js/main.js to keep its shape. */
+.pl-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.pl-table { position: relative; flex: none; border-radius: 22px; overflow: hidden; background: #2b170a; box-shadow: 0 14px 34px rgba(20, 8, 40, 0.35), 0 0 0 2px rgba(255, 255, 255, 0.08); }
+#pl-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+
+.pl-toast {
+  position: absolute;
+  z-index: 3; /* above the cue's layer */
+  top: 12px;
+  left: 50%;
+  /* As wide as its text, up to 92% of the table: anchored at the middle, it would otherwise get
+     only half the table's width and wrap into a tall, narrow box. */
+  width: max-content;
+  max-width: 92%;
+  margin: 0;
+  padding: 9px 18px;
+  border-radius: 18px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  font-weight: 700;
+  text-align: center;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.92);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -8px);
+  transition: opacity 0.25s, transform 0.25s;
+}
+.pl-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.pl-toast.good { background: rgba(5, 150, 105, 0.95); }
+.pl-toast.foul { background: rgba(225, 29, 72, 0.95); }
+
+/* The table draws its own rounded corners; its box shows nothing behind them. */
+.pl-table { background: transparent; }
+
+/* Push-out: the toggle on the shot after the break, and the opponent's choice afterwards. */
+/* (The toggle sits in a box like the ball-in-hand prompt: a label over a full-size button.) */
+.pl-push { min-width: 170px; }
+/* Styled like Sahkan; when chosen it reads "✓ Tolak keluar" with a white ring round it. */
+.pl-push[aria-pressed='true'] { box-shadow: 0 0 0 3px #fff, 0 4px 0 color-mix(in srgb, var(--primary) 60%, #000); }
+.pl-push-choice {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 86%;
+  padding: 16px;
+  border-radius: 18px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+  color: #f1f5f9;
+  background: rgba(15, 23, 42, 0.94);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.pl-push-choice[hidden] { display: none; }
+.pl-push-choice p { margin: 0; font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
+.pl-push-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pl-push-actions .btn { min-height: 42px; padding: 8px 10px; }
+.pl-bih { position: absolute; z-index: 3; left: 50%; bottom: 14px; transform: translateX(-50%); width: 90%; display: grid; justify-items: center; gap: 8px; }
+.pl-bih[hidden] { display: none; }
+.pl-bih span { padding: 5px 12px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; color: #fcd34d; background: rgba(2, 6, 23, 0.9); text-align: center; }
+.pl-bih .btn { min-height: 42px; padding: 8px 22px; }
+
+/* The floating power gauge, beside the finger while it pulls: a slim glass panel with softly
+   rounded square corners and quarter marks; the fill grows down from the top, green to red,
+   glowing as it nears full. The percentage sits in a badge underneath. */
+.pl-gauge {
+  position: absolute;
+  z-index: 3;
+  width: 48px;
+  padding: 7px 0 7px;
+  border-radius: 12px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.92));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), inset 0 0 0 1.5px rgba(255, 255, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  animation: pl-gauge-in 0.16s ease-out;
+}
+.pl-gauge[hidden] { display: none; }
+.pl-gauge-track {
+  position: relative;
+  width: 18px;
+  height: 128px;
+  border-radius: 6px;
+  overflow: hidden;
+  background:
+    linear-gradient(transparent calc(25% - 1px), rgba(255, 255, 255, 0.22) calc(25% - 1px) 25%, transparent 25%
+      calc(50% - 1px), rgba(255, 255, 255, 0.22) calc(50% - 1px) 50%, transparent 50% calc(75% - 1px),
+      rgba(255, 255, 255, 0.22) calc(75% - 1px) 75%, transparent 75%),
+    rgba(255, 255, 255, 0.1);
+  /* --p (0–1, the power, set on the gauge) makes it glow harder near full. */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45), 0 0 calc(2px + 12px * var(--p, 0)) rgba(249, 115, 22, calc(0.1 + 0.6 * var(--p, 0)));
+}
+.pl-gauge-fill {
+  /* Always full size; js/main.js reveals the top part with a clip (cheap to redraw, no layout),
+     so it follows the finger smoothly with the colours fixed along the track. */
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #34d399, #facc15 55%, #f97316 78%, #ef4444);
+  clip-path: inset(0 0 100% 0 round 6px);
+  will-change: clip-path;
+}
+.pl-gauge-pct {
+  min-width: 34px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #0f172a;
+  background: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes pl-gauge-in { from { opacity: 0; scale: 0.85; } }
+
+/* Fine aim: hold to turn slowly. */
+.pl-aim { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.pl-aim-btn { min-height: 44px; padding: 8px 10px; font-size: 0.85rem; gap: 6px; touch-action: none; }
+.pl-aim-btn:disabled { opacity: 0.45; }
+.pl-aim-btn svg { width: 18px; height: 18px; }
+/* Spin: the small cue ball in the bottom row, its red dot the strike point. */
+.pl-spin-btn { display: grid; justify-items: center; gap: 2px; padding: 2px 6px; border: 0; background: none; color: var(--ink-2); font: inherit; }
+.pl-spin-btn:disabled { opacity: 0.4; }
+.pl-spin-btn.showing { opacity: 1; } /* the AI's strike point, shown while it plays */
+.pl-spin-btn small { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.pl-spin-btn.set small { color: var(--accent, var(--primary)); }
+.pl-spin-mini {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff 0 12%, #f1f5f9 30%, #cbd5e1 75%, #94a3b8);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+}
+.pl-spin-btn.set .pl-spin-mini { box-shadow: 0 0 0 2px var(--accent, var(--primary)), 0 2px 5px rgba(0, 0, 0, 0.45); }
+.pl-spin-mini i,
+.pl-spin-dot { position: absolute; left: 50%; top: 50%; border-radius: 50%; background: #e11d48; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9); }
+.pl-spin-mini i { width: 8px; height: 8px; }
+
+/* The spin panel: a big cue ball over the bottom of the screen. */
+.pl-spin-panel {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px);
+  transform: translateX(-50%);
+  width: min(300px, calc(100% - 32px));
+  padding: 16px 16px 14px;
+  border-radius: 20px;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.94);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  animation: pl-gauge-in 0.16s ease-out;
+}
+.pl-spin-panel[hidden] { display: none; }
+.pl-spin-wrap { position: relative; padding: 18px 34px; }
+.pl-spin-label { position: absolute; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #94a3b8; }
+.pl-spin-label.top { top: 0; left: 50%; transform: translateX(-50%); }
+.pl-spin-label.bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+.pl-spin-label.left { left: 0; top: 50%; transform: translateY(-50%); }
+.pl-spin-label.right { right: 0; top: 50%; transform: translateY(-50%); }
+.pl-spin-ball {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  touch-action: none;
+  cursor: crosshair;
+  background:
+    linear-gradient(transparent calc(50% - 0.5px), rgba(15, 23, 42, 0.18) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(90deg, transparent calc(50% - 0.5px), rgba(15, 23, 42, 0.18) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    radial-gradient(circle at 34% 28%, #fff 0 10%, #f1f5f9 30%, #cbd5e1 78%, #94a3b8);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5), inset 0 -6px 12px rgba(0, 0, 0, 0.18);
+}
+.pl-spin-ball:focus-visible { outline: 3px solid var(--accent, #c084fc); outline-offset: 4px; }
+/* How far off centre a cue can strike without miscuing. */
+.pl-spin-reach { position: absolute; inset: 20%; border-radius: 50%; border: 1.5px dashed rgba(15, 23, 42, 0.35); }
+.pl-spin-dot { width: 20px; height: 20px; transition: left 0.05s, top 0.05s; }
+.pl-spin-text { margin: 0; min-height: 2.6em; font-size: 0.78rem; font-weight: 600; text-align: center; color: #cbd5e1; }
+.pl-spin-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.pl-spin-actions .btn { min-height: 42px; padding: 8px 10px; }
+
+/* ---------- result ---------- */
+.puzzle-result .pl-res-level { margin-top: -6px; font-size: 0.9rem; font-weight: 600; }
+.puzzle-result .score[hidden] { display: none; }
+
+/* ---------- coin toss: who breaks ---------- */
+.pl-coin-dlg { text-align: center; width: min(340px, calc(100vw - 32px)); overflow: hidden; /* never scrolls, so it never changes size mid-toss */ }
+.pl-coin-dlg h2 { margin: 0; font-size: 1.7rem; font-weight: 800; }
+.pl-coin-sub { margin: 4px 0 0; min-height: 2.8em; color: var(--ink-2); font-weight: 500; } /* room for two lines, whatever it says */
+/* The scene: the coin lies flat, seen at an angle; tall enough for the whole toss, so nothing
+   moves outside it. */
+.pl-coin-stage { position: relative; height: 250px; margin-top: 4px; perspective: 520px; perspective-origin: 50% 20%; }
+.pl-coin-shadow { position: absolute; left: 50%; bottom: 40px; width: 104px; height: 40px; margin-left: -52px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)); }
+/* The coin: 104px across, ~6px thick. js/main.js moves and turns it (rotateX: end over end). */
+.pl-coin {
+  --lit: 1;
+  --sheen: 50%;
+  position: absolute;
+  left: 50%;
+  bottom: 10px; /* resting in the middle of the felt */
+  width: 104px;
+  height: 104px;
+  margin-left: -52px;
+  transform-style: preserve-3d;
+  transform: rotateX(62deg);
+  transform-origin: 50% 50%;
+}
+.pl-coin-face { position: absolute; inset: 0; border-radius: 50%; }
+.pl-coin-face {
+  backface-visibility: hidden;
+  filter: brightness(var(--lit));
+  background:
+    /* a band of light that slides top to bottom as it flips (end over end, so the reflection
+       moves up and down; nothing moves sideways across the face) */
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 62%) 0 var(--sheen) / 100% 300% no-repeat,
+    /* the raised rim */
+    radial-gradient(circle, rgba(0, 0, 0, 0) 0 80%, #7c4a0c 81%, #f6d27a 83%, #e7b041 88%, #a86a14 94%, #6b3d08 100%),
+    /* brushed brass */
+    radial-gradient(circle at 36% 30%, #fff3c4 0, #f1c75b 28%, #d89a24 62%, #9c6311 100%);
+  box-shadow: inset 0 0 0 1px rgba(80, 40, 0, 0.6);
+}
+.pl-coin-face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pl-coin-face.heads { transform: translateZ(3px); }
+.pl-coin-face.tails { transform: rotateX(180deg) translateZ(3px); }
+/* The ribbed edge: strips standing round the rim (6px tall: the coin's thickness), ridged. */
+.pl-coin-rim { position: absolute; inset: 0; transform-style: preserve-3d; }
+.pl-coin-rim i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9.4px; /* the rim's length ÷ 36, with a hair of overlap */
+  height: 6px;
+  margin: -3px 0 0 -4.7px;
+  background: repeating-linear-gradient(90deg, #e2b04a 0 1.6px, #8a5a12 1.6px 3.1px);
+  filter: brightness(calc(0.5 + 0.5 * var(--lit)));
+}
+
+.pl-coin-result { min-height: 40px; margin: 6px 0 0; display: grid; place-items: center; }
+.pl-coin-result span { padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; animation: rise 0.3s both ease-out; }
+.pl-coin-result .win { background: color-mix(in srgb, var(--ok, #2e9e5b) 18%, var(--surface)); color: var(--ok, #2e9e5b); }
+.pl-coin-result .lose { background: color-mix(in srgb, #d0452f 14%, var(--surface)); color: #c0412c; }
+.pl-coin-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-player.active .pl-turn, .pl-gauge, .pl-coin-result span { animation: none; }
+}

@@ -175,6 +175,28 @@
       "shared/leaderboard.js",
       "shared/config.js",
       "shared/reload.js"
+    ],
+    "9balls": [
+      "9balls/",
+      "shared/base.css",
+      "shared/puzzle-page.css",
+      "9balls/css/pool.css",
+      "shared/theme-boot.js",
+      "9balls/js/main.js",
+      "9balls/js/rules.js",
+      "9balls/js/render.js",
+      "9balls/js/sound.js",
+      "shared/appswarga.js",
+      "shared/arked-link.js",
+      "shared/profile.js",
+      "shared/shared-store.js",
+      "shared/profile-options.js",
+      "shared/select.js",
+      "shared/uuid.js",
+      "shared/rng.js",
+      "shared/leaderboard.js",
+      "shared/config.js",
+      "shared/reload.js"
     ]
   }
 }

@@ -13,7 +13,7 @@ AppsWarga app (hub repo: `nullifye/arcade`). Static site on GitHub Pages, no bui
 | Susun Blok (block puzzle) | [`blok/`](blok/) | https://nullifye.github.io/warga-games/blok/ |
 | Memori (memory pairs) | [`memori/`](memori/) | https://nullifye.github.io/warga-games/memori/ |
 | Congkak (3D, against the AI) | [`congkak/`](congkak/) | https://nullifye.github.io/warga-games/congkak/ |
-| 9-Ball Pool (vs AI or another player) | [`9balls/`](9balls/) | https://nullifye.github.io/warga-games/9balls/ |
+| 9-Ball (pool, against the AI or a friend) | [`9balls/`](9balls/) | https://nullifye.github.io/warga-games/9balls/ |
 
 The site root redirects to the hub. Each game shows its version at the bottom of its home
 screen (tap it for a fresh reload); bump it when the game changes.
@@ -97,6 +97,7 @@ The hub's `supabase/arked.sql` explains each limit; keep it in step with any sco
 | Susun Blok | 100,000 | 200 |
 | Memori | 100,000 | 500 |
 | Congkak | 1,000 | 60 |
+| 9-Ball | 2,000 | 400 |
 
 ## Teka Kata
 
@@ -271,3 +272,46 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   off the board; the marbles in hand show under the status line. Swipe or the arrow keys turn
   the view (kept between games); ↺ or 0 puts it back. Settings: AI level, camera follow, fast
   sowing, sound.
+
+## 9-Ball
+
+- Pool on an upright table in a real 7 ft (bar) table's proportions (a 2:1 playing area, balls
+  5.8% of its width, a 58 in cue; pockets a touch generous for a phone): hit the lowest-numbered ball first; pot the 9 legally to win (on
+  the break too: a golden break). A legal pot keeps the turn. Fouls (cue ball potted, no
+  contact, wrong ball first, or no pot and no cushion after contact) give the other player the
+  cue ball in hand, placed anywhere; a 9 potted on a foul goes back on the spot. The shot after
+  the break may be a **push-out** (Tolak keluar): the cue ball may go anywhere, only a scratch is
+  a foul, nothing potted counts (a 9 is re-spotted), and the opponent then plays from there or
+  hands it back. **Three fouls in a row** by one player lose the rack (with a warning after two).
+- Against the AI (Mudah, Sederhana, Susah: more accurate aim, and Susah plays its best few shots
+  out in the physics first, with a centre, follow or draw strike, keeping the one that leaves the
+  cue ball best placed for the next ball; Sederhana sometimes adds a little follow or draw; the
+  AI's strike point shows on the Putaran button while it plays; Sederhana and Susah place the
+  cue ball well with ball in hand, and play safe when no pot is likely (Sederhana: when its pot
+  is blocked; Susah: when none of its tries pots): a legal shot that leaves the opponent the
+  worst shot (`planSafety`). They also push out after the break rather than play a blocked shot,
+  and hand back a push-out that leaves them nothing (`planPushOut`, `acceptPush`)), or
+  two players taking turns on one phone. Only rounds against the AI are recorded: 100 a ball
+  the player pots, plus 200, 500 or 900 for a win by level.
+- Drag on the table to aim (the guide shows the ghost ball, the target's path, and red for the
+  wrong ball), or tap where to aim; hold Kiri/Kanan to fine-tune. To shoot, press and hold on
+  the table until a power gauge appears beside the finger, pull down (the cue draws back with
+  it) and let go; back up to 0% cancels. The
+  **Laluan lanjutan** setting extends the guide: the cue ball's and the struck ball's paths to
+  their first cushion bounce (a pocket the struck ball heads for ringed in green), and where the
+  cue ball glances off (`tracePath` in rules.js). **Putaran** (the small cue ball at the bottom)
+  sets where the cue strikes: high to follow through, low to draw back, to a side for english
+  that turns the rebound off a cushion (and squirts the ball very slightly); it goes back to the
+  centre after each shot. Keyboard:
+  ← → aim (Shift for fine), ↓ ↑ power, Space or Enter to shoot.
+- The physics runs at a fixed 60 ticks a second, so shots play out the same on 60 Hz and 120 Hz
+  screens, and a ball can't slip off the table at a pocket's jaw. It follows a real table: a
+  struck ball slides, then rolls at 5/7 of its speed and slows steadily; balls trade speed but
+  keep their spin, so a sliding cue ball stops on a full hit (stun) and a rolling one follows
+  through; cushions return 80% across, grip a little along, and briefly check the spin. The
+  drawn balls turn with their actual spin (a sliding ball doesn't roll). A potted ball slides
+  into the pocket, shrinking and darkening as it sinks. For battery life the table is drawn once
+  into an offscreen canvas and copied each frame, and each ball's image is only redrawn while it
+  turns. The game screen is
+  dark slate round the table, whatever the theme. Rules, physics and AI are in
+  `9balls/js/rules.js` (unit-tested); based on PR #4 by mzulhelmi87.

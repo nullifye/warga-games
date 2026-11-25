@@ -1,1563 +1,326 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>9-Ball Pool Pro - Edisi Telefon (Menegak)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      touch-action: none;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100dvh;
-      overflow: hidden;
-      font-family: 'Outfit', sans-serif;
-      background: radial-gradient(circle at center, #1e293b 0%, #070b14 100%);
-      color: #f8fafc;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    /* Gaya Butang Permainan */
-    .btn-pool {
-      background: linear-gradient(180deg, #10b981 0%, #059669 100%);
-      border: 1px solid #34d399;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      transition: transform 0.12s ease, filter 0.12s ease;
-    }
-    .btn-pool:active {
-      transform: scale(0.96);
-    }
-
-    .btn-glass {
-      background: rgba(30, 41, 59, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-      transition: transform 0.1s ease, background 0.15s ease;
-    }
-    .btn-glass:active {
-      transform: scale(0.93);
-      background: rgba(51, 65, 85, 0.95);
-    }
-
-    .btn-active-mode {
-      background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
-      border: 1px solid #fbbf24;
-      color: #0f172a;
-      font-weight: 800;
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
-    }
-
-    /* Bekas Kanvas Menegak Responsif */
-    #play-area {
-      flex: 1 1 auto;
-      width: 100%;
-      max-width: 520px;
-      min-height: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 4px 8px;
-    }
-
-    #table-container {
-      position: relative;
-      height: 100%;
-      aspect-ratio: 1 / 1.92;
-      max-width: calc(100% - 54px);
-      border-radius: 24px;
-      box-shadow:
-        0 18px 45px rgba(0, 0, 0, 0.8),
-        0 0 0 2px rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-      background: #2b170a;
-    }
-
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      cursor: crosshair;
-    }
-
-    /* Bar Tarik Kuasa Menegak (Sebelah Kanan untuk Ibu Jari) */
-    #power-slider-wrap {
-      width: 44px;
-      height: 78%;
-      max-height: 420px;
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.92) 100%);
-      border: 1.5px solid rgba(148, 163, 184, 0.3);
-      border-radius: 22px;
-      padding: 6px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), inset 0 2px 6px rgba(0, 0, 0, 0.5);
-      position: relative;
-    }
-
-    #power-track {
-      position: relative;
-      width: 100%;
-      flex: 1;
-      border-radius: 16px;
-      background: rgba(2, 6, 23, 0.65);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-    }
-
-    #power-fill {
-      width: 100%;
-      height: 0%;
-      background: linear-gradient(180deg, #10b981 0%, #facc15 55%, #ef4444 100%);
-      border-radius: 14px;
-      transition: height 0.04s linear;
-    }
-
-    #power-knob {
-      position: absolute;
-      left: 50%;
-      top: 6px;
-      transform: translateX(-50%);
-      width: 32px;
-      height: 36px;
-      border-radius: 12px;
-      background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
-      border: 2px solid #0f172a;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      pointer-events: none;
-    }
-
-    #power-knob span {
-      display: block;
-      width: 14px;
-      height: 2px;
-      background: #475569;
-      border-radius: 2px;
-    }
-
-    /* Animasi Notifikasi Toast */
-    @keyframes popSlide {
-      0% { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
-      14% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-      86% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, -6px) scale(0.98); }
-    }
-
-    .toast-anim {
-      animation: popSlide 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>9-Ball</title>
+  <meta name="description" content="Biliar 9-Ball di telefon: masukkan bola 9 dengan sah untuk menang. Lawan AI atau rakan.">
+  <meta name="theme-color" content="#7b1fa2">
+  <script src="../shared/theme-boot.js"></script>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="../shared/puzzle-page.css">
+  <link rel="stylesheet" href="css/pool.css">
+  <!-- modulepreload:start (tools/preload.mjs) -->
+  <link rel="modulepreload" href="js/rules.js">
+  <link rel="modulepreload" href="js/render.js">
+  <link rel="modulepreload" href="js/sound.js">
+  <link rel="modulepreload" href="../shared/appswarga.js">
+  <link rel="modulepreload" href="../shared/arked-link.js">
+  <link rel="modulepreload" href="../shared/profile.js">
+  <link rel="modulepreload" href="../shared/shared-store.js">
+  <link rel="modulepreload" href="../shared/profile-options.js">
+  <link rel="modulepreload" href="../shared/select.js">
+  <link rel="modulepreload" href="../shared/uuid.js">
+  <link rel="modulepreload" href="../shared/rng.js">
+  <link rel="modulepreload" href="../shared/leaderboard.js">
+  <link rel="modulepreload" href="../shared/config.js">
+  <link rel="modulepreload" href="../shared/reload.js">
+  <!-- modulepreload:end -->
+  <script type="module" src="js/main.js"></script>
 </head>
-<body>
-
-  <!-- 1. BAR HUD ATAS (PADAT UNTUK TELEFON) -->
-  <header class="w-full max-w-[520px] px-2.5 pt-2 pb-1 flex flex-col gap-1.5 z-10 shrink-0">
-    <!-- Baris 1: Skor Pemain & Butang Kawalan Pantas -->
-    <div class="flex items-center justify-between gap-1.5 bg-slate-900/90 backdrop-blur-md border border-slate-700/70 rounded-2xl px-2.5 py-1.5 shadow-lg">
-      <!-- Pemain 1 -->
-      <div id="p1-card" class="flex items-center gap-1.5 px-2 py-1 rounded-xl border bg-emerald-500/15 border-emerald-400 transition-all">
-        <span id="p1-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        <div class="leading-tight">
-          <div class="text-[10px] text-slate-400 font-semibold uppercase">Anda</div>
-          <div class="text-xs font-extrabold text-white">P1 <span id="p1-score" class="text-emerald-300 ml-0.5">0</span></div>
-        </div>
-      </div>
-
-      <!-- Sasaran Bola Terkini -->
-      <div class="flex items-center gap-1.5 bg-slate-800/90 px-2.5 py-1 rounded-xl border border-slate-700">
-        <span class="text-[11px] font-bold text-slate-300">Sasaran:</span>
-        <div id="target-ball-badge" class="w-6 h-6 rounded-full flex items-center justify-center font-black text-xs text-slate-950 shadow border border-white/50 bg-yellow-400">
-          1
-        </div>
-      </div>
-
-      <!-- Pemain 2 / AI -->
-      <div id="p2-card" class="flex items-center gap-1.5 px-2 py-1 rounded-xl border border-slate-700/60 bg-slate-800/40 opacity-65 transition-all">
-        <div class="leading-tight text-right">
-          <div id="p2-label" class="text-[10px] text-slate-400 font-semibold uppercase">Komputer</div>
-          <div class="text-xs font-extrabold text-white"><span id="p2-score" class="text-amber-300 mr-0.5">0</span> <span id="p2-name">AI</span></div>
-        </div>
-        <span id="p2-dot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
-      </div>
-    </div>
-
-    <!-- Baris 2: Jalur Bola 1-9 & Butang Mod/Bunyi/Reset -->
-    <div class="flex items-center justify-between gap-1.5 px-1">
-      <!-- Baki Bola 1 hingga 9 -->
-      <div id="balls-strip" class="flex items-center gap-1 bg-slate-900/80 px-2 py-1 rounded-xl border border-slate-800">
-        <!-- Dijana secara dinamik oleh JS -->
-      </div>
-
-      <!-- Butang Mod, Bunyi & Semula -->
-      <div class="flex items-center gap-1">
-        <button id="mode-toggle-btn" class="btn-active-mode px-2 py-1 rounded-lg text-[11px] cursor-pointer">
-          🤖 vs AI
+<body data-screen="home">
+  <div id="app">
+    <!-- Laman utama -->
+    <section id="screen-home" class="screen screen-home">
+      <header class="home-head">
+        <!-- Only when opened from Arked Warga (html.from-arked): back to the game hub. -->
+        <button type="button" class="icon-btn" id="btn-hub" aria-label="Kembali ke Arked Warga">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button id="sound-btn" class="btn-glass w-7 h-7 rounded-lg flex items-center justify-center text-xs cursor-pointer" title="Bunyi">
-          <span id="sound-icon">🔊</span>
+        <button type="button" class="profile-chip" id="profile-chip">
+          <span class="avatar" id="chip-avatar" aria-hidden="true">?</span>
+          <span class="chip-text">
+            <strong id="chip-name">Tetapkan profil</strong>
+            <small id="chip-meta">Nama, kategori &amp; kampus</small>
+          </span>
         </button>
-        <button id="restart-btn" class="btn-glass w-7 h-7 rounded-lg flex items-center justify-center text-xs text-amber-300 cursor-pointer" title="Mula Semula">
-          🔄
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- 2. KAWASAN PERMAINAN UTAMA (MEJA MENEGAK + SLIDER KUASA) -->
-  <main id="play-area">
-    <!-- Bekas Meja Biliar -->
-    <div id="table-container">
-      <canvas id="poolCanvas"></canvas>
-
-      <!-- Notifikasi Status di atas meja -->
-      <div id="toast-container" class="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[92%] flex flex-col items-center"></div>
-
-      <!-- Butang Sahkan Kedudukan Ball-in-Hand -->
-      <div id="bih-controls" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 w-[90%]">
-        <div class="bg-slate-950/90 text-amber-300 border border-amber-400/50 text-[11px] font-bold px-3 py-1 rounded-full shadow-lg text-center">
-          ✋ Seret Bola Putih di atas meja
+        <div class="head-actions">
+          <button type="button" class="icon-btn" id="btn-help" aria-label="Cara bermain">?</button>
+          <!-- Only inside AppsWarga, unless opened from Arked Warga: leaves the webapp. -->
+          <button type="button" class="icon-btn" id="btn-close-app" aria-label="Tutup permainan">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+          </button>
         </div>
-        <button id="confirm-bih-btn" class="btn-pool px-5 py-2 rounded-full text-xs font-extrabold text-white tracking-wide shadow-xl cursor-pointer">
-          ✅ Sahkan Kedudukan
-        </button>
+      </header>
+
+      <div class="puzzle-brand">
+        <img src="icon.svg" alt="" width="84" height="84">
+        <h1>9-Ball</h1>
+        <p>Pukul bola terkecil dahulu. Masukkan bola 9 untuk menang.</p>
       </div>
 
-      <!-- Modal Tamat Permainan -->
-      <div id="gameover-modal" class="hidden absolute inset-0 z-30 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 w-full max-w-[270px] text-center shadow-2xl">
-          <div class="w-14 h-14 mx-auto mb-2.5 rounded-full bg-amber-400/20 border-2 border-amber-400 flex items-center justify-center text-2xl">
-            🏆
+      <dl class="puzzle-home-stats pl-stats">
+        <div><dt>Markah terbaik</dt><dd id="st-best">0</dd></div>
+        <div><dt>Menang</dt><dd id="st-won">0</dd></div>
+        <div><dt>Dimainkan</dt><dd id="st-played">0</dd></div>
+      </dl>
+
+      <div class="puzzle-settings" role="group" aria-label="Tetapan">
+        <div class="pl-set-row">
+          <div class="switch-text"><strong id="mode-label">Lawan</strong><small id="mode-hint"></small></div>
+          <div class="pl-seg two" role="group" aria-labelledby="mode-label">
+            <button type="button" data-mode="ai" aria-pressed="true">AI</button>
+            <button type="button" data-mode="duo" aria-pressed="false">2 Pemain</button>
           </div>
-          <h2 id="winner-title" class="text-xl font-extrabold text-white mb-1">Anda Menang!</h2>
-          <p id="winner-reason" class="text-xs text-slate-300 mb-5 leading-relaxed">Bola 9 berjaya dimasukkan secara sah!</p>
-          <button id="modal-restart-btn" class="btn-pool w-full py-2.5 rounded-xl font-extrabold text-white text-sm tracking-wide cursor-pointer">
-            🔄 Main Pusingan Baru
+        </div>
+        <div class="pl-set-row" id="level-row">
+          <div class="switch-text"><strong id="level-label">Tahap AI</strong><small id="level-hint"></small></div>
+          <div class="pl-seg three" role="group" aria-labelledby="level-label">
+            <button type="button" data-level="mudah" aria-pressed="false">Mudah</button>
+            <button type="button" data-level="sederhana" aria-pressed="true">Sederhana</button>
+            <button type="button" data-level="susah" aria-pressed="false">Susah</button>
+          </div>
+        </div>
+        <button type="button" class="switch-row" id="set-guide" role="switch" aria-checked="false">
+          <span class="switch-text"><strong>Laluan lanjutan</strong><small id="set-guide-hint">Garisan terus ke bola pertama</small></span>
+          <span class="switch" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="switch-row" id="set-sound" role="switch" aria-checked="true">
+          <span class="switch-text"><strong>Bunyi</strong><small id="set-sound-hint">Kesan bunyi</small></span>
+          <span class="switch" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-wide" id="btn-play">Main</button>
+      <button type="button" class="btn btn-ghost btn-wide" id="btn-board">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Papan Markah
+      </button>
+
+      <button type="button" class="app-version" id="btn-version" aria-label="Versi 1.0. Ketik untuk muat semula permainan.">Versi 1.0</button>
+    </section>
+
+    <!-- Permainan -->
+    <section id="screen-game" class="screen screen-game" hidden>
+      <header class="bar">
+        <button type="button" class="icon-btn" id="btn-quit" aria-label="Kembali ke laman utama">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="bar-mid">
+          <span class="bar-title" id="game-score" aria-live="polite">0 mata</span>
+          <span class="bar-sub" id="game-mode"></span>
+        </div>
+        <button type="button" class="icon-btn" id="btn-game-help" aria-label="Cara bermain">?</button>
+      </header>
+
+      <!-- Players (the one to play highlighted) with the balls each has potted, then the balls still on the table. -->
+      <div class="pl-hud">
+        <div class="pl-player" id="pl-p1"><span class="pl-turn" aria-hidden="true"></span><span class="pl-name" id="pl-p1-name">Anda</span><b class="pl-pots" id="pl-p1-pots" aria-label="bola masuk">0</b></div>
+        <div class="pl-player right" id="pl-p2"><b class="pl-pots" id="pl-p2-pots" aria-label="bola masuk">0</b><span class="pl-name" id="pl-p2-name">AI</span><span class="pl-turn" aria-hidden="true"></span></div>
+      </div>
+      <div class="pl-strip" id="pl-strip" aria-label="Bola di atas meja"></div>
+
+      <div class="pl-stage" id="pl-stage">
+        <div class="pl-table" id="pl-table">
+          <canvas id="pl-canvas" aria-label="Meja biliar"></canvas>
+          <p class="pl-toast" id="pl-toast" role="status" aria-live="polite"></p>
+          <!-- The power gauge: appears beside the finger after pressing and holding on the table. -->
+          <div class="pl-gauge" id="pl-gauge" role="meter" aria-label="Kuasa pukulan" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+            <div class="pl-gauge-track"><div class="pl-gauge-fill" id="pl-gauge-fill"></div></div>
+            <span class="pl-gauge-pct" id="pl-gauge-pct">0%</span>
+          </div>
+          <!-- The shot after the break may be a push-out. -->
+          <div class="pl-bih pl-push-box" id="pl-push-box" hidden>
+            <span>Pukulan selepas pecah rak: boleh tolak keluar</span>
+            <button type="button" class="btn btn-primary pl-push" id="pl-push" aria-pressed="false">Tolak keluar</button>
+          </div>
+          <!-- After a push-out: the opponent plays from there, or hands it back. -->
+          <div class="pl-push-choice" id="pl-push-choice" role="dialog" aria-labelledby="pl-push-who" hidden>
+            <p id="pl-push-who"></p>
+            <div class="pl-push-actions">
+              <button type="button" class="btn btn-primary" id="pl-push-play">Main dari sini</button>
+              <button type="button" class="btn btn-ghost" id="pl-push-back">Pulangkan</button>
+            </div>
+          </div>
+          <!-- Ball in hand: drag the cue ball, then confirm. -->
+          <div class="pl-bih" id="pl-bih" hidden>
+            <span>Bola putih di tangan: seret ke mana-mana</span>
+            <button type="button" class="btn btn-primary" id="pl-bih-ok">Sahkan</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- The cue, drawn over the whole screen so it can reach past the table (js/main.js). -->
+      <canvas class="pl-cue-layer" id="pl-cue" aria-hidden="true"></canvas>
+
+      <!-- Spin panel: drag the red dot on the big cue ball to where the cue will strike it. -->
+      <div class="pl-spin-panel" id="pl-spin-panel" role="dialog" aria-label="Kesan pukulan" hidden>
+        <div class="pl-spin-wrap">
+          <span class="pl-spin-label top">Atas</span>
+          <span class="pl-spin-label bottom">Bawah</span>
+          <span class="pl-spin-label left">Kiri</span>
+          <span class="pl-spin-label right">Kanan</span>
+          <div class="pl-spin-ball" id="pl-spin-ball" tabindex="0" aria-label="Titik pukulan: seret, atau guna kekunci anak panah">
+            <i class="pl-spin-reach" aria-hidden="true"></i>
+            <i class="pl-spin-dot" id="pl-spin-dot" aria-hidden="true"></i>
+          </div>
+        </div>
+        <p class="pl-spin-text" id="pl-spin-text" aria-live="polite"></p>
+        <div class="pl-spin-actions">
+          <button type="button" class="btn btn-ghost" id="pl-spin-reset">Tengah</button>
+          <button type="button" class="btn btn-primary" id="pl-spin-done">Siap</button>
+        </div>
+      </div>
+
+      <div class="pl-aim">
+        <button type="button" class="btn btn-ghost pl-aim-btn" id="pl-aim-left" aria-label="Halakan sedikit ke kiri">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 0 1 5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kiri
+        </button>
+        <!-- Spin: the strike point on the cue ball; opens the panel below. -->
+        <button type="button" class="pl-spin-btn" id="pl-spin-btn" aria-label="Kesan pukulan" aria-expanded="false" aria-controls="pl-spin-panel">
+          <span class="pl-spin-mini" aria-hidden="true"><i id="pl-spin-mini-dot"></i></span>
+          <small>Putaran</small>
+        </button>
+        <button type="button" class="btn btn-ghost pl-aim-btn" id="pl-aim-right" aria-label="Halakan sedikit ke kanan">
+          Kanan<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7l5 5-5 5M20 12H9a5 5 0 0 0-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Keputusan -->
+    <section id="screen-result" class="screen screen-result" hidden>
+      <header class="bar">
+        <button type="button" class="icon-btn" id="res-home" aria-label="Kembali ke laman utama">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </header>
+      <div class="puzzle-result">
+        <img class="res-icon" src="icon.svg" alt="" width="72" height="72">
+        <h2 id="res-title"></h2>
+        <p id="res-detail"></p>
+        <p class="pl-res-level" id="res-level"></p>
+        <div class="score" id="res-score"></div>
+        <p id="res-time"></p>
+        <div class="res-submit" id="res-submit" role="status"></div>
+        <div class="puzzle-actions">
+          <button type="button" class="btn btn-primary" id="res-again">Main Lagi</button>
+          <button type="button" class="btn btn-ghost" id="res-board">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Papan Markah
           </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Bar Tarik Kuasa Pukulan (Tarik ke Bawah & Lepaskan) -->
-    <aside id="power-slider-wrap" aria-label="Kawalan Kuasa Pukulan">
-      <div class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">TARIK</div>
-      <div id="power-track">
-        <div id="power-fill"></div>
-        <div id="power-knob">
-          <span></span>
-          <span></span>
-          <span></span>
+    <!-- Papan markah -->
+    <section id="screen-board" class="screen screen-board" hidden>
+      <header class="bar">
+        <button type="button" class="icon-btn" id="btn-board-back" aria-label="Kembali">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="bar-mid"><span class="bar-title">Papan Markah</span><span class="bar-sub" id="board-sub"></span></div>
+        <button type="button" class="icon-btn" id="btn-board-refresh" aria-label="Muat semula">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </header>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="daily" aria-selected="true">Hari Ini</button>
+        <button type="button" role="tab" data-tab="alltime" aria-selected="false">Keseluruhan</button>
+        <button type="button" role="tab" data-tab="campus" aria-selected="false">Kampus</button>
+      </div>
+      <div class="lb-body" id="lb-body" role="tabpanel"></div>
+    </section>
+  </div>
+
+  <!-- Profil -->
+  <dialog id="dlg-profile" class="dialog">
+    <form id="profile-form" method="dialog" novalidate>
+      <h2>Profil Pemain</h2>
+      <p class="muted">Digunakan dalam semua permainan dan papan markah.</p>
+      <label class="field">
+        <span>Nama panggilan</span>
+        <input id="pf-name" name="nickname" maxlength="20" required autocomplete="nickname" placeholder="cth. Siti_FSKM">
+      </label>
+      <label class="field">
+        <span>Kategori</span>
+        <span class="select-wrap"><select id="pf-type" name="user_type" required aria-describedby="pf-type-hint"></select></span>
+        <small class="field-hint" id="pf-type-hint" hidden></small>
+      </label>
+      <label class="field">
+        <span>Kampus</span>
+        <span class="select-wrap"><select id="pf-campus" name="campus" required></select></span>
+      </label>
+      <p class="form-error" id="pf-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="pf-cancel">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Coin toss: who breaks. Call heads (Kepala) or tails (Ekor); call it right and you break. -->
+  <dialog id="dlg-coin" class="dialog pl-coin-dlg" aria-labelledby="coin-title">
+    <h2 id="coin-title">Lambung syiling</h2>
+    <p class="pl-coin-sub" id="coin-sub"></p>
+    <div class="pl-coin-stage" aria-hidden="true">
+      <div class="pl-coin-shadow" id="coin-shadow"></div>
+      <!-- The coin: an embossed face each side, and a ribbed edge band round its rim. -->
+      <div class="pl-coin" id="coin">
+        <div class="pl-coin-face tails">
+          <svg viewBox="0 0 100 100">
+            <g filter="url(#coin-emboss)" fill="#d89a24" stroke="none">
+              <circle cx="50" cy="50" r="37" fill="none" stroke="#d89a24" stroke-width="2.4" stroke-dasharray="0.1 5.8" stroke-linecap="round"/>
+              <text x="50" y="62" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="44">9</text>
+              <text x="50" y="79" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="800" font-size="8" letter-spacing="2.5">EKOR</text>
+            </g>
+          </svg>
+        </div>
+        <!-- The edge: 36 ribbed strips round the rim, standing between the faces (a solid band at any angle). -->
+        <div class="pl-coin-rim"><i style="transform:rotateZ(0deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(10deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(20deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(30deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(40deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(50deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(60deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(70deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(80deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(90deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(100deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(110deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(120deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(130deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(140deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(150deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(160deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(170deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(180deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(190deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(200deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(210deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(220deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(230deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(240deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(250deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(260deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(270deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(280deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(290deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(300deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(310deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(320deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(330deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(340deg) translateY(-52px) rotateX(90deg)"></i><i style="transform:rotateZ(350deg) translateY(-52px) rotateX(90deg)"></i></div>
+        <div class="pl-coin-face heads">
+          <svg viewBox="0 0 100 100">
+            <defs>
+              <filter id="coin-emboss" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0.9" dy="0.9" stdDeviation="0.35" flood-color="#5c2d06" flood-opacity="0.75"/>
+                <feDropShadow dx="-0.7" dy="-0.7" stdDeviation="0.25" flood-color="#fff8dc" flood-opacity="0.9"/>
+              </filter>
+            </defs>
+            <g filter="url(#coin-emboss)" fill="#d89a24" stroke="none">
+              <circle cx="50" cy="50" r="37" fill="none" stroke="#d89a24" stroke-width="2.4" stroke-dasharray="0.1 5.8" stroke-linecap="round"/>
+              <g transform="translate(50 44)"><ellipse cx="0" cy="-10" rx="6.2" ry="10" transform="rotate(0)"/><ellipse cx="0" cy="-10" rx="6.2" ry="10" transform="rotate(72)"/><ellipse cx="0" cy="-10" rx="6.2" ry="10" transform="rotate(144)"/><ellipse cx="0" cy="-10" rx="6.2" ry="10" transform="rotate(216)"/><ellipse cx="0" cy="-10" rx="6.2" ry="10" transform="rotate(288)"/><circle r="4.5" fill="#e9b13a"/></g>
+              <text x="50" y="79" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="800" font-size="8" letter-spacing="2.5">KEPALA</text>
+            </g>
+          </svg>
         </div>
       </div>
-      <div id="power-pct" class="text-[10px] font-extrabold text-emerald-400">0%</div>
-    </aside>
-  </main>
-
-  <!-- 3. BAR KAWALAN HALUS BAWAH (FINE-TUNE SUDUT BIDIKAN) -->
-  <footer class="w-full max-w-[520px] px-3 pb-2.5 pt-1 flex items-center justify-between gap-2 z-10 shrink-0">
-    <button id="aim-left-btn" class="btn-glass flex-1 py-2 rounded-xl text-xs font-bold text-slate-200 flex items-center justify-center gap-1 cursor-pointer">
-      <span>↺</span> <span>Kiri Halus</span>
-    </button>
-    <div class="text-[10px] text-slate-400 text-center leading-tight px-1">
-      Sentuh meja untuk bidik<br><strong class="text-slate-200">Tarik bar kanan</strong> untuk pukul
     </div>
-    <button id="aim-right-btn" class="btn-glass flex-1 py-2 rounded-xl text-xs font-bold text-slate-200 flex items-center justify-center gap-1 cursor-pointer">
-      <span>Kanan Halus</span> <span>↻</span>
-    </button>
-  </footer>
-
-  <script>
-    /**
-     * ============================================================================
-     * ENJIN AUDIO SINTETIK (WEB AUDIO API)
-     * Menghasilkan kesan bunyi biliar secara masa nyata tanpa fail luar.
-     * ============================================================================
-     */
-    class SoundEngine {
-      constructor() {
-        this.ctx = null;
-        this.muted = false;
-      }
-
-      unlock() {
-        if (!this.ctx) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) this.ctx = new AudioCtx();
-        }
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
-        }
-      }
-
-      toggleMute() {
-        this.muted = !this.muted;
-        return this.muted;
-      }
-
-      playCueHit(powerRatio) {
-        if (this.muted) return;
-        this.unlock();
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-        const vol = Math.min(1, Math.max(0.18, powerRatio));
-
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(210 + powerRatio * 150, now);
-        osc.frequency.exponentialRampToValueAtTime(52, now + 0.085);
-
-        gain.gain.setValueAtTime(vol * 0.6, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
-
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.095);
-      }
-
-      playBallCollision(relSpeed) {
-        if (this.muted || relSpeed < 0.25) return;
-        this.unlock();
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-        const intensity = Math.min(1, relSpeed / 18);
-
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1480 + Math.random() * 240, now);
-        osc.frequency.exponentialRampToValueAtTime(410, now + 0.035);
-
-        gain.gain.setValueAtTime(intensity * 0.65, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.04);
-      }
-
-      playRailBounce(speed) {
-        if (this.muted || speed < 0.4) return;
-        this.unlock();
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-        const intensity = Math.min(1, speed / 18);
-
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(135, now);
-        osc.frequency.exponentialRampToValueAtTime(46, now + 0.07);
-
-        gain.gain.setValueAtTime(intensity * 0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
-
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.075);
-      }
-
-      playPocketDrop() {
-        if (this.muted) return;
-        this.unlock();
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(185, now);
-        osc.frequency.exponentialRampToValueAtTime(60, now + 0.22);
-
-        gain.gain.setValueAtTime(0.55, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.24);
-      }
-
-      playWinFanfare() {
-        if (this.muted) return;
-        this.unlock();
-        if (!this.ctx) return;
-        const notes = [523.25, 659.25, 783.99, 1046.5];
-        notes.forEach((freq, idx) => {
-          const now = this.ctx.currentTime + idx * 0.11;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now);
-          gain.gain.setValueAtTime(0.3, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.35);
-        });
-      }
-    }
-
-    /**
-     * ============================================================================
-     * KONFIGURASI MEJA MENEGAK (PORTRAIT 500 x 960)
-     * Nisbah aspek 1 : 1.92 untuk paparan telefon pintar menegak yang ergonomik.
-     * ============================================================================
-     */
-    const TABLE_W = 500;
-    const TABLE_H = 960;
-    const RAIL_SIZE = 38;
-    const PLAY_LEFT = RAIL_SIZE;
-    const PLAY_RIGHT = TABLE_W - RAIL_SIZE;
-    const PLAY_TOP = RAIL_SIZE;
-    const PLAY_BOTTOM = TABLE_H - RAIL_SIZE;
-    const PLAY_W = PLAY_RIGHT - PLAY_LEFT;
-    const PLAY_H = PLAY_BOTTOM - PLAY_TOP;
-
-    const BALL_RADIUS = 13.5;
-    const POCKET_RADIUS = 24;
-
-    // Titik penting meja menegak:
-    // Top Spot (25% dari atas) untuk susunan rak 9 bola
-    // Head String / Kitchen (75% dari atas) untuk bola putih
-    const TOP_SPOT_X = TABLE_W / 2;
-    const TOP_SPOT_Y = PLAY_TOP + PLAY_H * 0.26;
-    const HEAD_STRING_Y = PLAY_TOP + PLAY_H * 0.75;
-
-    // Warna rasmi bola 1-9
-    const BALL_STYLES = {
-      0: { color: '#f8fafc', stripe: false }, // Bola Putih
-      1: { color: '#facc15', stripe: false }, // Kuning
-      2: { color: '#2563eb', stripe: false }, // Biru
-      3: { color: '#dc2626', stripe: false }, // Merah
-      4: { color: '#7c3aed', stripe: false }, // Ungu
-      5: { color: '#f97316', stripe: false }, // Jingga
-      6: { color: '#16a34a', stripe: false }, // Hijau
-      7: { color: '#881337', stripe: false }, // Merah Hati
-      8: { color: '#18181b', stripe: false }, // Hitam
-      9: { color: '#facc15', stripe: true  }  // Kuning Berjalur (9-Ball)
-    };
-
-    // 6 Lubang (4 Penjuru + 2 Sisi Kiri & Kanan)
-    const POCKETS = [
-      { x: PLAY_LEFT + 3,  y: PLAY_TOP + 3,    r: POCKET_RADIUS + 2 }, // Kiri Atas
-      { x: PLAY_RIGHT - 3, y: PLAY_TOP + 3,    r: POCKET_RADIUS + 2 }, // Kanan Atas
-      { x: PLAY_LEFT - 3,  y: TABLE_H / 2,     r: POCKET_RADIUS },     // Tengah Kiri
-      { x: PLAY_RIGHT + 3, y: TABLE_H / 2,     r: POCKET_RADIUS },     // Tengah Kanan
-      { x: PLAY_LEFT + 3,  y: PLAY_BOTTOM - 3, r: POCKET_RADIUS + 2 }, // Kiri Bawah
-      { x: PLAY_RIGHT - 3, y: PLAY_BOTTOM - 3, r: POCKET_RADIUS + 2 }  // Kanan Bawah
-    ];
-
-    class VerticalPoolGame {
-      constructor() {
-        this.canvas = document.getElementById('poolCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.sound = new SoundEngine();
-
-        // Mod lalai: Lawan AI (sesuai untuk main terus di telefon)
-        this.vsAI = true;
-        this.scores = { 1: 0, 2: 0 };
-
-        // Keadaan permainan
-        this.balls = [];
-        this.currentPlayer = 1;
-        this.state = 'AIMING'; // 'AIMING', 'SHOOTING', 'BALL_IN_HAND', 'AI_THINKING', 'GAME_OVER'
-        this.isBreakShot = true;
-        this.firstBallHit = null;
-        this.pocketedThisTurn = [];
-        this.railHitAfterContact = false;
-
-        // Sasaran & Kawalan Sentuhan
-        this.aimAngle = -Math.PI / 2; // Menghala terus ke atas (ke arah Bola 1)
-        this.pullPower = 0;
-        this.maxShotSpeed = 24.5;
-
-        this.isAimDragging = false;
-        this.lastTouchAngle = 0;
-        this.isPowerDragging = false;
-        this.powerStartY = 0;
-        this.fineTuneInterval = null;
-        this.aiTimer = null;
-
-        this.initBallsStripUI();
-        this.setupEvents();
-        this.resizeCanvas();
-        this.resetRack();
-
-        this.loop = this.loop.bind(this);
-        requestAnimationFrame(this.loop);
-      }
-
-      /**
-       * Bina lencana bola 1 hingga 9 di bar atas
-       */
-      initBallsStripUI() {
-        const strip = document.getElementById('balls-strip');
-        strip.innerHTML = '';
-        for (let i = 1; i <= 9; i++) {
-          const el = document.createElement('div');
-          el.id = `strip-ball-${i}`;
-          const style = BALL_STYLES[i];
-          el.className = 'w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-200';
-          el.style.backgroundColor = style.color;
-          el.style.color = [1, 9].includes(i) ? '#0f172a' : '#ffffff';
-          if (i === 9) el.style.border = '1.5px solid #ffffff';
-          el.textContent = i;
-          strip.appendChild(el);
-        }
-      }
-
-      /**
-       * Susun rak 9-Ball menegak berbentuk berlian (Diamond):
-       * Bola 1 di puncak bawah (menghadap bola putih) & Bola 9 di tengah-tengah.
-       */
-      resetRack() {
-        if (this.aiTimer) clearTimeout(this.aiTimer);
-        this.balls = [];
-        this.currentPlayer = 1;
-        this.state = 'AIMING';
-        this.isBreakShot = true;
-        this.firstBallHit = null;
-        this.pocketedThisTurn = [];
-        this.railHitAfterContact = false;
-        this.pullPower = 0;
-        this.aimAngle = -Math.PI / 2;
-
-        // 1. Bola Putih di kawasan Kitchen (bawah)
-        this.balls.push({
-          id: 0,
-          x: TABLE_W / 2,
-          y: HEAD_STRING_Y + 12,
-          vx: 0,
-          vy: 0,
-          pocketed: false
-        });
-
-        // 2. Rak Berlian Menegak (1-2-3-2-1 baris dari bawah ke atas)
-        const r = BALL_RADIUS + 0.4;
-        const dy = r * Math.sqrt(3);
-        const dx = r;
-
-        const otherNums = [2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5);
-        const rackPositions = [
-          { row: 0,  col: 0,  id: 1 },             // Puncak bawah menghadap bola putih (Top Spot)
-          { row: -1, col: -1, id: otherNums[0] },
-          { row: -1, col: 1,  id: otherNums[1] },
-          { row: -2, col: -2, id: otherNums[2] },
-          { row: -2, col: 0,  id: 9 },             // Tengah-tengah berlian (9-Ball)
-          { row: -2, col: 2,  id: otherNums[3] },
-          { row: -3, col: -1, id: otherNums[4] },
-          { row: -3, col: 1,  id: otherNums[5] },
-          { row: -4, col: 0,  id: otherNums[6] }   // Puncak atas sekali
-        ];
-
-        for (const pos of rackPositions) {
-          this.balls.push({
-            id: pos.id,
-            x: TOP_SPOT_X + pos.col * dx,
-            y: TOP_SPOT_Y + pos.row * dy,
-            vx: 0,
-            vy: 0,
-            pocketed: false
-          });
-        }
-
-        document.getElementById('gameover-modal').classList.add('hidden');
-        document.getElementById('bih-controls').classList.add('hidden');
-        this.updatePowerUI(0);
-        this.updateHUD();
-        this.showToast('Pusingan Baru! Tarik bar kanan untuk memecah rak.', 'info');
-      }
-
-      getCueBall() {
-        return this.balls.find(b => b.id === 0);
-      }
-
-      getLowestBall() {
-        let lowest = null;
-        for (const b of this.balls) {
-          if (b.id > 0 && !b.pocketed) {
-            if (!lowest || b.id < lowest.id) lowest = b;
-          }
-        }
-        return lowest;
-      }
-
-      updateHUD() {
-        const p1Card = document.getElementById('p1-card');
-        const p2Card = document.getElementById('p2-card');
-        const p1Dot = document.getElementById('p1-dot');
-        const p2Dot = document.getElementById('p2-dot');
-
-        if (this.currentPlayer === 1) {
-          p1Card.className = 'flex items-center gap-1.5 px-2 py-1 rounded-xl border bg-emerald-500/15 border-emerald-400 transition-all';
-          p1Dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
-          p2Card.className = 'flex items-center gap-1.5 px-2 py-1 rounded-xl border border-slate-700/60 bg-slate-800/40 opacity-65 transition-all';
-          p2Dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
-        } else {
-          p2Card.className = 'flex items-center gap-1.5 px-2 py-1 rounded-xl border bg-amber-500/15 border-amber-400 transition-all';
-          p2Dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse';
-          p1Card.className = 'flex items-center gap-1.5 px-2 py-1 rounded-xl border border-slate-700/60 bg-slate-800/40 opacity-65 transition-all';
-          p1Dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
-        }
-
-        document.getElementById('p1-score').textContent = this.scores[1];
-        document.getElementById('p2-score').textContent = this.scores[2];
-        document.getElementById('p2-label').textContent = this.vsAI ? 'Komputer' : 'Pemain 2';
-        document.getElementById('p2-name').textContent = this.vsAI ? 'AI' : 'P2';
-
-        // Lencana Bola Sasaran Terkini
-        const target = this.getLowestBall();
-        const badge = document.getElementById('target-ball-badge');
-        if (target) {
-          const style = BALL_STYLES[target.id];
-          badge.textContent = target.id;
-          badge.style.backgroundColor = style.color;
-          badge.style.color = [1, 9].includes(target.id) ? '#0f172a' : '#ffffff';
-          badge.style.border = target.id === 9 ? '2.5px solid #ffffff' : '1px solid rgba(255,255,255,0.5)';
-        }
-
-        // Kemas kini jalur baki bola 1-9
-        for (let i = 1; i <= 9; i++) {
-          const ball = this.balls.find(b => b.id === i);
-          const el = document.getElementById(`strip-ball-${i}`);
-          if (el && ball) {
-            if (ball.pocketed) {
-              el.style.opacity = '0.2';
-              el.style.transform = 'scale(0.85)';
-            } else {
-              el.style.opacity = '1';
-              el.style.transform = (target && target.id === i) ? 'scale(1.18)' : 'scale(1)';
-              el.style.boxShadow = (target && target.id === i) ? '0 0 8px rgba(250, 204, 21, 0.9)' : 'none';
-            }
-          }
-        }
-      }
-
-      updatePowerUI(ratio) {
-        this.pullPower = Math.max(0, Math.min(1, ratio));
-        const pct = Math.round(this.pullPower * 100);
-        document.getElementById('power-pct').textContent = `${pct}%`;
-        document.getElementById('power-fill').style.height = `${pct}%`;
-
-        const track = document.getElementById('power-track');
-        const knob = document.getElementById('power-knob');
-        const maxTravel = Math.max(10, track.clientHeight - knob.clientHeight - 8);
-        knob.style.top = `${4 + this.pullPower * maxTravel}px`;
-      }
-
-      showToast(msg, type = 'info') {
-        const container = document.getElementById('toast-container');
-        container.innerHTML = '';
-        const el = document.createElement('div');
-        let colors = 'bg-slate-900/95 text-white border-slate-600';
-        if (type === 'foul') colors = 'bg-rose-600/95 text-white border-rose-300';
-        if (type === 'good') colors = 'bg-emerald-600/95 text-white border-emerald-300';
-
-        el.className = `toast-anim px-3.5 py-1.5 rounded-full border text-[11px] font-bold shadow-xl text-center ${colors}`;
-        el.textContent = msg;
-        container.appendChild(el);
-      }
-
-      getCanvasCoords(clientX, clientY) {
-        const rect = this.canvas.getBoundingClientRect();
-        return {
-          x: ((clientX - rect.left) / rect.width) * TABLE_W,
-          y: ((clientY - rect.top) / rect.height) * TABLE_H
-        };
-      }
-
-      resizeCanvas() {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        this.canvas.width = TABLE_W * dpr;
-        this.canvas.height = TABLE_H * dpr;
-        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-
-      isValidBallPlacement(x, y) {
-        const minY = this.isBreakShot ? HEAD_STRING_Y : PLAY_TOP + BALL_RADIUS;
-        if (
-          x < PLAY_LEFT + BALL_RADIUS ||
-          x > PLAY_RIGHT - BALL_RADIUS ||
-          y < minY ||
-          y > PLAY_BOTTOM - BALL_RADIUS
-        ) {
-          return false;
-        }
-
-        for (const b of this.balls) {
-          if (b.id !== 0 && !b.pocketed) {
-            if (Math.hypot(x - b.x, y - b.y) < BALL_RADIUS * 2 + 1) return false;
-          }
-        }
-        return true;
-      }
-
-      /**
-       * ============================================================================
-       * KAWALAN SENTUHAN TELEFON (MEJA UNTUK BIDIK + SLIDER KANAN UNTUK KUASA)
-       * ============================================================================
-       */
-      setupEvents() {
-        window.addEventListener('resize', () => this.resizeCanvas());
-
-        // Buka kunci audio pada sentuhan pertama
-        const unlockOnce = () => {
-          this.sound.unlock();
-          window.removeEventListener('touchstart', unlockOnce);
-          window.removeEventListener('mousedown', unlockOnce);
-        };
-        window.addEventListener('touchstart', unlockOnce, { passive: true });
-        window.addEventListener('mousedown', unlockOnce);
-
-        // 1. KAWALAN SENTUHAN DI ATAS MEJA (BIDIK & BALL-IN-HAND)
-        const onTableDown = (e) => {
-          if (this.vsAI && this.currentPlayer === 2) return;
-          const pt = e.touches ? e.touches[0] : e;
-          const pos = this.getCanvasCoords(pt.clientX, pt.clientY);
-
-          if (this.state === 'BALL_IN_HAND') {
-            this.isAimDragging = true;
-            // Letak bola putih sedikit di atas jari (offset -38px) supaya tidak terlindung jari!
-            const cue = this.getCueBall();
-            cue.x = Math.max(PLAY_LEFT + BALL_RADIUS, Math.min(PLAY_RIGHT - BALL_RADIUS, pos.x));
-            cue.y = Math.max(PLAY_TOP + BALL_RADIUS, Math.min(PLAY_BOTTOM - BALL_RADIUS, pos.y - 38));
-            return;
-          }
-
-          if (this.state === 'AIMING') {
-            const cue = this.getCueBall();
-            this.isAimDragging = true;
-            this.aimAngle = Math.atan2(pos.y - cue.y, pos.x - cue.x);
-            this.lastTouchAngle = this.aimAngle;
-          }
-        };
-
-        const onTableMove = (e) => {
-          if (!this.isAimDragging) return;
-          if (this.vsAI && this.currentPlayer === 2) return;
-          const pt = e.touches ? e.touches[0] : e;
-          const pos = this.getCanvasCoords(pt.clientX, pt.clientY);
-
-          if (this.state === 'BALL_IN_HAND') {
-            const cue = this.getCueBall();
-            cue.x = Math.max(PLAY_LEFT + BALL_RADIUS, Math.min(PLAY_RIGHT - BALL_RADIUS, pos.x));
-            cue.y = Math.max(PLAY_TOP + BALL_RADIUS, Math.min(PLAY_BOTTOM - BALL_RADIUS, pos.y - 38));
-            return;
-          }
-
-          if (this.state === 'AIMING') {
-            const cue = this.getCueBall();
-            const newAngle = Math.atan2(pos.y - cue.y, pos.x - cue.x);
-            // Putaran halus mengikut pergerakan jari di atas meja
-            let delta = newAngle - this.lastTouchAngle;
-            while (delta > Math.PI) delta -= Math.PI * 2;
-            while (delta < -Math.PI) delta += Math.PI * 2;
-            this.aimAngle += delta * 0.85;
-            this.lastTouchAngle = newAngle;
-          }
-        };
-
-        const onTableUp = () => {
-          this.isAimDragging = false;
-        };
-
-        this.canvas.addEventListener('mousedown', onTableDown);
-        window.addEventListener('mousemove', onTableMove);
-        window.addEventListener('mouseup', onTableUp);
-
-        this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onTableDown(e); }, { passive: false });
-        this.canvas.addEventListener('touchmove', (e) => { e.preventDefault(); onTableMove(e); }, { passive: false });
-        this.canvas.addEventListener('touchend', onTableUp);
-
-        // 2. KAWALAN BAR TARIK KUASA (POWER PULL-BACK BAR DI SEBELAH KANAN)
-        const powerWrap = document.getElementById('power-slider-wrap');
-        const powerTrack = document.getElementById('power-track');
-
-        const onPowerDown = (e) => {
-          if (this.state !== 'AIMING') return;
-          if (this.vsAI && this.currentPlayer === 2) return;
-          e.preventDefault();
-          const pt = e.touches ? e.touches[0] : e;
-          this.isPowerDragging = true;
-          this.powerStartY = pt.clientY;
-          this.updatePowerUI(0.06);
-        };
-
-        const onPowerMove = (e) => {
-          if (!this.isPowerDragging) return;
-          e.preventDefault();
-          const pt = e.touches ? e.touches[0] : e;
-          const trackHeight = Math.max(120, powerTrack.clientHeight - 36);
-          const pullDist = pt.clientY - this.powerStartY;
-          const ratio = Math.max(0, Math.min(1, pullDist / trackHeight));
-          this.updatePowerUI(ratio);
-        };
-
-        const onPowerUp = () => {
-          if (!this.isPowerDragging) return;
-          this.isPowerDragging = false;
-
-          if (this.state === 'AIMING' && this.pullPower >= 0.08) {
-            this.executeShot(this.aimAngle, this.pullPower);
-          }
-          this.updatePowerUI(0);
-        };
-
-        powerWrap.addEventListener('mousedown', onPowerDown);
-        window.addEventListener('mousemove', onPowerMove);
-        window.addEventListener('mouseup', onPowerUp);
-
-        powerWrap.addEventListener('touchstart', onPowerDown, { passive: false });
-        window.addEventListener('touchmove', onPowerMove, { passive: false });
-        window.addEventListener('touchend', onPowerUp);
-
-        // 3. BUTANG PELARASAN SUDUT HALUS (- / +) DI BAWAH SKRIN
-        const startFineTune = (dir) => {
-          if (this.state !== 'AIMING' || (this.vsAI && this.currentPlayer === 2)) return;
-          this.aimAngle += dir * 0.008;
-          this.fineTuneInterval = setInterval(() => {
-            if (this.state === 'AIMING') this.aimAngle += dir * 0.012;
-          }, 35);
-        };
-        const stopFineTune = () => {
-          if (this.fineTuneInterval) {
-            clearInterval(this.fineTuneInterval);
-            this.fineTuneInterval = null;
-          }
-        };
-
-        const leftBtn = document.getElementById('aim-left-btn');
-        const rightBtn = document.getElementById('aim-right-btn');
-
-        leftBtn.addEventListener('mousedown', () => startFineTune(-1));
-        leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startFineTune(-1); }, { passive: false });
-        rightBtn.addEventListener('mousedown', () => startFineTune(1));
-        rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startFineTune(1); }, { passive: false });
-
-        window.addEventListener('mouseup', stopFineTune);
-        window.addEventListener('touchend', stopFineTune);
-
-        // 4. BUTANG SAHKAN BALL-IN-HAND
-        document.getElementById('confirm-bih-btn').addEventListener('click', () => {
-          if (this.state !== 'BALL_IN_HAND') return;
-          const cue = this.getCueBall();
-          if (this.isValidBallPlacement(cue.x, cue.y)) {
-            cue.vx = 0;
-            cue.vy = 0;
-            cue.pocketed = false;
-            this.state = 'AIMING';
-            document.getElementById('bih-controls').classList.add('hidden');
-            const lowest = this.getLowestBall();
-            if (lowest) {
-              this.aimAngle = Math.atan2(lowest.y - cue.y, lowest.x - cue.x);
-            }
-            this.showToast('Kedudukan disahkan! Sedia untuk membidik.', 'good');
-          } else {
-            this.showToast('Kedudukan tidak sah! Jangan tindih bola lain atau dinding.', 'foul');
-          }
-        });
-
-        // 5. BUTANG MOD, BUNYI & MULA SEMULA
-        const modeBtn = document.getElementById('mode-toggle-btn');
-        modeBtn.addEventListener('click', () => {
-          this.vsAI = !this.vsAI;
-          modeBtn.textContent = this.vsAI ? '🤖 vs AI' : '👥 2 Pemain';
-          this.scores = { 1: 0, 2: 0 };
-          this.resetRack();
-        });
-
-        document.getElementById('sound-btn').addEventListener('click', () => {
-          const muted = this.sound.toggleMute();
-          document.getElementById('sound-icon').textContent = muted ? '🔇' : '🔊';
-        });
-
-        document.getElementById('restart-btn').addEventListener('click', () => this.resetRack());
-        document.getElementById('modal-restart-btn').addEventListener('click', () => this.resetRack());
-      }
-
-      executeShot(angle, powerRatio) {
-        const cue = this.getCueBall();
-        const speed = powerRatio * this.maxShotSpeed;
-        cue.vx = Math.cos(angle) * speed;
-        cue.vy = Math.sin(angle) * speed;
-
-        this.state = 'SHOOTING';
-        this.firstBallHit = null;
-        this.pocketedThisTurn = [];
-        this.railHitAfterContact = false;
-
-        this.sound.playCueHit(powerRatio);
-      }
-
-      /**
-       * ============================================================================
-       * ENJIN FIZIK 2D (8 SUB-STEPS PER FRAME)
-       * ============================================================================
-       */
-      updatePhysics() {
-        if (this.state !== 'SHOOTING') return;
-
-        const SUBSTEPS = 8;
-        const frictionPerFrame = 0.986;
-        const subFriction = Math.pow(frictionPerFrame, 1 / SUBSTEPS);
-        const restitutionWall = 0.82;
-        const lowestBeforeShot = this.getLowestBall();
-
-        for (let step = 0; step < SUBSTEPS; step++) {
-          // 1. Pergerakan & Pantulan Kusyen Meja Menegak
-          for (const b of this.balls) {
-            if (b.pocketed) continue;
-
-            b.x += b.vx / SUBSTEPS;
-            b.y += b.vy / SUBSTEPS;
-
-            // Dinding Kiri & Kanan (kecuali lubang sudut & lubang sisi tengah)
-            const nearCornerY = (b.y < PLAY_TOP + 22) || (b.y > PLAY_BOTTOM - 22);
-            const nearSidePocketY = Math.abs(b.y - TABLE_H / 2) < 20;
-            if (!nearCornerY && !nearSidePocketY) {
-              if (b.x - BALL_RADIUS < PLAY_LEFT) {
-                b.x = PLAY_LEFT + BALL_RADIUS;
-                b.vx = -b.vx * restitutionWall;
-                if (this.firstBallHit !== null) this.railHitAfterContact = true;
-                this.sound.playRailBounce(Math.abs(b.vx));
-              } else if (b.x + BALL_RADIUS > PLAY_RIGHT) {
-                b.x = PLAY_RIGHT - BALL_RADIUS;
-                b.vx = -b.vx * restitutionWall;
-                if (this.firstBallHit !== null) this.railHitAfterContact = true;
-                this.sound.playRailBounce(Math.abs(b.vx));
-              }
-            }
-
-            // Dinding Atas & Bawah (kecuali lubang sudut)
-            const nearCornerX = (b.x < PLAY_LEFT + 22) || (b.x > PLAY_RIGHT - 22);
-            if (!nearCornerX) {
-              if (b.y - BALL_RADIUS < PLAY_TOP) {
-                b.y = PLAY_TOP + BALL_RADIUS;
-                b.vy = -b.vy * restitutionWall;
-                if (this.firstBallHit !== null) this.railHitAfterContact = true;
-                this.sound.playRailBounce(Math.abs(b.vy));
-              } else if (b.y + BALL_RADIUS > PLAY_BOTTOM) {
-                b.y = PLAY_BOTTOM - BALL_RADIUS;
-                b.vy = -b.vy * restitutionWall;
-                if (this.firstBallHit !== null) this.railHitAfterContact = true;
-                this.sound.playRailBounce(Math.abs(b.vy));
-              }
-            }
-          }
-
-          // 2. Pelanggaran Elastik antara Bola
-          for (let i = 0; i < this.balls.length; i++) {
-            const a = this.balls[i];
-            if (a.pocketed) continue;
-
-            for (let j = i + 1; j < this.balls.length; j++) {
-              const b = this.balls[j];
-              if (b.pocketed) continue;
-
-              const dx = b.x - a.x;
-              const dy = b.y - a.y;
-              const dist = Math.hypot(dx, dy);
-              const minDist = BALL_RADIUS * 2;
-
-              if (dist > 0 && dist < minDist) {
-                if (this.firstBallHit === null) {
-                  if (a.id === 0) this.firstBallHit = b.id;
-                  else if (b.id === 0) this.firstBallHit = a.id;
-                }
-
-                const nx = dx / dist;
-                const ny = dy / dist;
-                const overlap = (minDist - dist) * 0.5;
-                a.x -= nx * overlap;
-                a.y -= ny * overlap;
-                b.x += nx * overlap;
-                b.y += ny * overlap;
-
-                const rvx = b.vx - a.vx;
-                const rvy = b.vy - a.vy;
-                const velAlongNormal = rvx * nx + rvy * ny;
-
-                if (velAlongNormal < 0) {
-                  const e = 0.95;
-                  const impulse = -(1 + e) * velAlongNormal * 0.5;
-                  a.vx -= impulse * nx;
-                  a.vy -= impulse * ny;
-                  b.vx += impulse * nx;
-                  b.vy += impulse * ny;
-
-                  this.sound.playBallCollision(Math.abs(velAlongNormal));
-                }
-              }
-            }
-          }
-
-          // 3. Semak bola masuk lubang
-          for (const b of this.balls) {
-            if (b.pocketed) continue;
-            for (const p of POCKETS) {
-              if (Math.hypot(b.x - p.x, b.y - p.y) < p.r - 2) {
-                b.pocketed = true;
-                b.vx = 0;
-                b.vy = 0;
-                this.pocketedThisTurn.push(b.id);
-                this.sound.playPocketDrop();
-                break;
-              }
-            }
-          }
-
-          // 4. Geseran meja
-          for (const b of this.balls) {
-            if (b.pocketed) continue;
-            b.vx *= subFriction;
-            b.vy *= subFriction;
-            if (Math.hypot(b.vx, b.vy) < 0.04) {
-              b.vx = 0;
-              b.vy = 0;
-            }
-          }
-        }
-
-        const anyMoving = this.balls.some(b => !b.pocketed && (b.vx !== 0 || b.vy !== 0));
-        if (!anyMoving) {
-          this.evaluateTurn(lowestBeforeShot);
-        }
-      }
-
-      /**
-       * Menilai keputusan pukulan mengikut Peraturan Rasmi 9-Ball
-       */
-      evaluateTurn(lowestBeforeShot) {
-        const cuePocketed = this.pocketedThisTurn.includes(0);
-        const ninePocketed = this.pocketedThisTurn.includes(9);
-        const objectBallsPocketed = this.pocketedThisTurn.filter(id => id !== 0);
-
-        let foulReason = null;
-
-        if (cuePocketed) {
-          foulReason = 'Bola putih masuk lubang (Scratch)!';
-        } else if (this.firstBallHit === null) {
-          foulReason = 'Bola putih gagal menyentuh sebarang bola!';
-        } else if (lowestBeforeShot && this.firstBallHit !== lowestBeforeShot.id) {
-          foulReason = `Mesti sentuh Bola ${lowestBeforeShot.id} dahulu (terkena Bola ${this.firstBallHit})!`;
-        } else if (objectBallsPocketed.length === 0 && !this.railHitAfterContact) {
-          foulReason = 'Tiada bola masuk & tiada bola sentuh kusyen!';
-        }
-
-        if (ninePocketed) {
-          if (!foulReason) {
-            this.scores[this.currentPlayer]++;
-            this.updateHUD();
-            this.state = 'GAME_OVER';
-            this.sound.playWinFanfare();
-            const winnerName = this.currentPlayer === 1 ? 'Anda (Pemain 1)' : (this.vsAI ? 'Bot AI' : 'Pemain 2');
-            document.getElementById('winner-title').textContent = `${winnerName} Menang!`;
-            document.getElementById('winner-reason').textContent = this.isBreakShot
-              ? 'Golden Break! Bola 9 masuk terus semasa pukulan pemecah!'
-              : 'Bola 9 berjaya dimasukkan secara sah!';
-            document.getElementById('gameover-modal').classList.remove('hidden');
-            return;
-          } else {
-            // Bola 9 termasuk semasa FOUL -> Letak semula di Top Spot
-            const nineBall = this.balls.find(b => b.id === 9);
-            nineBall.pocketed = false;
-            nineBall.vx = 0;
-            nineBall.vy = 0;
-            this.spotBall(nineBall);
-          }
-        }
-
-        this.isBreakShot = false;
-
-        if (foulReason) {
-          this.switchPlayer();
-          this.prepareBallInHand(foulReason);
-          return;
-        }
-
-        if (objectBallsPocketed.length > 0) {
-          this.showToast(`Mantap! Bola ${objectBallsPocketed.join(', ')} masuk. Teruskan giliran.`, 'good');
-          this.state = 'AIMING';
-          this.autoAimAtLowest();
-          this.updateHUD();
-          this.checkAITurn();
-        } else {
-          this.switchPlayer();
-          this.state = 'AIMING';
-          this.autoAimAtLowest();
-          this.updateHUD();
-          const nextName = this.currentPlayer === 1 ? 'Giliran Anda' : (this.vsAI ? 'Giliran Bot AI' : 'Giliran Pemain 2');
-          this.showToast(`${nextName}.`, 'info');
-          this.checkAITurn();
-        }
-      }
-
-      autoAimAtLowest() {
-        const cue = this.getCueBall();
-        const lowest = this.getLowestBall();
-        if (cue && lowest) {
-          this.aimAngle = Math.atan2(lowest.y - cue.y, lowest.x - cue.x);
-        }
-      }
-
-      spotBall(ball) {
-        let testY = TOP_SPOT_Y;
-        const testX = TOP_SPOT_X;
-        while (this.balls.some(other => other.id !== ball.id && !other.pocketed && Math.hypot(other.x - testX, other.y - testY) < BALL_RADIUS * 2 + 1)) {
-          testY -= BALL_RADIUS * 2 + 2;
-          if (testY < PLAY_TOP + BALL_RADIUS) {
-            testY = TOP_SPOT_Y + BALL_RADIUS * 2;
-            break;
-          }
-        }
-        ball.x = testX;
-        ball.y = testY;
-      }
-
-      switchPlayer() {
-        this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
-      }
-
-      prepareBallInHand(reason) {
-        const cue = this.getCueBall();
-        cue.pocketed = false;
-        cue.vx = 0;
-        cue.vy = 0;
-
-        let startX = TABLE_W / 2;
-        let startY = HEAD_STRING_Y + 12;
-        if (!this.isValidBallPlacement(startX, startY)) {
-          for (let y = PLAY_BOTTOM - 40; y > PLAY_TOP + 40; y -= 25) {
-            for (let x = PLAY_LEFT + 35; x < PLAY_RIGHT - 35; x += 25) {
-              if (this.isValidBallPlacement(x, y)) {
-                startX = x;
-                startY = y;
-                break;
-              }
-            }
-          }
-        }
-        cue.x = startX;
-        cue.y = startY;
-        this.updateHUD();
-
-        if (this.vsAI && this.currentPlayer === 2) {
-          this.showToast(`FOUL! ${reason} Bot AI dapat Ball-in-Hand.`, 'foul');
-          this.state = 'AIMING';
-          this.checkAITurn();
-        } else {
-          this.state = 'BALL_IN_HAND';
-          document.getElementById('bih-controls').classList.remove('hidden');
-          const pName = this.currentPlayer === 1 ? 'Anda' : 'Pemain 2';
-          this.showToast(`FOUL! ${reason} ${pName} dapat Ball-in-Hand.`, 'foul');
-        }
-      }
-
-      /**
-       * Logik Bot AI untuk Meja Menegak
-       */
-      checkAITurn() {
-        if (!this.vsAI || this.currentPlayer !== 2 || this.state === 'GAME_OVER') return;
-
-        this.state = 'AI_THINKING';
-        this.aiTimer = setTimeout(() => {
-          const cue = this.getCueBall();
-          const target = this.getLowestBall();
-          if (!cue || !target) return;
-
-          let bestAngle = Math.atan2(target.y - cue.y, target.x - cue.x);
-          let bestScore = -9999;
-
-          for (const p of POCKETS) {
-            const toPocketAngle = Math.atan2(p.y - target.y, p.x - target.x);
-            const ghostX = target.x - Math.cos(toPocketAngle) * (BALL_RADIUS * 2);
-            const ghostY = target.y - Math.sin(toPocketAngle) * (BALL_RADIUS * 2);
-
-            const shotAngle = Math.atan2(ghostY - cue.y, ghostX - cue.x);
-            const cutAngleDiff = Math.abs(Math.atan2(Math.sin(shotAngle - toPocketAngle), Math.cos(shotAngle - toPocketAngle)));
-
-            if (cutAngleDiff < 1.15) {
-              const distCueToTarget = Math.hypot(ghostX - cue.x, ghostY - cue.y);
-              const distTargetToPocket = Math.hypot(p.x - target.x, p.y - target.y);
-              const blocked = this.isPathBlocked(cue.x, cue.y, ghostX, ghostY, [0, target.id]);
-              const score = (blocked ? -500 : 100) - cutAngleDiff * 80 - (distCueToTarget + distTargetToPocket) * 0.08;
-
-              if (score > bestScore) {
-                bestScore = score;
-                bestAngle = shotAngle;
-              }
-            }
-          }
-
-          const jitter = this.isBreakShot ? 0.02 : (Math.random() - 0.5) * 0.045;
-          this.aimAngle = bestAngle + jitter;
-          const power = this.isBreakShot ? 0.94 : Math.min(0.76, Math.max(0.4, 0.54 + Math.random() * 0.14));
-
-          this.executeShot(this.aimAngle, power);
-        }, 900);
-      }
-
-      isPathBlocked(x1, y1, x2, y2, ignoreIds) {
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const len = Math.hypot(dx, dy);
-        if (len === 0) return false;
-        const ux = dx / len;
-        const uy = dy / len;
-
-        for (const b of this.balls) {
-          if (b.pocketed || ignoreIds.includes(b.id)) continue;
-          const px = b.x - x1;
-          const py = b.y - y1;
-          const proj = px * ux + py * uy;
-          if (proj > 0 && proj < len) {
-            const perpDist = Math.abs(px * uy - py * ux);
-            if (perpDist < BALL_RADIUS * 2.05) return true;
-          }
-        }
-        return false;
-      }
-
-      calculateAimRay(cue, angle) {
-        const dirX = Math.cos(angle);
-        const dirY = Math.sin(angle);
-        let minT = 1200;
-        let hitBall = null;
-
-        if (dirX > 0) minT = Math.min(minT, (PLAY_RIGHT - BALL_RADIUS - cue.x) / dirX);
-        else if (dirX < 0) minT = Math.min(minT, (PLAY_LEFT + BALL_RADIUS - cue.x) / dirX);
-
-        if (dirY > 0) minT = Math.min(minT, (PLAY_BOTTOM - BALL_RADIUS - cue.y) / dirY);
-        else if (dirY < 0) minT = Math.min(minT, (PLAY_TOP + BALL_RADIUS - cue.y) / dirY);
-
-        const combinedR = BALL_RADIUS * 2;
-        for (const b of this.balls) {
-          if (b.id === 0 || b.pocketed) continue;
-          const ocX = cue.x - b.x;
-          const ocY = cue.y - b.y;
-          const bCoef = ocX * dirX + ocY * dirY;
-          const cCoef = ocX * ocX + ocY * ocY - combinedR * combinedR;
-          const disc = bCoef * bCoef - cCoef;
-
-          if (disc >= 0) {
-            const t = -bCoef - Math.sqrt(disc);
-            if (t > 0 && t < minT) {
-              minT = t;
-              hitBall = b;
-            }
-          }
-        }
-
-        return {
-          ghostX: cue.x + dirX * minT,
-          ghostY: cue.y + dirY * minT,
-          hitBall
-        };
-      }
-
-      /**
-       * ============================================================================
-       * LUKISAN GRAFIK MEJA MENEGAK, BOLA & KIU
-       * ============================================================================
-       */
-      drawTable() {
-        const ctx = this.ctx;
-
-        // 1. Bingkai Kayu Mahogani
-        const woodGrad = ctx.createLinearGradient(0, 0, TABLE_W, TABLE_H);
-        woodGrad.addColorStop(0, '#4a2511');
-        woodGrad.addColorStop(0.5, '#361a0b');
-        woodGrad.addColorStop(1, '#261106');
-        ctx.fillStyle = woodGrad;
-        ctx.fillRect(0, 0, TABLE_W, TABLE_H);
-
-        // Kemasan logam tembaga/emas di 4 penjuru
-        ctx.fillStyle = '#d97706';
-        const cornerSize = 32;
-        ctx.fillRect(0, 0, cornerSize, cornerSize);
-        ctx.fillRect(TABLE_W - cornerSize, 0, cornerSize, cornerSize);
-        ctx.fillRect(0, TABLE_H - cornerSize, cornerSize, cornerSize);
-        ctx.fillRect(TABLE_W - cornerSize, TABLE_H - cornerSize, cornerSize, cornerSize);
-
-        // 2. Permukaan Kain Hijau Biliar
-        const feltGrad = ctx.createRadialGradient(TABLE_W / 2, TABLE_H / 2, 50, TABLE_W / 2, TABLE_H / 2, 520);
-        feltGrad.addColorStop(0, '#15803d');
-        feltGrad.addColorStop(1, '#0d5c2b');
-        ctx.fillStyle = feltGrad;
-        ctx.fillRect(PLAY_LEFT - 5, PLAY_TOP - 5, PLAY_W + 10, PLAY_H + 10);
-
-        // Kusyen getah dalam
-        ctx.strokeStyle = '#064e3b';
-        ctx.lineWidth = 5;
-        ctx.strokeRect(PLAY_LEFT - 2.5, PLAY_TOP - 2.5, PLAY_W + 5, PLAY_H + 5);
-
-        // Bayang-bayang kusyen
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-        ctx.lineWidth = 7;
-        ctx.strokeRect(PLAY_LEFT + 2, PLAY_TOP + 2, PLAY_W - 4, PLAY_H - 4);
-
-        // 3. Garisan Kitchen (Head String) & Titik Susunan (Top Spot)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(PLAY_LEFT + 6, HEAD_STRING_Y);
-        ctx.lineTo(PLAY_RIGHT - 6, HEAD_STRING_Y);
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.beginPath();
-        ctx.arc(TOP_SPOT_X, TOP_SPOT_Y, 3.5, 0, Math.PI * 2);
-        ctx.arc(TOP_SPOT_X, HEAD_STRING_Y, 3.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 4. Penanda Berlian (Diamond Sights) pada rel kayu
-        ctx.fillStyle = '#fde68a';
-        for (let i = 1; i <= 7; i++) {
-          if (i === 4) continue; // Tengah adalah lubang sisi
-          const dy = PLAY_TOP + (PLAY_H * i) / 8;
-          this.drawDiamond(RAIL_SIZE * 0.45, dy);
-          this.drawDiamond(TABLE_W - RAIL_SIZE * 0.45, dy);
-        }
-        for (let j = 1; j <= 3; j++) {
-          const dx = PLAY_LEFT + (PLAY_W * j) / 4;
-          this.drawDiamond(dx, RAIL_SIZE * 0.45);
-          this.drawDiamond(dx, TABLE_H - RAIL_SIZE * 0.45);
-        }
-
-        // 5. Lukis 6 Lubang (Pockets)
-        for (const p of POCKETS) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
-          ctx.fillStyle = '#1c1917';
-          ctx.fill();
-
-          const pGrad = ctx.createRadialGradient(p.x - 2, p.y - 2, 2, p.x, p.y, p.r);
-          pGrad.addColorStop(0, '#09090b');
-          pGrad.addColorStop(1, '#000000');
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = pGrad;
-          ctx.fill();
-        }
-      }
-
-      drawDiamond(x, y) {
-        const ctx = this.ctx;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(Math.PI / 4);
-        ctx.fillRect(-2.8, -2.8, 5.6, 5.6);
-        ctx.restore();
-      }
-
-      drawBalls() {
-        const ctx = this.ctx;
-        const lowest = this.getLowestBall();
-
-        for (const b of this.balls) {
-          if (b.pocketed) continue;
-
-          const style = BALL_STYLES[b.id];
-          const isGhostPlacement = (this.state === 'BALL_IN_HAND' && b.id === 0);
-
-          ctx.save();
-          if (isGhostPlacement) {
-            ctx.globalAlpha = this.isValidBallPlacement(b.x, b.y) ? 0.9 : 0.42;
-          }
-
-          // Bayang-bayang bola
-          ctx.beginPath();
-          ctx.arc(b.x + 3, b.y + 3.5, BALL_RADIUS, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
-          ctx.fill();
-
-          // Bulatan denyut di sekeliling Bola Sasaran Terendah
-          if (lowest && b.id === lowest.id && (this.state === 'AIMING' || this.state === 'BALL_IN_HAND')) {
-            const pulse = 3 + Math.sin(performance.now() / 180) * 1.8;
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, BALL_RADIUS + pulse, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.7)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-          }
-
-          // Badan utama bola
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, BALL_RADIUS, 0, Math.PI * 2);
-          ctx.fillStyle = style.stripe ? '#f8fafc' : style.color;
-          ctx.fill();
-
-          // Jalur khas Bola 9
-          if (style.stripe) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, BALL_RADIUS, 0, Math.PI * 2);
-            ctx.clip();
-            ctx.fillStyle = style.color;
-            ctx.fillRect(b.x - BALL_RADIUS, b.y - BALL_RADIUS * 0.56, BALL_RADIUS * 2, BALL_RADIUS * 1.12);
-            ctx.restore();
-          }
-
-          // Bulatan nombor (1-9)
-          if (b.id > 0) {
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, BALL_RADIUS * 0.46, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff';
-            ctx.fill();
-
-            ctx.fillStyle = '#0f172a';
-            ctx.font = '800 10px Outfit, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(String(b.id), b.x, b.y + 0.5);
-          }
-
-          // Kilauan cahaya 3D
-          const gloss = ctx.createRadialGradient(
-            b.x - BALL_RADIUS * 0.35,
-            b.y - BALL_RADIUS * 0.35,
-            1,
-            b.x,
-            b.y,
-            BALL_RADIUS
-          );
-          gloss.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
-          gloss.addColorStop(0.35, 'rgba(255, 255, 255, 0.1)');
-          gloss.addColorStop(1, 'rgba(0, 0, 0, 0.28)');
-
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, BALL_RADIUS, 0, Math.PI * 2);
-          ctx.fillStyle = gloss;
-          ctx.fill();
-
-          ctx.restore();
-        }
-      }
-
-      drawAimAndCue() {
-        if (this.state !== 'AIMING') return;
-        if (this.vsAI && this.currentPlayer === 2) return;
-
-        const ctx = this.ctx;
-        const cue = this.getCueBall();
-        if (!cue || cue.pocketed) return;
-
-        const ray = this.calculateAimRay(cue, this.aimAngle);
-        const lowest = this.getLowestBall();
-        const isLegalTarget = ray.hitBall && lowest && ray.hitBall.id === lowest.id;
-
-        // 1. Garis sasaran putus-putus
-        ctx.save();
-        ctx.setLineDash([6, 6]);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = ray.hitBall
-          ? (isLegalTarget ? 'rgba(255, 255, 255, 0.8)' : 'rgba(244, 63, 94, 0.85)')
-          : 'rgba(255, 255, 255, 0.45)';
-
-        ctx.beginPath();
-        ctx.moveTo(cue.x, cue.y);
-        ctx.lineTo(ray.ghostX, ray.ghostY);
-        ctx.stroke();
-
-        // 2. Ghost Ball di titik perlanggaran
-        ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.arc(ray.ghostX, ray.ghostY, BALL_RADIUS, 0, Math.PI * 2);
-        ctx.strokeStyle = ray.hitBall
-          ? (isLegalTarget ? 'rgba(52, 211, 153, 0.95)' : 'rgba(244, 63, 94, 0.95)')
-          : 'rgba(255, 255, 255, 0.55)';
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-
-        // 3. Garis unjuran arah bola sasaran selepas dilanggar
-        if (ray.hitBall) {
-          const targetDir = Math.atan2(ray.hitBall.y - ray.ghostY, ray.hitBall.x - ray.ghostX);
-          const lineLen = 90;
-          ctx.beginPath();
-          ctx.moveTo(ray.hitBall.x, ray.hitBall.y);
-          ctx.lineTo(
-            ray.hitBall.x + Math.cos(targetDir) * lineLen,
-            ray.hitBall.y + Math.sin(targetDir) * lineLen
-          );
-          ctx.strokeStyle = isLegalTarget ? 'rgba(250, 204, 21, 0.9)' : 'rgba(244, 63, 94, 0.8)';
-          ctx.lineWidth = 2.5;
-          ctx.stroke();
-        }
-        ctx.restore();
-
-        // 4. Kayu Kiu di belakang bola putih
-        const pullback = 18 + this.pullPower * 75;
-        const stickLen = 250;
-
-        ctx.save();
-        ctx.translate(cue.x, cue.y);
-        ctx.rotate(this.aimAngle + Math.PI);
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-        ctx.beginPath();
-        ctx.roundRect(pullback, 2, stickLen, 6.5, 3);
-        ctx.fill();
-
-        const stickGrad = ctx.createLinearGradient(pullback, 0, pullback + stickLen, 0);
-        stickGrad.addColorStop(0, '#fde68a');
-        stickGrad.addColorStop(0.55, '#b45309');
-        stickGrad.addColorStop(1, '#1e1b18');
-
-        ctx.fillStyle = stickGrad;
-        ctx.beginPath();
-        ctx.moveTo(pullback, -3);
-        ctx.lineTo(pullback + stickLen, -6);
-        ctx.lineTo(pullback + stickLen, 6);
-        ctx.lineTo(pullback, 3);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(pullback, -3, 7, 6);
-        ctx.fillStyle = '#0284c7';
-        ctx.fillRect(pullback - 3, -2.8, 3, 5.6);
-
-        ctx.restore();
-      }
-
-      loop() {
-        this.updatePhysics();
-        this.drawTable();
-        this.drawBalls();
-        this.drawAimAndCue();
-        requestAnimationFrame(this.loop);
-      }
-    }
-
-    window.onload = () => {
-      new VerticalPoolGame();
-    };
-  </script>
+    <p class="pl-coin-result" id="coin-result" role="status"></p>
+    <div class="pl-coin-choices" id="coin-choices">
+      <button type="button" class="btn btn-primary" data-coin="kepala">Kepala</button>
+      <button type="button" class="btn btn-primary" data-coin="ekor">Ekor</button>
+    </div>
+  </dialog>
+
+  <!-- Cara bermain -->
+  <dialog id="dlg-help" class="dialog">
+    <h2>Cara Bermain</h2>
+    <ol class="help-list">
+      <li><b>Lambung syiling</b> dahulu: teka betul, anda pecah rak.</li>
+      <li><b>Bidik</b>: seret di meja. Tahan <b>Kiri</b>/<b>Kanan</b> untuk halus.</li>
+      <li><b>Pukul</b>: tekan dan tahan di meja, tarik ke bawah, lepas.</li>
+      <li>Kena <b>bola terkecil</b> dahulu. Bola masuk: main lagi.</li>
+      <li>Masukkan <b>bola 9</b> untuk <b>menang</b>.</li>
+      <li><b>Salah</b> (bola putih masuk, kena bola lain dahulu, dan lain-lain): lawan dapat bola putih di tangan. Tiga kali berturut-turut: kalah.</li>
+      <li><b>Putaran</b> (bola kecil di bawah): atas untuk ikut, bawah untuk tarik balik.</li>
+      <li>Selepas pecah rak, boleh <b>tolak keluar</b>.</li>
+    </ol>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-primary" id="help-close">Faham!</button>
+    </div>
+  </dialog>
 </body>
 </html>

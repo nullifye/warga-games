@@ -14,7 +14,7 @@ import { dirname, join, posix, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-export const GAMES = ['teka-kata', 'ular', 'duga-kata', 'kejar-lapan', '2048', 'blok', 'memori', 'congkak'];
+export const GAMES = ['teka-kata', 'ular', 'duga-kata', 'kejar-lapan', '2048', 'blok', 'memori', 'congkak', '9balls'];
 // Files the hub doesn't prefetch: too big to fetch on the chance the game is played.
 const PREFETCH_MAX_BYTES = 150_000;
 const START = '<!-- modulepreload:start (tools/preload.mjs) -->';
