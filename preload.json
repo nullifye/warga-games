@@ -197,6 +197,27 @@
       "shared/leaderboard.js",
       "shared/config.js",
       "shared/reload.js"
+    ],
+    "pemadam": [
+      "pemadam/",
+      "shared/base.css",
+      "shared/puzzle-page.css",
+      "pemadam/css/pemadam.css",
+      "shared/theme-boot.js",
+      "pemadam/js/main.js",
+      "pemadam/js/rules.js",
+      "pemadam/js/sound.js",
+      "shared/appswarga.js",
+      "shared/arked-link.js",
+      "shared/profile.js",
+      "shared/shared-store.js",
+      "shared/profile-options.js",
+      "shared/select.js",
+      "shared/uuid.js",
+      "shared/rng.js",
+      "shared/leaderboard.js",
+      "shared/config.js",
+      "shared/reload.js"
     ]
   }
 }

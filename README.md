@@ -14,6 +14,7 @@ AppsWarga app (hub repo: `nullifye/arcade`). Static site on GitHub Pages, no bui
 | Memori (memory pairs) | [`memori/`](memori/) | https://nullifye.github.io/warga-games/memori/ |
 | Congkak (3D, against the AI) | [`congkak/`](congkak/) | https://nullifye.github.io/warga-games/congkak/ |
 | 9-Ball (pool, against the AI or a friend) | [`9balls/`](9balls/) | https://nullifye.github.io/warga-games/9balls/ |
+| Pemadam (3D eraser flicking, against the AI) | [`pemadam/`](pemadam/) | https://nullifye.github.io/warga-games/pemadam/ |
 
 The site root redirects to the hub. Each game shows its version at the bottom of its home
 screen (tap it for a fresh reload); bump it when the game changes.
@@ -98,6 +99,7 @@ The hub's `supabase/arked.sql` explains each limit; keep it in step with any sco
 | Memori | 100,000 | 500 |
 | Congkak | 1,000 | 60 |
 | 9-Ball | 2,000 | 400 |
+| Pemadam | 1,000 | 100 |
 
 ## Teka Kata
 
@@ -315,3 +317,37 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   turns. The game screen is
   dark slate round the table, whatever the theme. Rules, physics and AI are in
   `9balls/js/rules.js` (unit-tested); based on PR #4 by mzulhelmi87.
+
+## Pemadam
+
+- The school game: flick your eraser so it lands flat on top of the other one. Osom decides who
+  starts; landing on top, and staying there for a quarter of a second, is a point, and the
+  scorer flicks again from the start. An eraser off the desk scores nothing: both go back to
+  the start and the other player flicks. Otherwise both stay where they stopped and the turn
+  passes. First to 5 wins. Rules, what counts as on top (outlines overlapping, the upper one's
+  underside on the lower one's face, both lying flat and still) and the turn order are in
+  `pemadam/js/rules.js` (unit-tested).
+- Real physics: Rapier 3D (`pemadam/vendor/rapier.es.js`, the `@dimforge/rapier3d-compat`
+  0.17.3 build with its WebAssembly inside, Apache-2.0; fetched while the home screen shows),
+  stepped at a fixed 120 Hz. The erasers are soft rubber blocks with rounded edges; the pencil
+  case and the pencil on the desk are solid. An eraser left standing on a side or an end is
+  nudged so it falls flat by itself, face up or down as the physics decides.
+- Aim like a slingshot: press on your eraser, pull back and let go. An arrow on the desk shows
+  the direction and power, and a power gauge (as in 9-Ball) floats beside the finger. **Kuat**
+  hops high and tumbles, to land on top; **Lembut** skims low, to creep closer (K and L on a
+  keyboard).
+- AI levels (Mudah, Sederhana, Susah, Pakar): Mudah aims straight at your eraser with a rough
+  power; the others try 10, 24 or 80 flicks out in a copy of the physics, judged by the same
+  rules, and keep the best (a point, or failing that a good spot away from the edges), then
+  miss by a little less at each level (`planFlick` in `pemadam/js/physics.js`). The AI shows its
+  arrow and gauge as it aims. Only a win scores: the level's maximum (100, 400, 700, 1,000) less
+  a tenth for each point the AI got.
+- 3D with Three.js (Kejar Lapan's `vendor/` copy): a light wooden school desk with grain, knots
+  and old scratches on a steel frame, soft shadows, and flag erasers: yours the Jalur Gemilang,
+  the AI's one of 11 others, a different one each match (Japan, Indonesia, Thailand, Singapore,
+  Germany, France, Italy, Netherlands, Ukraine, Bangladesh, Poland). Each is drawn to its official
+  construction and proportions (`pemadam/js/flags.js`, tested), with a thin rubber margin.
+  A thud and a rubbery squeak as they land and skid. Each
+  point is replayed in slow motion up close (**Ulang tayang**, on by default; tap to skip).
+  Swipe off your eraser or the arrow keys turn the view (kept between games); ↺ or 0 puts it
+  back. Based on PR #3 by Hijaz96.

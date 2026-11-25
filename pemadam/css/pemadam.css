@@ -1,0 +1,285 @@
+/* Pemadam. Builds on ../shared/base.css and ../shared/puzzle-page.css (home, settings, result),
+   so it looks like the other games; this file adds the AI level picker, the 3D stage with its
+   tags, power gauge and flick choice, and the osom dialog. */
+
+/* ---------- home ---------- */
+.pm-stats { grid-template-columns: repeat(3, 1fr); }
+
+.pm-level-row { padding: 12px 14px; display: grid; gap: 10px; border-bottom: 1px solid var(--track); }
+.pm-levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--track); }
+.pm-levels button {
+  border: 0;
+  border-radius: 10px;
+  min-height: 40px;
+  padding: 6px 2px;
+  background: none;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: background 0.2s, color 0.2s;
+}
+.pm-levels button[aria-pressed='true'] { background: var(--key); color: var(--primary); box-shadow: var(--shadow); }
+
+/* ---------- game ---------- */
+/* The desk fills the whole window under the bar (wider than the 520px #app column, or a wide
+   window would slice the 3D scene off); the bar and status line float over it, in the column.
+   Round the desk is the classroom's dim floor, whatever the theme: the colour tokens are
+   redefined for the game screen (as 9-Ball does), and the theme's primary colour stays for
+   highlights. */
+body[data-screen='game'] { background: #24201c; }
+.screen-game {
+  --bg: #24201c;
+  --surface: rgba(48, 41, 35, 0.9);
+  --surface-2: #3a322b;
+  --ink: #f6efe6;
+  --ink-2: #c9bba9;
+  --muted: #9a8b7a;
+  --line: rgba(214, 190, 160, 0.26);
+  --track: #3a322b;
+  --key: #4a4038;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --accent: color-mix(in srgb, var(--primary) 55%, #fff);
+  color: var(--ink);
+  background: #24201c;
+  position: relative;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+}
+.screen-game .bar { position: relative; z-index: 2; width: 100%; max-width: 520px; margin: 0 auto; padding: 0 16px; }
+.screen-game .icon-btn { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line), var(--shadow); }
+.screen-game,
+.screen-game * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.pm-status {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 520px;
+  margin: 8px auto 0;
+  padding: 0 16px;
+  min-height: 1.5em;
+  text-align: center;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 0.92rem;
+  pointer-events: none;
+}
+.pm-status::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  border-radius: 50%;
+  vertical-align: 1px;
+  background: transparent;
+}
+.pm-status[data-who='player']::before { background: #2f7dd6; }
+.pm-status[data-who='ai']::before { background: #d0452f; }
+
+.pm-stage { position: absolute; inset: 0; z-index: 0; overflow: hidden; touch-action: none; }
+.pm-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.pm-canvas:active { cursor: grabbing; }
+.pm-reset-view { position: absolute; right: 16px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px); z-index: 2; }
+.pm-reset-view[hidden] { display: none; }
+
+/* Small name tags over the erasers. */
+.pm-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  pointer-events: none;
+  will-change: transform;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.pm-tag.you { background: #2f7dd6; }
+.pm-tag.ai { background: #d0452f; }
+.pm-tag[hidden] { display: none; }
+
+/* During a point's replay: a badge at the top of the desk area. */
+.pm-replay {
+  position: absolute;
+  left: 50%;
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 70px);
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.pm-replay[hidden] { display: none; }
+.pm-replay-dot { width: 9px; height: 9px; border-radius: 50%; background: #ef4444; animation: pm-blink 1s steps(2, start) infinite; }
+@keyframes pm-blink { to { visibility: hidden; } }
+
+/* The flick: Kuat (hops high) or Lembut (skims low), at the bottom over the desk. */
+.pm-style {
+  position: absolute;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  width: min(300px, calc(100vw - 32px));
+  padding: 4px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+}
+.pm-style button {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  min-height: 46px;
+  padding: 5px 4px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink-2);
+  transition: background 0.2s, color 0.2s;
+}
+.pm-style b { font-size: 0.9rem; }
+.pm-style small { font-size: 0.68rem; color: var(--muted); }
+.pm-style button[aria-pressed='true'] { background: var(--key); color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* The power gauge beside the finger (or the AI's eraser): a slim glass panel; the fill rises
+   from the bottom, green to red, glowing as it nears full. */
+.pm-gauge {
+  position: absolute;
+  z-index: 3;
+  width: 48px;
+  padding: 7px 0;
+  border-radius: 12px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.92));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), inset 0 0 0 1.5px rgba(255, 255, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  animation: pm-gauge-in 0.16s ease-out;
+}
+.pm-gauge[hidden] { display: none; }
+.pm-gauge-track {
+  position: relative;
+  width: 18px;
+  height: 128px;
+  border-radius: 6px;
+  overflow: hidden;
+  background:
+    linear-gradient(transparent calc(25% - 1px), rgba(255, 255, 255, 0.22) calc(25% - 1px) 25%, transparent 25%
+      calc(50% - 1px), rgba(255, 255, 255, 0.22) calc(50% - 1px) 50%, transparent 50% calc(75% - 1px),
+      rgba(255, 255, 255, 0.22) calc(75% - 1px) 75%, transparent 75%),
+    rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45), 0 0 calc(2px + 12px * var(--p, 0)) rgba(249, 115, 22, calc(0.1 + 0.6 * var(--p, 0)));
+}
+.pm-gauge-fill {
+  /* Always full size; js/main.js reveals the bottom part with a clip (no layout work). */
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(0deg, #34d399, #facc15 55%, #f97316 78%, #ef4444);
+  clip-path: inset(100% 0 0 0 round 6px);
+  will-change: clip-path;
+}
+.pm-gauge-pct {
+  min-width: 34px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #0f172a;
+  background: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes pm-gauge-in { from { opacity: 0; scale: 0.85; } }
+
+/* ---------- result ---------- */
+.puzzle-result .pm-res-level { margin-top: -6px; font-size: 0.9rem; font-weight: 600; }
+
+/* ---------- osom (as in Congkak) ---------- */
+.pm-osom { text-align: center; width: min(360px, calc(100vw - 32px)); }
+.pm-osom h2 { margin: 0; font-size: 1.9rem; font-weight: 800; letter-spacing: -0.01em; }
+.pm-osom-sub { margin: 4px 0 0; min-height: 1.4em; color: var(--ink-2); font-weight: 500; }
+.pm-osom-arena {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 12px 8px;
+  border-radius: 20px;
+  background: linear-gradient(100deg,
+    color-mix(in srgb, #2f7dd6 16%, var(--surface-2)) 0%,
+    var(--surface-2) 42%, var(--surface-2) 58%,
+    color-mix(in srgb, #d0452f 16%, var(--surface-2)) 100%);
+}
+.pm-osom-side { display: grid; justify-items: center; gap: 6px; padding: 10px 4px 8px; border-radius: 16px; transition: background 0.25s, box-shadow 0.25s; }
+.pm-osom-side b { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.pm-osom-side.you b { color: #2f6fc0; }
+.pm-osom-side.ai b { color: #c0412c; }
+.pm-osom-hand { display: inline-block; font-size: 3.4rem; line-height: 1; }
+.pm-osom-side.ai .pm-osom-hand { transform: scaleX(-1); }
+.pm-osom-vs { font-weight: 800; font-size: 0.85rem; color: var(--muted); letter-spacing: 0.06em; }
+.pm-osom-arena.shaking .pm-osom-hand { animation: pm-osom-shake 0.3s ease-in-out 3; }
+.pm-osom-side.won { background: color-mix(in srgb, var(--gold) 20%, transparent); box-shadow: inset 0 0 0 2px var(--gold); }
+.pm-osom-side.won .pm-osom-hand { animation: pm-osom-pop 0.45s ease-out; }
+@keyframes pm-osom-shake { 0%, 100% { translate: 0 0; } 50% { translate: 0 -14px; } }
+@keyframes pm-osom-pop { 0% { scale: 0.7; } 65% { scale: 1.2; } 100% { scale: 1; } }
+
+.pm-osom-result { min-height: 40px; margin: 12px 0 0; display: grid; place-items: center; }
+.pm-osom-result span { padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; animation: rise 0.3s both ease-out; }
+.pm-osom-result .win { background: color-mix(in srgb, var(--ok, #2e9e5b) 18%, var(--surface)); color: var(--ok, #2e9e5b); }
+.pm-osom-result .lose { background: color-mix(in srgb, #d0452f 14%, var(--surface)); color: #c0412c; }
+.pm-osom-result .draw { background: color-mix(in srgb, var(--gold) 22%, var(--surface)); color: color-mix(in srgb, var(--gold) 45%, var(--ink)); }
+
+.pm-osom-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 0; }
+.pm-osom-choices button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 12px 4px 10px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.82rem;
+  box-shadow: inset 0 0 0 2px var(--line), 0 4px 0 var(--line);
+  transition: transform 0.08s, box-shadow 0.08s, opacity 0.2s;
+}
+.pm-osom-choices button span { font-size: 2.3rem; line-height: 1.15; }
+.pm-osom-choices button:active { transform: translateY(2px); box-shadow: inset 0 0 0 2px var(--line), 0 2px 0 var(--line); }
+.pm-osom-choices button:disabled { opacity: 0.45; }
+.pm-osom-choices button[aria-pressed='true'] { opacity: 1; color: var(--primary); box-shadow: inset 0 0 0 3px var(--primary), 0 4px 0 color-mix(in srgb, var(--primary) 60%, #000); }
+.pm-osom-rule { margin: 14px 0 0; font-size: 0.78rem; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-osom-arena.shaking .pm-osom-hand, .pm-osom-side.won .pm-osom-hand, .pm-osom-result span, .pm-gauge, .pm-replay-dot { animation: none; }
+}

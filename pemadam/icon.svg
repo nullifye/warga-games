@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <!-- A light wooden school desk, its grain running across. -->
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2b277"/>
+      <stop offset="1" stop-color="#bf8448"/>
+    </linearGradient>
+    <clipPath id="flag-my"><rect x="15" y="16.5" width="38" height="11" rx="1.6"/></clipPath>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#desk)"/>
+  <g fill="none" stroke="#8a5a2b" stroke-linecap="round" opacity=".22">
+    <path d="M0 12c14-3 26 3 40 0s18-2 24 0" stroke-width="1.2"/>
+    <path d="M0 52c12 2 24-3 38 0s20 2 26 0" stroke-width="1.4"/>
+    <path d="M0 58c16-2 30 2 44-1s14 0 20 1" stroke-width=".9"/>
+  </g>
+
+  <!-- Soft shadow under the pair. -->
+  <ellipse cx="33" cy="54" rx="22" ry="4.5" fill="#5b3716" opacity=".28"/>
+
+  <!-- The other eraser, flat on the desk: plain rounded rubber, no flag. -->
+  <g transform="rotate(-6 32 42)">
+    <rect x="10" y="40" width="44" height="13" rx="4" fill="#d8cfba"/>
+    <rect x="10" y="32" width="44" height="13" rx="4" fill="#f6f2e6"/>
+  </g>
+
+  <!-- Yours, landed on top (the same size): the Jalur Gemilang. -->
+  <g transform="rotate(9 34 22)">
+    <rect x="12" y="23" width="44" height="13" rx="4" fill="#d8cfba"/>
+    <rect x="12" y="15" width="44" height="13" rx="4" fill="#f6f2e6"/>
+    <g clip-path="url(#flag-my)">
+      <rect x="15" y="16.5" width="38" height="11" fill="#fff"/>
+      <g fill="#cc142b">
+        <rect x="15" y="16.50" width="38" height=".79"/><rect x="15" y="18.07" width="38" height=".79"/>
+        <rect x="15" y="19.64" width="38" height=".79"/><rect x="15" y="21.21" width="38" height=".79"/>
+        <rect x="15" y="22.79" width="38" height=".79"/><rect x="15" y="24.36" width="38" height=".79"/>
+        <rect x="15" y="25.93" width="38" height=".79"/>
+      </g>
+      <rect x="15" y="16.5" width="19" height="6.3" fill="#010066"/>
+      <circle cx="21.4" cy="19.65" r="2.3" fill="#ffcc00"/>
+      <circle cx="22.3" cy="19.1" r="1.95" fill="#010066"/>
+      <path d="M26.60 17.90L26.78 18.87L27.36 18.07L27.10 19.02L27.97 18.56L27.32 19.30L28.31 19.26L27.40 19.65L28.31 20.04L27.32 20.00L27.97 20.74L27.10 20.28L27.36 21.23L26.78 20.43L26.60 21.40L26.42 20.43L25.84 21.23L26.10 20.28L25.23 20.74L25.88 20.00L24.89 20.04L25.80 19.65L24.89 19.26L25.88 19.30L25.23 18.56L26.10 19.02L25.84 18.07L26.42 18.87Z" fill="#ffcc00"/>
+    </g>
+  </g>
+</svg>
