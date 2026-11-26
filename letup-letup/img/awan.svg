@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 160">
+  <!-- Sunset clouds for LetupLetup's sky: a strip that tiles side to side (css/letup.css drifts it). -->
+  <g fill="#ffb3c7" opacity=".28">
+    <ellipse cx="90" cy="48" rx="70" ry="14"/><ellipse cx="120" cy="38" rx="38" ry="16"/><ellipse cx="70" cy="40" rx="26" ry="12"/>
+    <ellipse cx="380" cy="104" rx="90" ry="15"/><ellipse cx="410" cy="92" rx="44" ry="18"/><ellipse cx="350" cy="96" rx="30" ry="13"/>
+    <ellipse cx="640" cy="58" rx="80" ry="13"/><ellipse cx="664" cy="48" rx="36" ry="15"/><ellipse cx="618" cy="51" rx="24" ry="11"/>
+  </g>
+  <g fill="#ffd8a8" opacity=".22">
+    <ellipse cx="96" cy="56" rx="58" ry="5"/><ellipse cx="386" cy="114" rx="76" ry="5"/><ellipse cx="646" cy="66" rx="66" ry="4"/>
+  </g>
+  <g fill="#c9a7ff" opacity=".18">
+    <ellipse cx="250" cy="22" rx="60" ry="9"/><ellipse cx="270" cy="15" rx="26" ry="10"/>
+    <ellipse cx="540" cy="134" rx="70" ry="10"/><ellipse cx="560" cy="126" rx="30" ry="11"/>
+    <ellipse cx="770" cy="20" rx="40" ry="8"/><ellipse cx="-30" cy="20" rx="40" ry="8"/>
+  </g>
+</svg>

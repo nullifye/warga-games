@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+  <!-- UiTM Shah Alam at sunset, as a skyline along the bottom of LetupLetup's game screen (the sky
+       above is css/letup.css). Left to right: Dewan Agung Tuanku Canselor, Perpustakaan Tun Abdul
+       Razak, Menara SAAS, a faculty block, Masjid Tuanku Mizan; Pintu Utama in front. -->
+  <defs>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b3a8f"/>
+      <stop offset="1" stop-color="#3f2163"/>
+    </linearGradient>
+    <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a1f63"/>
+      <stop offset="1" stop-color="#22113d"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4f3a8c"/>
+      <stop offset=".5" stop-color="#7a63c2"/>
+      <stop offset="1" stop-color="#3d2b73"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fff3bf"/>
+      <stop offset=".35" stop-color="#ffd43b" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#ffd43b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Hills far off. -->
+  <path d="M0 150Q50 128 110 142T230 136T330 130T400 138V200H0z" fill="url(#far)" opacity=".75"/>
+
+  <!-- Dewan Agung Tuanku Canselor: a wide hall under a tiered roof. -->
+  <g>
+    <path d="M10 152h116l-14-16H24z" fill="#4a2a78"/>
+    <path d="M30 136h76l-12-13H42z" fill="#55318a"/>
+    <path d="M48 123h40l-10-11H58z" fill="#603a99"/>
+    <path d="M68 112v-12" stroke="#ffd43b" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="68" cy="99" r="2" fill="#ffd43b"/>
+    <rect x="16" y="152" width="104" height="48" fill="url(#mid)"/>
+    <g fill="#ffd8a8" opacity=".75">
+      <rect x="22" y="158" width="6" height="9" rx="1"/><rect x="34" y="158" width="6" height="9" rx="1"/><rect x="46" y="158" width="6" height="9" rx="1"/>
+      <rect x="84" y="158" width="6" height="9" rx="1"/><rect x="96" y="158" width="6" height="9" rx="1"/><rect x="108" y="158" width="6" height="9" rx="1"/>
+    </g>
+    <g stroke="#7b5bb5" stroke-width="1.2" opacity=".7"><path d="M58 158v34M64 158v34M72 158v34M78 158v34"/></g>
+  </g>
+
+  <!-- Perpustakaan Tun Abdul Razak (PTAR): bands of windows. -->
+  <g>
+    <rect x="128" y="126" width="50" height="74" fill="url(#mid)"/>
+    <rect x="126" y="122" width="54" height="5" fill="#4a2a78"/>
+    <g fill="#ffd8a8" opacity=".7">
+      <rect x="132" y="132" width="42" height="3"/><rect x="132" y="142" width="42" height="3"/><rect x="132" y="152" width="42" height="3"/><rect x="132" y="162" width="42" height="3"/>
+    </g>
+    <g fill="#22113d"><rect x="141" y="131" width="2" height="36"/><rect x="152" y="131" width="2" height="36"/><rect x="163" y="131" width="2" height="36"/></g>
+  </g>
+
+  <!-- Menara SAAS: the tall tower, glass strips, a lit crown and its spire. -->
+  <g>
+    <rect x="184" y="40" width="34" height="160" fill="url(#glass)"/>
+    <rect x="184" y="40" width="34" height="160" fill="none" stroke="#2a1648" stroke-width="1.2"/>
+    <rect x="188" y="30" width="26" height="11" fill="#5b43a3"/>
+    <rect x="193" y="21" width="16" height="10" fill="#6c55b8"/>
+    <path d="M201 21V5" stroke="#e9ecef" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="201" cy="4" r="2" fill="#ff6b6b"/>
+    <rect x="188" y="32" width="26" height="2" fill="#ffd43b" opacity=".9"/>
+    <g fill="#2a1648" opacity=".55"><rect x="192" y="44" width="2" height="156"/><rect x="200" y="44" width="2" height="156"/><rect x="208" y="44" width="2" height="156"/></g>
+    <g fill="#ffd8a8" opacity=".85">
+      <rect x="195" y="56" width="3" height="3"/><rect x="211" y="70" width="3" height="3"/><rect x="187" y="86" width="3" height="3"/><rect x="203" y="98" width="3" height="3"/>
+      <rect x="195" y="114" width="3" height="3"/><rect x="211" y="128" width="3" height="3"/><rect x="187" y="142" width="3" height="3"/><rect x="203" y="156" width="3" height="3"/><rect x="195" y="170" width="3" height="3"/>
+    </g>
+  </g>
+
+  <!-- A faculty block. -->
+  <g>
+    <rect x="224" y="118" width="58" height="82" fill="url(#mid)"/>
+    <rect x="222" y="114" width="62" height="5" fill="#4a2a78"/>
+    <g fill="#ffd8a8" opacity=".65">
+      <rect x="230" y="124" width="6" height="7"/><rect x="242" y="124" width="6" height="7"/><rect x="266" y="124" width="6" height="7"/>
+      <rect x="254" y="137" width="6" height="7"/><rect x="230" y="150" width="6" height="7"/><rect x="266" y="150" width="6" height="7"/><rect x="242" y="163" width="6" height="7"/>
+    </g>
+  </g>
+
+  <!-- Masjid Tuanku Mizan: a dome with its crescent, and the minaret. -->
+  <g>
+    <rect x="288" y="150" width="68" height="50" fill="url(#mid)"/>
+    <path d="M294 151c0-20 12-34 28-37 16 3 28 17 28 37z" fill="#4dabf7" opacity=".85"/>
+    <path d="M294 151c0-20 12-34 28-37-8 6-13 20-13 37z" fill="#74c0fc" opacity=".6"/>
+    <path d="M322 114v-8" stroke="#ffd43b" stroke-width="1.4"/>
+    <path d="M325 101a4 4 0 1 1-4-5 3 3 0 1 0 4 5z" fill="#ffd43b"/>
+    <g fill="#ffd8a8" opacity=".7"><path d="M300 166a4 4 0 0 1 8 0v10h-8zM318 166a4 4 0 0 1 8 0v10h-8zM336 166a4 4 0 0 1 8 0v10h-8z"/></g>
+    <rect x="362" y="86" width="11" height="114" fill="url(#mid)"/>
+    <rect x="360" y="110" width="15" height="4" fill="#4a2a78"/>
+    <rect x="360" y="140" width="15" height="4" fill="#4a2a78"/>
+    <path d="M360 86l7.5-12 7.5 12z" fill="#4dabf7"/>
+    <path d="M369.5 70a3 3 0 1 1-3-3.6 2.2 2.2 0 1 0 3 3.6z" fill="#ffd43b"/>
+    <rect x="378" y="142" width="22" height="58" fill="url(#mid)"/>
+  </g>
+
+  <!-- Trees along the road. -->
+  <g fill="#1a0c30">
+    <circle cx="6" cy="182" r="14"/><circle cx="22" cy="186" r="11"/>
+    <circle cx="150" cy="184" r="13"/><circle cx="166" cy="188" r="10"/>
+    <circle cx="236" cy="186" r="12"/><circle cx="254" cy="182" r="14"/><circle cx="272" cy="188" r="10"/>
+    <circle cx="384" cy="182" r="14"/><circle cx="398" cy="187" r="10"/>
+  </g>
+  <!-- A palm or two. -->
+  <g stroke="#1a0c30" stroke-width="2.4" fill="none" stroke-linecap="round">
+    <path d="M176 200c1-14 2-24 0-34"/>
+    <path d="M176 166c-6-2-11 0-14 4M176 166c6-3 12-2 15 2M176 166c-2-5-6-8-11-8M176 166c3-5 7-7 12-6"/>
+    <path d="M282 200c-1-12-1-20 1-28"/>
+    <path d="M283 172c-5-2-9 0-12 3M283 172c5-2 10-1 12 2M283 172c-1-4-5-7-9-7M283 172c2-4 6-6 10-5"/>
+  </g>
+
+  <!-- Pintu Utama UiTM, in front: two pillars and the arch with the name. -->
+  <g>
+    <rect x="60" y="166" width="9" height="34" fill="#2b1650"/>
+    <rect x="131" y="166" width="9" height="34" fill="#2b1650"/>
+    <rect x="54" y="158" width="92" height="17" rx="3" fill="#6f2c91" stroke="#ffd43b" stroke-width="1.5"/>
+    <text x="100" y="171" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="12.5" fill="#ffd43b" letter-spacing=".5">UiTM</text>
+    <rect x="58" y="162" width="13" height="3" rx="1" fill="#ffd43b" opacity=".5"/>
+    <rect x="129" y="162" width="13" height="3" rx="1" fill="#ffd43b" opacity=".5"/>
+  </g>
+
+  <!-- Street lamps. -->
+  <g>
+    <path d="M40 200v-24M204 200v-20M300 200v-22M348 200v-20" stroke="#120822" stroke-width="1.6"/>
+    <circle cx="40" cy="175" r="7" fill="url(#lamp)"/><circle cx="204" cy="179" r="7" fill="url(#lamp)"/>
+    <circle cx="300" cy="177" r="7" fill="url(#lamp)"/><circle cx="348" cy="179" r="7" fill="url(#lamp)"/>
+  </g>
+
+  <!-- The road. -->
+  <rect x="0" y="194" width="400" height="6" fill="#120822"/>
+  <path d="M8 197h14M40 197h14M72 197h14M104 197h14M136 197h14M168 197h14M200 197h14M232 197h14M264 197h14M296 197h14M328 197h14M360 197h14M392 197h8" stroke="#ffd43b" stroke-width=".8" opacity=".35"/>
+</svg>
