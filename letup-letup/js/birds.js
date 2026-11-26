@@ -1,8 +1,11 @@
-// Letup-Letup's pieces: six round little birds drawn as inline SVG (the same on every phone). Each
-// has a body colour far from the others (red, blue, green, yellow, purple, white) and its own
-// headwear from campus life, so types are easy to tell apart at a glance. The parts that move at
-// idle have classes for css/letup.css: .lt-bob (the whole bird), .eyes (blinks), .pupils (looks
-// about) and .wing (flaps now and then).
+// Letup-Letup's pieces: six round little birds drawn as SVG (the same on every phone). Each has a
+// body colour far from the others (red, blue, green, yellow, purple, white) and its own headwear
+// from campus life, so types are easy to tell apart at a glance.
+//
+// For speed on phones each bird is drawn as a few still images (poses: normal, blinking, wings up,
+// worried) that the browser draws once and reuses for every bird of that colour (birdSrc). The
+// board brings them to life by swapping poses now and then and gently bobbing the image, instead
+// of animating 25 shapes inside each of 54 birds every frame.
 const BIRDS = [
   // Red: the athlete, in a sweatband.
   { body: '#f03e3e', dark: '#a61e1e', belly: '#ffc9c9', tuft: true, hat: `
@@ -41,12 +44,19 @@ export const BIRD_COLOURS = BIRDS.map((b) => b.body);
 /** Feather colours for each bird, for the burst when one explodes. */
 export const FEATHERS = BIRDS.map((b) => [b.body, b.belly, b.dark]);
 
-/** A bird's SVG. */
-export function birdSvg(type) {
+/**
+ * A bird's SVG in a pose: `blink` (eyes shut), `flap` (wings up), `worried` (looking up at the
+ * top of a nearly full column).
+ */
+export function birdSvg(type, { blink = false, flap = false, worried = false } = {}) {
   const b = BIRDS[type];
   const tuft = b.tuft ? `<path d="M22 10.2c-.6-3 .7-5.4 3.1-6.2-1 1.8-.9 3.6.3 5.5.6-1.5 1.8-2.4 3.3-2.6-1.1 1.2-1.5 2.4-1.3 3.8" fill="${b.body}" stroke="${b.dark}" stroke-width="1.2" stroke-linejoin="round"/>` : '';
   const beak = b.beak ?? '#ffa94d';
-  return `<svg class="lt-bird" viewBox="0 0 48 48" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">
+  const wingL = flap ? ' transform="rotate(28 13.8 26.6)"' : '';
+  const wingR = flap ? ' transform="rotate(-28 34.2 26.6)"' : '';
+  const eyes = blink ? ' transform="translate(0 21.5) scale(1 .12) translate(0 -21.5)"' : '';
+  const look = worried ? ' transform="translate(0 -1.6)"' : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="lt-bird" viewBox="0 0 48 48" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">
   <g class="lt-bob">
     <ellipse cx="24" cy="45" rx="11" ry="2" fill="#000" opacity=".18"/>
     <path d="M19 41.5v2.6M17.4 44.1h3.2M29 41.5v2.6M27.4 44.1h3.2" stroke="#e8590c" stroke-width="1.6"/>
@@ -54,13 +64,13 @@ export function birdSvg(type) {
     <circle cx="24" cy="26" r="16.5" fill="${b.body}" stroke="${b.dark}" stroke-width="1.8"/>
     <ellipse cx="24" cy="32.5" rx="10" ry="8" fill="${b.belly}"/>
     <path d="M13 17.5c2.5-3.6 6.3-5.6 10.5-5.9" fill="none" stroke="#fff" stroke-width="1.6" opacity=".45"/>
-    <path class="wing" d="M8.6 25.5c-2.6 2.4-3.1 6.6-1 9.4 2.6-.2 5.4-2.2 6.5-5.2.5-1.6-.1-3.4-1.6-4.3-1.3-.8-2.8-.7-3.9.1z" fill="${b.dark}"/>
-    <path class="wing wing-r" d="M39.4 25.5c2.6 2.4 3.1 6.6 1 9.4-2.6-.2-5.4-2.2-6.5-5.2-.5-1.6.1-3.4 1.6-4.3 1.3-.8 2.8-.7 3.9.1z" fill="${b.dark}"/>
+    <path class="wing"${wingL} d="M8.6 25.5c-2.6 2.4-3.1 6.6-1 9.4 2.6-.2 5.4-2.2 6.5-5.2.5-1.6-.1-3.4-1.6-4.3-1.3-.8-2.8-.7-3.9.1z" fill="${b.dark}"/>
+    <path class="wing wing-r"${wingR} d="M39.4 25.5c2.6 2.4 3.1 6.6 1 9.4-2.6-.2-5.4-2.2-6.5-5.2-.5-1.6.1-3.4 1.6-4.3 1.3-.8 2.8-.7 3.9.1z" fill="${b.dark}"/>
     <ellipse cx="14.5" cy="28.5" rx="2.6" ry="1.6" fill="#ff8787" opacity=".55"/>
     <ellipse cx="33.5" cy="28.5" rx="2.6" ry="1.6" fill="#ff8787" opacity=".55"/>
-    <g class="eyes">
+    <g class="eyes"${eyes}>
       <ellipse cx="18" cy="21.5" rx="4.6" ry="5" fill="#fff" stroke="${b.dark}" stroke-width=".5"/><ellipse cx="30" cy="21.5" rx="4.6" ry="5" fill="#fff" stroke="${b.dark}" stroke-width=".5"/>
-      <g class="pupils" fill="#1d2b3a"><circle cx="18.6" cy="22.2" r="2.7"/><circle cx="29.4" cy="22.2" r="2.7"/></g>
+      <g class="pupils" fill="#1d2b3a"${look}><circle cx="18.6" cy="22.2" r="2.7"/><circle cx="29.4" cy="22.2" r="2.7"/></g>
       <circle cx="19.6" cy="20.8" r="1" fill="#fff"/><circle cx="30.4" cy="20.8" r="1" fill="#fff"/>
     </g>
     ${b.eyesExtra ?? ''}
@@ -69,4 +79,24 @@ export function birdSvg(type) {
     ${b.hat ?? ''}
   </g>
 </svg>`;
+}
+
+export const POSES = { normal: {}, blink: { blink: true }, flap: { flap: true }, worried: { worried: true } };
+const srcCache = new Map();
+/** A bird in a pose as an image address (made once, then reused by every bird of that colour). */
+export function birdSrc(type, pose = 'normal') {
+  const k = `${type}:${pose}`;
+  if (!srcCache.has(k)) srcCache.set(k, `data:image/svg+xml;charset=utf-8,${encodeURIComponent(birdSvg(type, POSES[pose]))}`);
+  return srcCache.get(k);
+}
+
+/** Decodes every bird's poses ahead of time, so the first blink or flap doesn't flicker. */
+export function preloadBirds(types = BIRDS.length) {
+  for (let t = 0; t < types; t++) {
+    for (const pose of Object.keys(POSES)) {
+      const img = new Image();
+      img.src = birdSrc(t, pose);
+      img.decode?.().catch(() => {});
+    }
+  }
 }

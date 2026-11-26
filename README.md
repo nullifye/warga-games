@@ -419,9 +419,26 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   specials swapped into each other go off together: Mercun + Mercun = **Mercun Besar** (5 × 5,
   +50), Mercun + Petir = **Petir Berganda** (three rows and three columns, +75), Petir + Petir
   = **Ribut Petir** (every bird of both colours, +100); they set off other specials they reach.
-- Always a little alive: each bird bobs, blinks, looks about and flaps now and then, on its own
-  random timing; a picked one hops and flaps. An explosion: a flash, a fireball, a shock ring,
-  sparks and the bird's feathers; big ones (blasts, chains of 3+) jolt the board.
+- Always a little alive: each bird bobs gently on its own timing, one blinks or flaps now and
+  then, a picked one hops and flaps, and birds in a nearly full column tremble and look up. An
+  explosion: a flash, a fireball, a shock ring, sparks and the bird's feathers; big ones (blasts,
+  chains of 3+) jolt the board.
+- Made to run smoothly on phones:
+  - each bird is a still image in four poses (normal, blinking, wings up, worried) drawn once per
+    colour and reused (`birdSrc` in `js/birds.js`), bobbing as a whole; the poses are swapped on a
+    bird or two at a time, rather than 54 detailed drawings animating inside all the time;
+  - the board's panel doesn't blur the sky behind it, and the clouds slide rather than move their
+    background, so the graphics chip does both;
+  - sparks and feathers are drawn on one canvas over the board; a pop shares a budget of 60 of
+    them (16 with Animasi ringan) among all its birds, with at most 12 fireballs, 8 shock rings
+    and one bolt per column; effects only move, scale and fade (no animated blur, brightness,
+    border width or shadow size);
+  - the bobbing pauses while birds move or explode; the row timer and kombo bars are scaled, not
+    resized;
+  - **Animasi ringan** (settings): still birds, a still sky, fewer particles. It switches itself
+    on (once, with a message) if the first seconds of play run below about 36 frames a second.
+  - Measured in a headless browser with software graphics at phone size: an idle board and a
+    row dropping went from about 0 to 60 frames a second, a Ribut Petir from 1 to about 49.
 - **Music**: an original synthesised loop (16 bars: melody, bass, off-beat chords, drums) at a
   steady 118 BPM whatever the level. It follows how close the stack is to the top instead: tense
   (132 BPM, a driving bass) when a column has two spaces left, panicky (148 BPM, a ticking clock

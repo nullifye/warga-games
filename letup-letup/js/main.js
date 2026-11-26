@@ -8,7 +8,7 @@ import {
 import {
   setMuted, unlockSound, play as playSound, setMusicOn, setMusicMood, startMusic, stopMusic,
 } from './sound.js';
-import { birdSvg, FEATHERS } from './birds.js';
+import { birdSrc, preloadBirds, FEATHERS } from './birds.js';
 import { initAppsWarga, appsWargaHaptic, closeMiniApp, notifyAppReady } from '../../shared/appswarga.js';
 import { initFromArked, backToArked } from '../../shared/arked-link.js';
 import { initProfile, loadProfile, withProfile } from '../../shared/profile.js';
@@ -50,7 +50,7 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
 }
 
-const settings = () => ({ sound: true, music: true, ...storeGet(K.settings, {}) });
+const settings = () => ({ sound: true, music: true, lite: false, liteChecked: false, ...storeGet(K.settings, {}) });
 const stats = () => ({ played: 0, best: 0, bestLevel: 0, ...storeGet(K.stats, {}) });
 const todaysDaily = () => { const d = storeGet(K.daily, null); return d?.date === todayKL() ? d : null; };
 
@@ -113,6 +113,9 @@ function renderSettings() {
   setMusicOn(s.music);
   $('#set-music').setAttribute('aria-checked', String(s.music));
   $('#set-music-hint').textContent = s.music ? 'Muzik latar semasa bermain' : 'Senyap';
+  $('#set-lite').setAttribute('aria-checked', String(s.lite));
+  $('#set-lite-hint').textContent = s.lite ? 'Burung tidak beranimasi, letupan lebih ringkas' : 'Untuk telefon yang perlahan';
+  document.body.classList.toggle('lt-lite', s.lite);
 }
 
 function renderHome() {
@@ -186,7 +189,7 @@ function startGame(g) {
   session = {
     g, startedAt: Date.now(), busy: false, paused: false, idle: 0, raf: 0, lastTs: 0,
     sel: null, cursor: [ROWS - 1, 3], held: false, els: new Map(), leaving: false, warned: false,
-    clock: 0, popup: false, hint: null, lastAct: 0,
+    clock: 0, popup: false, hint: null, lastAct: 0, alive: 0, selFlap: 0, fpsSamples: [],
   };
   show('game');
   $('#game-mode').textContent = g.daily ? 'Cabaran Harian' : 'Main Bebas';
@@ -197,8 +200,10 @@ function startGame(g) {
   $('#lt-tip').hidden = true;
   fit();
   buildBoard();
+  particlesCanvas();
   renderAll();
   session.raf = requestAnimationFrame(frame);
+  session.alive = setInterval(alive, 380);
   setMusicMood(0);
   stopMusic({ reset: true });
   startMusic();
@@ -238,7 +243,11 @@ function confirmLeave() {
 }
 
 function stopRound() {
-  if (session) cancelAnimationFrame(session.raf);
+  if (session) {
+    cancelAnimationFrame(session.raf);
+    clearInterval(session.alive);
+    clearInterval(session.selFlap);
+  }
   stopMusic();
   session = null;
   pointer = null;
@@ -282,6 +291,7 @@ function frame(ts) {
   // The game clock (for the combo window): runs while playing, also while birds move, but not in
   // a pause or a Tahniah popup.
   if (!s.popup) s.clock += dt;
+  checkFrameRate(s, ts);
   renderCombo();
   if (s.busy) return;
   maybeHint(s);
@@ -291,6 +301,27 @@ function frame(ts) {
   if (s.idle >= iv) {
     s.idle = 0;
     doDrop();
+  }
+}
+
+/**
+ * The first time the game is played on a phone, its frame rate is measured over a few seconds of
+ * play; if it is low, Animasi ringan is switched on (once; the switch in the settings can undo it).
+ */
+function checkFrameRate(s, ts) {
+  const st = settings();
+  if (st.liteChecked || st.lite || s.clock < 1.5) return;
+  const f = s.fpsSamples;
+  if (f.last) f.push(ts - f.last);
+  f.last = ts;
+  if (f.length < 150) return;
+  const sorted = [...f].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const slow = median > 28 || sorted[Math.floor(sorted.length * 0.9)] > 50; // under ~36 fps, or very uneven
+  storeSet(K.settings, { ...st, liteChecked: true, lite: slow });
+  if (slow) {
+    renderSettings();
+    toast('Animasi ringan dihidupkan supaya lebih lancar. Boleh ditukar di tetapan.');
   }
 }
 
@@ -364,14 +395,14 @@ function renderCombo() {
     box.classList.add('pop');
   }
   const left = Math.max(0, 1 - (s.clock - s.g.lastPopT) / COMBO_WINDOW);
-  $('#lt-combo-bar').style.width = `${(left * 100).toFixed(1)}%`;
+  $('#lt-combo-bar').style.transform = `scaleX(${left.toFixed(4)})`;
   box.classList.toggle('ending', left < 0.3);
 }
 const comboMultText = (c) => String(c >= 8 ? 3 : c >= 5 ? 2.5 : c >= 3 ? 2 : 1.5); // a point for decimals, as in Malaysia
 
 function renderTimer(p) {
   const fill = $('#lt-timer-fill');
-  fill.style.width = `${Math.min(100, p * 100).toFixed(1)}%`;
+  fill.style.transform = `scaleX(${Math.min(1, p).toFixed(4)})`; // scaled, not resized: no layout each frame
   const soon = p > 0.78;
   fill.classList.toggle('soon', soon);
   $('#lt-rail').classList.toggle('soon', soon);
@@ -380,7 +411,7 @@ function renderTimer(p) {
 /** Drops the waiting row; `early`: seconds left on the timer when the player called it down. */
 async function doDrop(early = 0) {
   const s = session;
-  s.busy = true;
+  setBusy(s, true);
   clearHint();
   clearSel();
   const steps = dropWave(s.g, early);
@@ -388,8 +419,17 @@ async function doDrop(early = 0) {
   if (session !== s) return;
   if (s.g.over) return finish('penuh');
   saveDailyProgress();
-  s.busy = false;
+  setBusy(s, false);
   renderAll();
+}
+
+/**
+ * While birds move or explode, the board is "moving": the idle bobbing pauses and no poses swap,
+ * so the phone's effort goes to the action.
+ */
+function setBusy(s, busy) {
+  s.busy = busy;
+  $('#lt-board').classList.toggle('moving', busy);
 }
 
 /** Tapping the waiting row (or J): it drops now, with points for the seconds saved. */
@@ -410,8 +450,8 @@ function fit() {
   const stage = $('#lt-stage');
   const pad = parseFloat(getComputedStyle(stage).paddingBottom) || 0;
   const w = stage.clientWidth - 14;
-  const hgt = stage.clientHeight - pad - 14 - 12 - 8;
-  cell = Math.max(26, Math.min(72, Math.floor(Math.min(w / COLS, hgt / (ROWS + 1)))));
+  const hgt = stage.clientHeight - pad - 14 - 12 - 8 - 12; // (12: room above the rail's birds and below the tray)
+  cell = Math.max(26, Math.min(72, Math.floor(Math.min(w / COLS, hgt / (ROWS + 1))))); // the board and the rail's row
   $('#lt-frame').style.setProperty('--cell', `${cell}px`);
   $('#lt-frame').style.setProperty('--cols', String(COLS));
 }
@@ -424,14 +464,45 @@ function setPos(el, r, c) {
 /** A bird on its tile, with its own idle rhythm (random delays) so the flock never moves in step. */
 function discFor(p) {
   const disc = h('span', 'lt-disc');
-  disc.innerHTML = birdSvg(p.type);
-  const rnd = (max) => `${(-Math.random() * max).toFixed(2)}s`;
+  // A still image of the bird (drawn once for its colour); it bobs as a whole, and alive() swaps
+  // its pose now and then (a blink, a flap).
+  const img = document.createElement('img');
+  img.className = 'lt-bird';
+  img.alt = '';
+  img.draggable = false;
+  img.decoding = 'async';
+  img.src = birdSrc(p.type);
+  disc.append(img);
   disc.style.setProperty('--bob', `${(1.4 + Math.random() * 0.6).toFixed(2)}s`);
-  disc.style.setProperty('--d1', rnd(2));
-  disc.style.setProperty('--d2', rnd(5));
-  disc.style.setProperty('--d3', rnd(7));
-  disc.style.setProperty('--d4', rnd(6));
+  disc.style.setProperty('--d1', `${(-Math.random() * 2).toFixed(2)}s`);
   return disc;
+}
+
+/** A piece's resting pose: worried in a nearly full column, else normal. */
+const restPose = (el) => (el.classList.contains('worried') ? 'worried' : 'normal');
+function setPose(el, pose) {
+  const img = el?.querySelector('.lt-bird');
+  if (img) img.src = birdSrc(Number(el.dataset.type), pose);
+}
+/** A pose for `ms`, then back to rest (if the bird is still there). */
+function flashPose(el, pose, ms) {
+  setPose(el, pose);
+  setTimeout(() => { if (el.isConnected && !el.classList.contains('sel')) setPose(el, restPose(el)); }, ms);
+}
+
+/**
+ * Keeps the flock alive cheaply: every so often one bird blinks, and now and then another flaps,
+ * instead of every bird animating all the time. Not while birds move, in a pause, or with
+ * Animasi ringan.
+ */
+function alive() {
+  const s = session;
+  if (!s || s.busy || s.paused || s.g.over || document.hidden || settings().lite) return;
+  const els = [...s.els.values()].filter((el) => el.isConnected && !el.classList.contains('sel'));
+  if (!els.length) return;
+  const pick = () => els[Math.floor(Math.random() * els.length)];
+  flashPose(pick(), 'blink', 150);
+  if (Math.random() < 0.35) flashPose(pick(), 'flap', 320);
 }
 
 function pieceEl(p, r, c) {
@@ -538,7 +609,11 @@ function renderCols() {
     // Birds in a column that is nearly full look worried.
     for (let r = 0; r < ROWS; r++) {
       const p = s.g.grid[r][c];
-      if (p) s.els.get(p.id)?.classList.toggle('worried', n <= 1);
+      const el = p && s.els.get(p.id);
+      if (el && el.classList.contains('worried') !== (n <= 1)) {
+        el.classList.toggle('worried', n <= 1);
+        if (!el.classList.contains('sel')) setPose(el, restPose(el));
+      }
     }
   });
   setMusicMood(full || least <= 1 ? 2 : least <= 2 ? 1 : 0);
@@ -571,34 +646,94 @@ function fx(el, x, y, ms) {
  * A bird exploding: a white flash, a fireball, a shock ring, hot sparks and its feathers flying
  * out and drifting down. `big` (blasts, long chains) makes it larger.
  */
-function explode(r, c, type, big = false) {
+/**
+ * A bird exploding: a fireball and (`ring`) a shock ring as page elements, and `sparks` hot
+ * sparks and `feathers` of its colours on the board's particle canvas. playClear shares a fixed
+ * budget of particles among all the birds that pop at once.
+ */
+function explode(r, c, type, { big = false, boom = true, ring = true, sparks = 5, feathers = 5 } = {}) {
   if (reduceMotion()) return;
   const { x, y } = centre(r, c);
-  const boom = h('span', `lt-boom${big ? ' big' : ''}`);
-  fx(boom, x, y, 520);
-  fx(h('span', 'lt-ring'), x, y, 520);
+  if (boom) fx(h('span', `lt-boom${big ? ' big' : ''}`), x, y, 520);
+  if (ring) fx(h('span', 'lt-ring'), x, y, 520);
   const colours = FEATHERS[type] ?? ['#fff'];
-  const sparks = big ? 8 : 5, bits = big ? 8 : 5;
+  const now = performance.now();
   for (let i = 0; i < sparks; i++) {
     const a = (i / sparks) * Math.PI * 2 + Math.random() * 0.7;
     const d = cell * (0.6 + Math.random() * 0.6) * (big ? 1.4 : 1);
-    const sp = h('span', 'lt-spark');
-    sp.style.setProperty('--k', i % 2 ? '#fff3bf' : '#ffa94d');
-    sp.style.setProperty('--dx', `${Math.cos(a) * d}px`);
-    sp.style.setProperty('--dy', `${Math.sin(a) * d}px`);
-    fx(sp, x, y, 520);
+    particles.push({ kind: 's', x, y, dx: Math.cos(a) * d, dy: Math.sin(a) * d, t0: now, dur: 500, k: i % 2 ? '#fff3bf' : '#ffa94d' });
   }
-  for (let i = 0; i < bits; i++) {
+  for (let i = 0; i < feathers; i++) {
     const a = Math.random() * Math.PI * 2;
     const d = cell * (0.5 + Math.random() * 0.7);
-    const f = h('span', 'lt-feather');
-    f.style.setProperty('--k', colours[i % colours.length]);
-    f.style.setProperty('--dx', `${Math.cos(a) * d}px`);
-    f.style.setProperty('--dy', `${Math.sin(a) * d - cell * 0.3}px`);
-    f.style.setProperty('--rot', `${Math.round(Math.random() * 360)}deg`);
-    f.style.setProperty('--spin', `${Math.round(Math.random() * 300 - 150)}deg`);
-    fx(f, x, y, 1100);
+    particles.push({
+      kind: 'f', x, y, dx: Math.cos(a) * d, dy: Math.sin(a) * d - cell * 0.3, t0: now, dur: 1050,
+      k: colours[i % colours.length], rot: Math.random() * Math.PI * 2, spin: (Math.random() * 300 - 150) * (Math.PI / 180),
+    });
   }
+  if (!particleRaf) particleRaf = requestAnimationFrame(drawParticles);
+}
+
+// ---------- particles: one canvas over the board for every spark and feather ----------
+
+let particles = [];
+let particleRaf = 0;
+/** The board's particle canvas, sized to the board (made when a game starts). */
+function particlesCanvas() {
+  let cv = $('#lt-particles');
+  if (!cv) {
+    cv = document.createElement('canvas');
+    cv.id = 'lt-particles';
+    cv.className = 'lt-particles';
+    cv.setAttribute('aria-hidden', 'true');
+    $('#lt-board').append(cv);
+  }
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(cell * COLS * dpr);
+  cv.height = Math.round(cell * ROWS * dpr);
+  particles = [];
+  return cv;
+}
+const easeOut = (t) => 1 - (1 - t) ** 3;
+function drawParticles(now) {
+  const cv = $('#lt-particles');
+  if (!cv) { particleRaf = 0; return; }
+  const g = cv.getContext('2d');
+  const dpr = cv.width / (cell * COLS);
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, cell * COLS, cell * ROWS);
+  particles = particles.filter((p) => now - p.t0 < p.dur);
+  for (const p of particles) {
+    const t = Math.max(0, (now - p.t0) / p.dur);
+    if (p.kind === 's') {
+      // A spark: flies out, shrinks and fades, with a soft halo.
+      const e = easeOut(t), r = cell * 0.07 * (1 - 0.8 * t);
+      const x = p.x + p.dx * e, y = p.y + p.dy * e;
+      g.globalAlpha = (1 - t) * 0.35;
+      g.fillStyle = p.k;
+      g.beginPath(); g.arc(x, y, r * 2.4, 0, Math.PI * 2); g.fill();
+      g.globalAlpha = 1 - t;
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    } else {
+      // A feather: bursts out in the first 30%, then drifts down, turning, and fades.
+      const a = Math.min(1, t / 0.3), b = Math.max(0, (t - 0.3) / 0.7);
+      const ea = easeOut(a);
+      const x = p.x + p.dx * ea + p.dx * 0.15 * b;
+      const y = p.y + p.dy * ea + cell * 0.7 * b;
+      const scale = (0.4 + 0.6 * ea) * (1 - 0.1 * b);
+      g.save();
+      g.translate(x, y);
+      g.rotate(p.rot + p.spin * (0.5 * ea + 0.5 * b));
+      g.globalAlpha = 1 - b;
+      g.fillStyle = p.k;
+      g.beginPath();
+      g.ellipse(0, 0, cell * 0.065 * scale, cell * 0.16 * scale, 0, 0, Math.PI * 2);
+      g.fill();
+      g.restore();
+    }
+  }
+  g.globalAlpha = 1;
+  particleRaf = particles.length ? requestAnimationFrame(drawParticles) : 0;
 }
 
 /**
@@ -628,10 +763,14 @@ function specialComboFx(step, quick) {
       fx(col, null, null, 600);
     }
   } else {
-    for (const cc of step.cells) {
+    // One bolt per column (down to its lowest bird hit), not one per bird: at most 6, each with
+    // a large glow.
+    const deepest = new Map();
+    for (const cc of step.cells) deepest.set(cc.c, Math.max(deepest.get(cc.c) ?? 0, cc.r));
+    for (const [col, row] of deepest) {
       const bolt = h('span', 'lt-bolt');
-      bolt.style.left = `${(cc.c + 0.5) * cell}px`;
-      bolt.style.height = `${(cc.r + 0.6) * cell}px`;
+      bolt.style.left = `${(col + 0.5) * cell}px`;
+      bolt.style.height = `${(row + 0.6) * cell}px`;
       bolt.style.animationDelay = `${(Math.random() * 0.12).toFixed(2)}s`;
       fx(bolt, null, null, 650);
     }
@@ -661,10 +800,24 @@ async function playSteps(steps) {
   for (const step of steps) {
     if (session !== s) return;
     if (step.type === 'swap') {
+      // The moved bird (ia) passes in front of the other (ib), which passes behind, a little
+      // slower than other moves so the trade is easy to follow.
       const [ia, ib] = step.ids;
-      if (ia) { const el = s.els.get(ia); el.style.setProperty('--t', '120ms'); setPos(el, ...step.b); }
-      if (ib) { const el = s.els.get(ib); el.style.setProperty('--t', '120ms'); setPos(el, ...step.a); }
-      await wait(quick ? 0 : 130);
+      const ea = ia && s.els.get(ia), eb = ib && s.els.get(ib);
+      const ms = quick ? 0 : 220;
+      for (const [el, to, cls] of [[ea, step.b, 'swap-front'], [eb, step.a, 'swap-back']]) {
+        if (!el) continue;
+        el.style.setProperty('--t', `${ms}ms`);
+        el.style.setProperty('--ease', 'ease-in-out');
+        if (!quick) el.classList.add(cls);
+        setPos(el, ...to);
+      }
+      await wait(ms + 10);
+      for (const el of [ea, eb]) {
+        if (!el) continue;
+        el.classList.remove('swap-front', 'swap-back');
+        el.style.removeProperty('--ease');
+      }
     } else if (step.type === 'fall') {
       let longest = 0;
       for (const m of step.moves) {
@@ -761,7 +914,10 @@ async function levelPopup(s, level, quick) {
   if (newBird) {
     const nb = h('div', 'lt-levelup-new');
     const pic = h('span', 'lt-levelup-bird');
-    pic.innerHTML = birdSvg(typeCount(level) - 1);
+    const img = document.createElement('img');
+    img.alt = '';
+    img.src = birdSrc(typeCount(level) - 1);
+    pic.append(img);
     nb.append(pic, h('span', null, 'Burung baharu muncul!'));
     card.append(nb);
   }
@@ -842,11 +998,19 @@ async function playClear(s, step, quick) {
   playSound('pop', step.chain);
   appsWargaHaptic('impact', step.blasts.length ? 'heavy' : step.chain > 1 ? 'medium' : 'light');
   const big = step.blasts.length > 0 || step.chain >= 3;
-  for (const c of step.cells) {
+  // However many birds pop at once, at most 60 sparks and feathers in all (16 with
+  // Animasi ringan), a fireball on at most 12 birds (spread out) and a shock ring on at most 8.
+  const lite = settings().lite;
+  const budget = lite ? 16 : 60;
+  const per = Math.max(1, Math.floor(budget / Math.max(1, step.cells.length)));
+  const sparks = Math.min(big ? 8 : 5, Math.ceil(per / 2));
+  const feathers = Math.min(big ? 8 : 5, per - sparks);
+  const boomEvery = Math.ceil(step.cells.length / 12);
+  step.cells.forEach((c, i) => {
     const el = s.els.get(c.id);
     if (el) { el.classList.remove('sel', 'worried'); el.classList.add('pop'); }
-    explode(c.r, c.c, c.type, big);
-  }
+    explode(c.r, c.c, c.type, { big, boom: i % boomEvery === 0, ring: !lite && i < 8, sparks, feathers });
+  });
   if (big || step.cells.length >= 5) shake(step.blasts.length > 0 || Boolean(step.combo));
   for (const m of step.made) {
     const el = s.els.get(m.id);
@@ -891,13 +1055,20 @@ function select(at) {
   clearSel();
   session.sel = at;
   const p = pieceAt(at);
-  if (p) session.els.get(p.id)?.classList.add('sel');
+  const el = p && session.els.get(p.id);
+  if (!el) return;
+  el.classList.add('sel');
+  // Picked: it flaps, excited (two poses in turn).
+  let up = false;
+  session.selFlap = setInterval(() => { up = !up; setPose(el, up ? 'flap' : 'normal'); }, 120);
 }
 
 function clearSel() {
   if (!session) return;
+  clearInterval(session.selFlap);
   const p = session.sel && pieceAt(session.sel);
-  if (p) session.els.get(p.id)?.classList.remove('sel');
+  const el = p && session.els.get(p.id);
+  if (el) { el.classList.remove('sel'); setPose(el, restPose(el)); }
   session.sel = null;
 }
 
@@ -923,7 +1094,7 @@ async function trySwap(a, b) {
     return;
   }
   clearSel();
-  s.busy = true;
+  setBusy(s, true);
   const t0 = performance.now();
   playSound('swap');
   const steps = swap(s.g, a, b, s.clock);
@@ -935,7 +1106,7 @@ async function trySwap(a, b) {
   }
   if (session !== s) return;
   saveDailyProgress();
-  s.busy = false;
+  setBusy(s, false);
   renderAll();
 }
 
@@ -1247,6 +1418,11 @@ function init() {
     unlockSound();
     playSound('tap');
   });
+  $('#set-lite').addEventListener('click', () => {
+    storeSet(K.settings, { ...settings(), lite: !settings().lite, liteChecked: true });
+    renderSettings();
+    appsWargaHaptic('selection');
+  });
   $('#set-music').addEventListener('click', () => {
     storeSet(K.settings, { ...settings(), music: !settings().music });
     renderSettings();
@@ -1293,6 +1469,7 @@ function init() {
   window.addEventListener('resize', () => { if (session) fit(); });
   window.addEventListener('hashchange', route);
   settleClosedDaily();
+  preloadBirds(); // every bird's poses, decoded before the first game
   if (!storeGet(K.seenHelp, false)) {
     storeSet(K.seenHelp, true);
     help();
