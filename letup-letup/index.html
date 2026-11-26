@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>LetupLetup</title>
-  <meta name="description" content="LetupLetup: burung-burung warga UiTM berjatuhan! Tukar dan sejajarkan tiga burung sama warna untuk meletupkannya sebelum kelas penuh. Cabaran Harian dan Main Bebas.">
+  <title>Letup-Letup</title>
+  <meta name="description" content="Letup-Letup: burung-burung warga UiTM berjatuhan! Tukar dan sejajarkan tiga burung sama warna untuk meletupkannya sebelum kelas penuh. Cabaran Harian dan Main Bebas.">
   <meta name="theme-color" content="#7b1fa2">
   <script src="../shared/theme-boot.js"></script>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -59,7 +59,7 @@
 
       <div class="puzzle-brand">
         <img src="icon.svg" alt="" width="84" height="84">
-        <h1>LetupLetup</h1>
+        <h1>Letup-Letup</h1>
         <p>Burung-burung warga kampus berjatuhan! Sejajarkan tiga sama warna untuk meletupkannya sebelum kelas penuh.</p>
       </div>
 
@@ -118,7 +118,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <div class="bar-mid">
-          <span class="bar-title">LetupLetup</span>
+          <span class="bar-title">Letup-Letup</span>
           <span class="bar-sub" id="game-mode"></span>
         </div>
         <button type="button" class="icon-btn" id="btn-pause" aria-label="Jeda">
@@ -153,7 +153,9 @@
             <div class="lt-fx" id="lt-fx" aria-hidden="true"></div>
             <div class="lt-cursor" id="lt-cursor" hidden aria-hidden="true"></div>
             <!-- The combo: moves that pop within 4 seconds of each other; the bar is the time left. -->
-            <div class="lt-combo" id="lt-combo" hidden aria-hidden="true"><b id="lt-combo-n">Combo 2</b><span id="lt-combo-x">×1,5</span><i><i id="lt-combo-bar"></i></i></div>
+            <!-- A tip the first time a Mercun, Petir or caged bird turns up (once ever). -->
+            <p class="lt-tip" id="lt-tip" hidden></p>
+            <div class="lt-combo" id="lt-combo" hidden aria-hidden="true"><b id="lt-combo-n">Kombo 2</b><span id="lt-combo-x">×1.5</span><i><i id="lt-combo-bar"></i></i></div>
           </div>
           <!-- Jeda -->
           <div class="lt-pause" id="lt-pause" hidden>
@@ -182,7 +184,7 @@
           <div><dt>Tahap</dt><dd id="res-level">–</dd></div>
           <div><dt>Diletupkan</dt><dd id="res-cleared">0</dd></div>
           <div><dt>Rantaian terbaik</dt><dd id="res-chain">0</dd></div>
-          <div><dt>Combo terbaik</dt><dd id="res-combo">–</dd></div>
+          <div><dt>Kombo terbaik</dt><dd id="res-combo">–</dd></div>
         </dl>
         <p class="lt-res-made" id="res-made"></p>
         <p id="res-time"></p>
@@ -257,14 +259,11 @@
   <dialog id="dlg-help" class="dialog">
     <h2>Cara Bermain</h2>
     <ol class="help-list">
-      <li>Leret seekor burung ke kiri, kanan, atas atau bawah untuk menukarnya dengan jirannya (atau ketik satu, kemudian jirannya). Boleh juga gerakkan ke ruang kosong di sebelah.</li>
-      <li>Sejajarkan <b>3 atau lebih</b> burung sama warna, melintang atau menegak, untuk meletupkannya. Letupan berantai: ×2, ×3 hingga ×5.</li>
-      <li><b>4 sebaris</b> meninggalkan <b>Mercun</b> (meletupkan 3 × 3 di sekelilingnya). <b>5 sebaris</b> atau bentuk <b>L / T</b> meninggalkan <b>Petir</b> (sebaris dan selajur).</li>
-      <li><b>Combo</b>: setiap letupan dalam 4 saat selepas letupan sebelumnya menambah combo dan menggandakan markah gerakan itu (×1,5 hingga ×3).</li>
-      <li><b>Combo khas</b>: tukar dua burung khas sesama sendiri. Mercun + Mercun = <b>Mercun Besar</b> (5 × 5), Mercun + Petir = <b>Petir Berganda</b> (3 baris dan 3 lajur), Petir + Petir = <b>Ribut Petir</b> (semua burung dua warna itu).</li>
-      <li>Burung <b>dalam sangkar</b> tidak boleh digerakkan atau dipadankan; letupkan burung di sebelahnya untuk membebaskannya.</li>
-      <li>Setiap beberapa saat <b>sebaris penuh</b> burung baharu (ditunjukkan di atas papan) jatuh, seekor ke setiap lajur. Jika ada lajur yang sudah penuh, <b>permainan tamat</b>. Setiap 35 letupan, naik tahap: <b>Pra Diploma</b>, Diploma (6 Semester), Ijazah (4), Sarjana (3), PhD (6), dan akhirnya <b>Pembelajaran Sepanjang Hayat</b>, tanpa penghujung: main sampai tersangkut di atas. Setiap tahap lebih laju dan lebih banyak burung dalam sangkar!</li>
-      <li>Tak mahu tunggu? <b>Ketik baris di atas papan</b> (atau <b>J</b>) untuk menjatuhkannya sekarang: dapat 5 mata untuk setiap saat yang dijimatkan.</li>
+      <li>Leret seekor burung ke jirannya (atau ketik satu, kemudian jirannya) untuk menukarnya. Sejajarkan <b>3 sama warna</b> untuk meletupkannya.</li>
+      <li>Setiap beberapa saat <b>sebaris burung baharu</b> jatuh dari atas. Jika lajurnya sudah penuh, <b>permainan tamat</b>.</li>
+      <li><b>Ketik baris di atas papan</b> (atau J) untuk menjatuhkannya awal: dapat mata jika anda sudah meletupkan burung sejak baris lepas.</li>
+      <li>Letupan dalam 4 saat antara satu sama lain membina <b>kombo</b> (hingga ×3). 4 sebaris memberi <b>Mercun</b>; 5 sebaris atau bentuk L / T memberi <b>Petir</b>.</li>
+      <li>Setiap 35 letupan, naik tahap: dari <b>Pra Diploma</b> hingga <b>Pembelajaran Sepanjang Hayat</b>. Petua lain muncul semasa bermain.</li>
     </ol>
     <div class="dialog-actions">
       <button type="button" class="btn btn-primary" id="help-close">Faham!</button>

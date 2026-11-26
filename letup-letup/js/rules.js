@@ -35,25 +35,31 @@ export const TYPES = ['Burung Merah', 'Burung Biru', 'Burung Hijau', 'Burung Kun
 export const SPECIAL_NAMES = { bom: 'Mercun', petir: 'Petir' };
 
 // ---------- scoring ----------
-export const PER_PIECE = 10;
+// Points are kept modest (5 a bird), so a game weighs about as much as the other games' rounds
+// on the hub's combined board.
+export const PER_PIECE = 5;
 /** A chain's n-th link is worth ×n, up to ×5. */
 export const CHAIN_CAP = 5;
-export const SPECIAL_BONUS = { bom: 30, petir: 60 };
-export const UNLOCK_POINTS = 5;
-/** Calling the next row down early (tapping it): points for each second saved. */
-export const EARLY_BONUS_PER_S = 5;
+export const SPECIAL_BONUS = { bom: 15, petir: 30 };
+export const UNLOCK_POINTS = 3;
+/**
+ * Calling the next row down early (tapping it): points for each second saved, but only when the
+ * player has popped something since the last row (calling rows down alone, without playing,
+ * earns nothing).
+ */
+export const EARLY_BONUS_PER_S = 3;
 /** Seconds after a pop in which the next popping move keeps the combo going (game time: not paused). */
 export const COMBO_WINDOW = 4;
 /** A move's points × this, by the combo it makes: 2 → ×1.5, 3–4 → ×2, 5–7 → ×2.5, 8+ → ×3. */
 export const comboMult = (combo) => (combo >= 8 ? 3 : combo >= 5 ? 2.5 : combo >= 3 ? 2 : combo === 2 ? 1.5 : 1);
 /** Two specials swapped into each other: what they make, and its bonus. */
 export const SPECIAL_COMBOS = {
-  'bom+bom': { name: 'Mercun Besar', bonus: 100 },
-  'bom+petir': { name: 'Petir Berganda', bonus: 150 },
-  'petir+petir': { name: 'Ribut Petir', bonus: 200 },
+  'bom+bom': { name: 'Mercun Besar', bonus: 50 },
+  'bom+petir': { name: 'Petir Berganda', bonus: 75 },
+  'petir+petir': { name: 'Ribut Petir', bonus: 100 },
 };
 export const comboKind = (x, y) => [x, y].sort().join('+');
-export const MAX_POINTS = 100_000;
+export const MAX_POINTS = 50_000;
 /**
  * The page keeps input locked for at least this long after a swap that pops anything (the pop
  * and the fall take that long to play anyway, also with reduced motion). With the board's limits
@@ -151,6 +157,7 @@ export function newGame({ seed, daily = false }) {
       level: 1, cleared: 0, score: 0, bestChain: 0, made: { bom: 0, petir: 0 }, swaps: 0, waveIndex: 0,
       wave: makeWave(seed, 0, 1), over: false, endReason: null,
       combo: 0, lastPopT: -Infinity, bestCombo: 0, specialCombos: 0,
+      poppedSinceRow: false, // a swap of the player's popped something since the last row dropped
     };
     const rng = mulberry32(hashString(`${seed}:start:${attempt}`));
     const n = typeCount(1);
@@ -419,6 +426,7 @@ export function swap(s, a, b, t = 0) {
   // The combo: a move that pops within COMBO_WINDOW of the last pop adds to it; its points are
   // multiplied. Moves that pop nothing neither add to it nor break it; time does.
   if (steps.some((x) => x.type === 'clear')) {
+    s.poppedSinceRow = true;
     s.combo = s.combo > 0 && t - s.lastPopT <= COMBO_WINDOW ? s.combo + 1 : 1;
     s.lastPopT = t;
     s.bestCombo = Math.max(s.bestCombo, s.combo);
@@ -477,12 +485,14 @@ export const room = (s, c) => s.grid.reduce((n, row) => n + (row[c] ? 0 : 1), 0)
 /**
  * Drops the waiting wave into its columns, pops what lines up, and draws the next wave. A wave
  * that meets a full column ends the game. `early`: seconds left on the row timer when the player
- * called it down (EARLY_BONUS_PER_S points each).
+ * called it down: EARLY_BONUS_PER_S points each, if they popped something since the last row.
  */
 export function dropWave(s, early = 0) {
   if (s.over) return [];
   const steps = [];
-  if (early > 0) {
+  const earned = s.poppedSinceRow;
+  s.poppedSinceRow = false;
+  if (early > 0 && earned) {
     const bonus = Math.round(early * EARLY_BONUS_PER_S);
     s.score = Math.min(MAX_POINTS, s.score + bonus);
     steps.push({ type: 'early', bonus });

@@ -8,7 +8,7 @@ import {
 } from '../js/rules.js';
 
 // The board's limits (README.md, and arked_games in the hub's supabase/arked.sql).
-const MAX_PER_SEC = 600;
+const MAX_PER_SEC = 300;
 /** Seconds as the page records them: whole seconds, rounded up, at least 1. */
 const recorded = (t) => Math.max(1, Math.ceil(t));
 
@@ -153,7 +153,7 @@ test('gravity lets everything fall to rest and reports each move', () => {
 
 // ---------- popping and chains ----------
 
-test('a line pops for 10 an item, and the chain multiplies the next link', () => {
+test('a line pops for PER_PIECE an item, and the chain multiplies the next link', () => {
   const s = board([
     'B.....',
     'A.....',
@@ -167,7 +167,7 @@ test('a line pops for 10 an item, and the chain multiplies the next link', () =>
   assert.equal(clears[0].points, 3 * PER_PIECE);
   assert.equal(clears[1].chain, 2);
   assert.equal(clears[1].points, 3 * PER_PIECE * 2);
-  assert.equal(s.score, 90);
+  assert.equal(s.score, 3 * PER_PIECE * 3);
   assert.equal(s.cleared, 6);
   assert.equal(s.bestChain, 2);
 });
@@ -328,13 +328,14 @@ test('combo: popping moves within the window add up and multiply the move', () =
   const s = board(['..A..C', 'AABCCD']);
   swap(s, [7, 2], [8, 2], 0); // A A A
   assert.equal(s.combo, 1);
-  assert.equal(s.score, 30);
+  const line = 3 * PER_PIECE;
+  assert.equal(s.score, line);
   const steps = swap(s, [7, 5], [8, 5], 2); // C C C, 2 s later
   assert.equal(s.combo, 2);
   const streak = steps.find((x) => x.type === 'streak');
   assert.equal(streak.mult, 1.5);
-  assert.equal(streak.extra, 15);
-  assert.equal(s.score, 30 + 30 + 15);
+  assert.equal(streak.extra, Math.round(line * 0.5));
+  assert.equal(s.score, line + line + Math.round(line * 0.5));
   assert.ok(comboAlive(s, 2 + COMBO_WINDOW));
   assert.ok(!comboAlive(s, 2 + COMBO_WINDOW + 0.1));
   // A third line, too late: the combo starts again.
@@ -396,12 +397,28 @@ test('special combos set off other specials they reach', () => {
 
 // ---------- calling a row early ----------
 
-test('a row called down early earns points for the seconds saved', () => {
-  const s = newGame({ seed: 3 });
+test('a row called down early earns points for the seconds saved, after a pop since the last row', () => {
+  // Nothing popped yet: calling the row down early earns nothing.
+  const idle = newGame({ seed: 3 });
+  assert.equal(dropWave(idle, 4.3)[0].type, 'drop');
+  assert.equal(idle.score >= 0 && !dropWave(idle, 4.3).some((x) => x.type === 'early'), true);
+  // After a popping swap it does, once: the next row needs another pop.
+  const s = board(['..A..C', 'AABCCD']);
+  swap(s, [7, 2], [8, 2], 0); // A A A
+  const before = s.score;
   const steps = dropWave(s, 4.3);
   assert.deepEqual(steps[0], { type: 'early', bonus: Math.round(4.3 * EARLY_BONUS_PER_S) });
-  assert.ok(s.score >= 22);
+  assert.ok(s.score >= before + Math.round(4.3 * EARLY_BONUS_PER_S));
+  assert.ok(!dropWave(s, 4.3).some((x) => x.type === 'early'));
+  // Not early: no bonus step at all.
   assert.equal(dropWave(newGame({ seed: 3 }), 0)[0].type, 'drop');
+});
+
+test('calling rows down without playing earns no early points', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const s = newGame({ seed });
+    while (!s.over) assert.ok(!dropWave(s, waveInterval(s.level)).some((x) => x.type === 'early'));
+  }
 });
 
 test('points a second: calling rows down as fast as they fall stays under the limit', () => {

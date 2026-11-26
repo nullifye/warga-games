@@ -16,7 +16,7 @@ AppsWarga app (hub repo: `nullifye/arcade`). Static site on GitHub Pages, no bui
 | 9-Ball (pool, against the AI or a friend) | [`9balls/`](9balls/) | https://nullifye.github.io/warga-games/9balls/ |
 | Pemadam (3D eraser flicking, against the AI) | [`pemadam/`](pemadam/) | https://nullifye.github.io/warga-games/pemadam/ |
 | Congak Matematik (mental arithmetic on a blackboard) | [`congak/`](congak/) | https://nullifye.github.io/warga-games/congak/ |
-| LetupLetup (falling-stack match-3 with campus birds) | [`letup-letup/`](letup-letup/) | https://nullifye.github.io/warga-games/letup-letup/ |
+| Letup-Letup (falling-stack match-3 with campus birds) | [`letup-letup/`](letup-letup/) | https://nullifye.github.io/warga-games/letup-letup/ |
 
 The site root redirects to the hub. Each game shows its version at the bottom of its home
 screen (tap it for a fresh reload); bump it when the game changes.
@@ -103,7 +103,7 @@ The hub's `supabase/arked.sql` explains each limit; keep it in step with any sco
 | 9-Ball | 2,000 | 400 |
 | Pemadam | 1,000 | 100 |
 | Congak Matematik | 8,000 | 150 |
-| LetupLetup | 100,000 | 600 |
+| Letup-Letup | 50,000 | 300 |
 
 ## Teka Kata
 
@@ -379,7 +379,7 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   best combo, average time, accuracy by operation with a practice tip ("× 33%: latih sifir 7 dan
   8"), and the wrong answers. The chalk is Cabin Sketch, on the board only.
 
-## LetupLetup
+## Letup-Letup
 
 - A falling-stack match-3 on a 6 × 9 board (6 columns keep the birds big on a phone and the options few, so the pressure stays on). The pieces are six round birds (`js/birds.js`,
   inline SVG), each a body colour far from the others (red, blue, green, yellow, purple, white)
@@ -406,7 +406,8 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   fanfare for a new programme). It closes after about 2 s or on a tap, and the row timer waits. The row timer only runs while nothing is moving, and pauses
   (Jeda) when the page is hidden, AppsWarga goes to the background, or a dialog is open. A greedy
   test player (scoring swaps only, one every 1.2 s) lasts about 2 minutes, to around Diploma
-  Semester 2. **Tap the waiting row** (or J) to drop it at once, for 5 points a second saved.
+  Semester 2. **Tap the waiting row** (or J) to drop it at once, for 3 points a second saved if you have
+  popped something since the last row (calling rows down without playing earns nothing).
 - The game screen is sunset over UiTM Shah Alam: Dewan Agung Tuanku Canselor, PTAR, Menara SAAS,
   a faculty block and Masjid Tuanku Mizan along the bottom with Pintu Utama in front
   (`img/kampus.svg`); clouds drift (`img/awan.svg`), birds fly past, and now and then a
@@ -416,8 +417,8 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   2 → ×1.5, 3–4 → ×2, 5–7 → ×2.5, 8+ → ×3; moves that explode nothing don't break it, time does.
   A badge on the board shows it with a bar draining over the 4 s. **Special combos**: two
   specials swapped into each other go off together: Mercun + Mercun = **Mercun Besar** (5 × 5,
-  +100), Mercun + Petir = **Petir Berganda** (three rows and three columns, +150), Petir + Petir
-  = **Ribut Petir** (every bird of both colours, +200); they set off other specials they reach.
+  +50), Mercun + Petir = **Petir Berganda** (three rows and three columns, +75), Petir + Petir
+  = **Ribut Petir** (every bird of both colours, +100); they set off other specials they reach.
 - Always a little alive: each bird bobs, blinks, looks about and flaps now and then, on its own
   random timing; a picked one hops and flaps. An explosion: a flash, a fireball, a shock ring,
   sparks and the bird's feathers; big ones (blasts, chains of 3+) jolt the board.
@@ -431,29 +432,18 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   own, so players at the same level see the same rows), one try. **Main Bebas**: a new board
   each time. Leaving with points (or leaving the daily try) ends the game and records it, after
   asking.
-- Points: 10 a bird popped (blasted ones too) × the chain link (×1 to ×5), +30 a Mercun made,
-  +60 a Petir, +5 a bird freed, +100 / +150 / +200 a special combo; then × the move's combo
-  (×1.5 to ×3); +5 a second saved by calling a row down early. A move that pops anything keeps
-  input locked for at least 0.45 s (`MIN_MOVE_S`), and the page records whole seconds rounded up.
-  Tested, combos included: the best opening bursts (every pair of first swaps, and greedy runs
-  of up to 12 back to back) stay under 600 a second (worst seen ~435); a greedy player as fast as
-  the game allows peaks around 31 a second over whole games; calling every row down at once
-  stays under 300 a second.
+- Points, kept modest so a game weighs about as much as the other games' rounds on the hub's
+  combined board: 5 a bird popped (blasted ones too) × the chain link (×1 to ×5), +15 a Mercun
+  made, +30 a Petir, +3 a bird freed, +50 / +75 / +100 a special combo; then × the move's combo
+  (×1.5 to ×3); +3 a second saved by calling a row down early, after a pop since the last row.
+  A move that pops anything keeps input locked for at least 0.45 s (`MIN_MOVE_S`), and the page
+  records whole seconds rounded up. Tested, combos included: the best opening bursts (every pair
+  of first swaps, and greedy runs of up to 12 back to back) stay under 300 a second (worst seen
+  ~218); a greedy player as fast as the game allows peaks around 19 a second over whole games;
+  calling rows down without playing earns no early points.
+- Help: five short points; a tip shows (once) the first time a Mercun, a Petir, two specials or
+  a caged bird turns up. In Pra Diploma, after 5 s without a move, the two birds of a swap that
+  pops something pulse. The next row waits in a dashed "Seterusnya" tray, a little smaller and
+  dimmer than the board's birds.
 - Rules in `letup-letup/js/rules.js` (unit-tested); every game goes to `arked_record`. `?debug`
   exposes `window.__lt` for browser tests.
-
-**Registering it in the hub (`nullifye/arcade`)**: until this is done the result screen says
-"Permainan tidak dikenali". Add to `supabase/arked.sql` (`insert into public.arked_games`):
-
-```sql
-  -- LetupLetup: 10 a bird × a chain of at most ×5, +30 / +60 a special made, +100 to +200 a
-  -- special combo, +5 a bird freed, × a move combo of at most ×3, +5 a second saved calling a row
-  -- early. A move that pops takes at least 0.45 s and seconds are rounded up, so the best opening
-  -- bursts (worst tested ~435 in the first second) stay under 600 a second; whole games peak
-  -- around 31 a second. The score is capped at 100,000.
-  ('letup-letup', 'LetupLetup', 100000, 600),
-```
-
-and to `js/games.js` a `live` entry with id `letup-letup` and
-`url: 'https://nullifye.github.io/warga-games/letup-letup/'`, with `icons/letup-letup.svg` (a copy
-of `letup-letup/icon.svg`).

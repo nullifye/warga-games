@@ -1,4 +1,4 @@
-// LetupLetup's sounds and music, synthesised (no files to download).
+// Letup-Letup's sounds and music, synthesised (no files to download).
 // Sounds: a swish as birds trade places, a chirp when one is picked, a bang, a pop and a startled
 // chirp for each line (higher with every link of a chain), the Mercun's boom, the Petir's crackle, a cage
 // clicking open, a row falling (a whoosh and a flutter, a thud as each bird lands, a chirp when

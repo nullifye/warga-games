@@ -1,4 +1,4 @@
-// LetupLetup's pieces: six round little birds drawn as inline SVG (the same on every phone). Each
+// Letup-Letup's pieces: six round little birds drawn as inline SVG (the same on every phone). Each
 // has a body colour far from the others (red, blue, green, yellow, purple, white) and its own
 // headwear from campus life, so types are easy to tell apart at a glance. The parts that move at
 // idle have classes for css/letup.css: .lt-bob (the whole bird), .eyes (blinks), .pupils (looks

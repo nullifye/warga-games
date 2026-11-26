@@ -1,9 +1,9 @@
-// LetupLetup: screens, Cabaran Harian and Main Bebas, the board (birds that bob, blink and look
+// Letup-Letup: screens, Cabaran Harian and Main Bebas, the board (birds that bob, blink and look
 // about; slide, fall and explode; the next row above it; the wave timer), music, input (swipe,
 // tap-tap, keyboard), results and the leaderboard. The rules are in rules.js, the birds in birds.js.
 import {
   COLS, ROWS, SPECIAL_NAMES, PER_SEMESTER, MAX_LEVEL, levelName, MIN_MOVE_S, newGame, canSwap, swap, dropWave, room, waveInterval,
-  lockChance, typeCount, summary, end, dailySeed, COMBO_WINDOW, comboAlive, SPECIAL_COMBOS,
+  lockChance, typeCount, summary, end, dailySeed, COMBO_WINDOW, comboAlive, SPECIAL_COMBOS, legalSwaps, clone,
 } from './rules.js';
 import {
   setMuted, unlockSound, play as playSound, setMusicOn, setMusicMood, startMusic, stopMusic,
@@ -20,13 +20,13 @@ import { hardReload } from '../../shared/reload.js';
 const GAME_ID = 'letup-letup';
 const PROGRESS_KEY = gameKey(GAME_ID);
 const SCREENS = ['home', 'game', 'result', 'board'];
-const K = { stats: 'letup.stats', settings: 'letup.settings', daily: 'letup.daily', seenHelp: 'letup.seenHelp' };
+const K = { stats: 'letup.stats', settings: 'letup.settings', daily: 'letup.daily', seenHelp: 'letup.seenHelp', tips: 'letup.tips' };
 const BADGE = {
   bom: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="9" width="12" height="11" rx="2" fill="#fff" transform="rotate(-20 12 14)"/><path d="M14 7c1-3 4-3 5-1" fill="none" stroke="#fff3bf" stroke-width="2" stroke-linecap="round"/><circle cx="19.5" cy="5" r="2" fill="#ffd43b"/></svg>',
   petir: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 5 13.5h6L9.5 22 19 9.5h-6.2z" fill="#ffd43b" stroke="#fff3bf" stroke-width="1" stroke-linejoin="round"/></svg>',
 };
 const LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#f1f3f5" stroke-width="2.6"/><rect x="5" y="11" width="14" height="10" rx="2.5" fill="#fab005" stroke="#7c4a03" stroke-width="1.2"/><circle cx="12" cy="15.6" r="1.6" fill="#7c4a03"/></svg>';
-const PRAISE = { 2: 'Berantai ×2!', 3: 'Hebat! ×3', 4: 'Luar biasa! ×4', 5: 'Letup Letup! ×5' };
+const PRAISE = { 2: 'Berantai ×2!', 3: 'Hebat! ×3', 4: 'Luar biasa! ×4', 5: 'Letup-Letup! ×5' };
 const $ = (sel) => document.querySelector(sel);
 const number = (n) => Number(n).toLocaleString('ms-MY');
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -149,9 +149,31 @@ function startDaily() {
     return go('tamat', { replace: true });
   }
   const date = todayKL();
-  storeSet(K.daily, { date, status: 'playing' });
   recordProgress({ date, status: 'playing' });
   startGame(newGame({ seed: dailySeed(date), daily: true }));
+  saveDailyProgress();
+}
+
+/**
+ * Cabaran Harian is one try. While it plays, the result so far is kept on the phone (after every
+ * move and row), so a game cut off by closing the app or reloading still counts: see
+ * settleClosedDaily.
+ */
+function saveDailyProgress() {
+  const s = session;
+  if (!s?.g.daily || s.g.over) return;
+  storeSet(K.daily, { date: todayKL(), status: 'playing', result: resultOf(s.g, secondsSince(s.startedAt), 'closed') });
+}
+
+/**
+ * Opening the game with today's Cabaran Harian still marked as playing means it was cut off: it
+ * counts as today's try, with the score it had, and is recorded; no second try.
+ */
+function settleClosedDaily() {
+  const d = todaysDaily();
+  if (d?.status !== 'playing' || session) return;
+  record(d.result ?? resultOf(newGame({ seed: dailySeed(d.date), daily: true }), 1, 'closed'));
+  toast('Cabaran Harian yang terhenti tadi telah direkodkan.');
 }
 
 function startFree() {
@@ -164,7 +186,7 @@ function startGame(g) {
   session = {
     g, startedAt: Date.now(), busy: false, paused: false, idle: 0, raf: 0, lastTs: 0,
     sel: null, cursor: [ROWS - 1, 3], held: false, els: new Map(), leaving: false, warned: false,
-    clock: 0, popup: false,
+    clock: 0, popup: false, hint: null, lastAct: 0,
   };
   show('game');
   $('#game-mode').textContent = g.daily ? 'Cabaran Harian' : 'Main Bebas';
@@ -172,6 +194,7 @@ function startGame(g) {
   $('#lt-fx').replaceChildren();
   $('#lt-pause').hidden = true;
   $('#lt-cursor').hidden = true;
+  $('#lt-tip').hidden = true;
   fit();
   buildBoard();
   renderAll();
@@ -261,6 +284,7 @@ function frame(ts) {
   if (!s.popup) s.clock += dt;
   renderCombo();
   if (s.busy) return;
+  maybeHint(s);
   s.idle += dt;
   const iv = waveInterval(s.g.level);
   renderTimer(s.idle / iv);
@@ -270,14 +294,68 @@ function frame(ts) {
   }
 }
 
-/** The combo badge on the board: "Combo 3 ×2", its bar draining over the combo window. */
+// ---------- a hint for beginners, and tips the first time something turns up ----------
+
+/** In Pra Diploma, a swap that makes a line pulses after HINT_S seconds without a move. */
+const HINT_S = 5;
+function maybeHint(s) {
+  if (s.hint || s.g.level !== 1 || s.sel || s.clock - s.lastAct < HINT_S) return;
+  const move = hintMove(s.g);
+  s.lastAct = s.clock; // (if there is none, look again in a while)
+  if (!move) return;
+  s.hint = move;
+  for (const at of move) { const p = pieceAt(at); if (p) s.els.get(p.id)?.classList.add('hint'); }
+}
+
+/** The first legal swap that pops something (tried out on a copy of the game). */
+function hintMove(g) {
+  for (const [a, b] of legalSwaps(g)) {
+    if (swap(clone(g), a, b)?.some((x) => x.type === 'clear')) return [a, b];
+  }
+  return null;
+}
+
+/** Any move (or tap, or row) takes the hint away and starts the wait again. */
+function clearHint() {
+  const s = session;
+  if (!s) return;
+  s.lastAct = s.clock;
+  if (!s.hint) return;
+  for (const at of s.hint) { const p = pieceAt(at); if (p) s.els.get(p.id)?.classList.remove('hint'); }
+  s.hint = null;
+}
+
+/** What each tip says, shown once ever (remembered on the phone). */
+const TIPS = {
+  bom: 'Mercun! 4 sebaris meninggalkan Mercun. Letupkannya untuk meletupkan 3 × 3 di sekelilingnya.',
+  petir: 'Petir! 5 sebaris atau bentuk L / T meninggalkan Petir. Ia meletupkan sebaris dan selajur.',
+  pair: 'Dua burung khas di papan: tukar sesama sendiri untuk kombo khas yang lebih besar!',
+  cage: 'Burung dalam sangkar tidak boleh digerakkan. Letupkan burung di sebelahnya untuk membebaskannya.',
+};
+let tipTimer = 0;
+function tipOnce(kind) {
+  const seen = storeGet(K.tips, {});
+  if (seen[kind]) return;
+  storeSet(K.tips, { ...seen, [kind]: true });
+  const el = $('#lt-tip');
+  el.textContent = TIPS[kind];
+  el.hidden = false;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  announce(TIPS[kind]);
+  clearTimeout(tipTimer);
+  tipTimer = setTimeout(() => { el.hidden = true; }, 5500);
+}
+
+/** The combo badge on the board: "Kombo 3 ×2", its bar draining over the combo window. */
 function renderCombo() {
   const s = session;
   const box = $('#lt-combo');
   const alive = s.g.combo >= 2 && comboAlive(s.g, s.clock);
   box.hidden = !alive;
   if (!alive) return;
-  const text = `Combo ${s.g.combo}`;
+  const text = `Kombo ${s.g.combo}`;
   if ($('#lt-combo-n').textContent !== text) {
     $('#lt-combo-n').textContent = text;
     $('#lt-combo-x').textContent = `×${comboMultText(s.g.combo)}`;
@@ -289,7 +367,7 @@ function renderCombo() {
   $('#lt-combo-bar').style.width = `${(left * 100).toFixed(1)}%`;
   box.classList.toggle('ending', left < 0.3);
 }
-const comboMultText = (c) => String(c >= 8 ? 3 : c >= 5 ? 2.5 : c >= 3 ? 2 : 1.5).replace('.', ',');
+const comboMultText = (c) => String(c >= 8 ? 3 : c >= 5 ? 2.5 : c >= 3 ? 2 : 1.5); // a point for decimals, as in Malaysia
 
 function renderTimer(p) {
   const fill = $('#lt-timer-fill');
@@ -303,11 +381,13 @@ function renderTimer(p) {
 async function doDrop(early = 0) {
   const s = session;
   s.busy = true;
+  clearHint();
   clearSel();
   const steps = dropWave(s.g, early);
   await playSteps(steps);
   if (session !== s) return;
   if (s.g.over) return finish('penuh');
+  saveDailyProgress();
   s.busy = false;
   renderAll();
 }
@@ -402,6 +482,7 @@ function renderAll() {
   renderHud();
   renderRail();
   renderCols();
+  snapCursor();
 }
 
 function renderHud() {
@@ -620,8 +701,11 @@ async function playSteps(steps) {
       appsWargaHaptic('impact', 'medium');
       await wait(quick ? 0 : longest);
       for (const sp of step.spawns) land(s.els.get(sp.id));
+      if (step.spawns.some((sp) => sp.piece.locked)) tipOnce('cage');
     } else if (step.type === 'clear') {
       await playClear(s, step, quick);
+      for (const m of step.made) tipOnce(m.kind);
+      if (s.g.grid.flat().filter((p) => p?.special).length >= 2) tipOnce('pair');
     } else if (step.type === 'early') {
       // Called down early: points for the time saved, shown by the row.
       playSound('tap');
@@ -631,8 +715,8 @@ async function playSteps(steps) {
     } else if (step.type === 'streak') {
       // A move in a combo: its bonus.
       playSound('combo', step.combo);
-      banner(`Combo ${step.combo}! ×${comboMultText(step.combo)} +${number(step.extra)}`, 'combo', 900);
-      announce(`Combo ${step.combo}. Bonus ${step.extra} mata.`);
+      banner(`Kombo ${step.combo}! ×${comboMultText(step.combo)} +${number(step.extra)}`, 'combo', 900);
+      announce(`Kombo ${step.combo}. Bonus ${step.extra} mata.`);
       renderHud();
       bump('#lt-score');
       renderCombo();
@@ -833,6 +917,7 @@ function nope(at) {
 async function trySwap(a, b) {
   const s = session;
   if (!s || s.busy || s.paused || s.g.over) return;
+  clearHint();
   if (!canSwap(s.g, a, b)) {
     nope(pieceAt(b)?.locked ? b : a);
     return;
@@ -849,6 +934,7 @@ async function trySwap(a, b) {
     if (rest > 0) await wait(rest);
   }
   if (session !== s) return;
+  saveDailyProgress();
   s.busy = false;
   renderAll();
 }
@@ -857,6 +943,7 @@ async function trySwap(a, b) {
 function tap(at) {
   const s = session;
   if (s.busy) return;
+  clearHint();
   if (s.sel && same(s.sel, at)) return clearSel();
   if (s.sel && neighbours(s.sel, at)) return trySwap(s.sel, at);
   const p = pieceAt(at);
@@ -877,6 +964,7 @@ function onPointerDown(e) {
   const s = session;
   if (!s || s.paused || s.g.over || e.button > 0) return;
   unlockSound();
+  hideCursor(); // a finger or the mouse: the keyboard's cursor goes away until a key is used
   const at = cellAt(e);
   if (!at) return;
   $('#lt-board').setPointerCapture?.(e.pointerId);
@@ -902,6 +990,52 @@ function onPointerUp(e) {
   if (!p.moved && session && !session.paused) tap(p.at);
 }
 
+/** The keyboard cursor is only for keyboard play: touch or the mouse hides it. */
+function hideCursor() {
+  const s = session;
+  if (!s) return;
+  s.held = false;
+  const cursor = $('#lt-cursor');
+  cursor.hidden = true;
+  cursor.classList.remove('held');
+}
+
+/**
+ * After birds pop and fall, the cursor stays on a bird rather than a space: if its square is now
+ * empty, it moves down its column to the bird that fell there (or the column's bottom).
+ */
+function snapCursor() {
+  const s = session;
+  const cursor = $('#lt-cursor');
+  if (!s || cursor.hidden || pieceAt(s.cursor)) return;
+  let [r, c] = s.cursor;
+  while (r < ROWS - 1 && !pieceAt([r, c])) r++;
+  s.cursor = [r, c];
+  s.held = false;
+  cursor.classList.remove('held');
+  setPos(cursor, r, c);
+}
+
+/**
+ * Where an arrow takes the cursor: from bird to bird, as a finger can only pick birds. Up and
+ * down stay in the column while there are birds; left and right go to the next column that has
+ * any, on the same row if a bird is there, else onto that column's top bird. null: nowhere to go.
+ */
+function cursorStep(s, [dr, dc]) {
+  const [r, c] = s.cursor;
+  if (dr) {
+    const to = [r + dr, c];
+    return to[0] >= 0 && to[0] < ROWS && pieceAt(to) ? to : null;
+  }
+  for (let cc = c + dc; cc >= 0 && cc < COLS; cc += dc) {
+    if (pieceAt([r, cc])) return [r, cc];
+    let top = 0;
+    while (top < ROWS && !pieceAt([top, cc])) top++;
+    if (top < ROWS) return [top, cc];
+  }
+  return null;
+}
+
 // Keyboard: the arrows move a cursor; Space or Enter picks the item up, then an arrow trades it.
 const ARROWS = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
 function onKey(e) {
@@ -915,15 +1049,20 @@ function onKey(e) {
   if (d) {
     e.preventDefault();
     cursor.hidden = false;
-    const to = [s.cursor[0] + d[0], s.cursor[1] + d[1]];
-    if (to[0] < 0 || to[0] >= ROWS || to[1] < 0 || to[1] >= COLS) return;
     if (s.held) {
+      // Holding a bird: the arrow trades it with its neighbour (or slides it sideways into a
+      // space); the cursor goes with it, and follows it down if it falls (snapCursor).
+      const from = s.cursor, to = [from[0] + d[0], from[1] + d[1]];
       s.held = false;
       cursor.classList.remove('held');
-      trySwap(s.cursor, to);
+      if (canSwap(s.g, from, to)) { s.cursor = to; setPos(cursor, ...to); }
+      trySwap(from, to);
+      return;
     }
-    s.cursor = to;
-    setPos(cursor, ...to);
+    const next = cursorStep(s, d);
+    if (!next) return;
+    s.cursor = next;
+    setPos(cursor, ...next);
   } else if (e.key === ' ' || e.key === 'Enter') {
     e.preventDefault();
     cursor.hidden = false;
@@ -939,7 +1078,32 @@ function onKey(e) {
 const REASON = {
   penuh: 'Kelas penuh! Tiada lagi tempat duduk untuk burung baharu.',
   quit: 'Anda keluar sebelum tamat.',
+  closed: 'Permainan ditutup sebelum tamat. Cubaan hari ini dikira dengan markah setakat itu.',
 };
+
+/** Whole seconds since `t`, rounded up (the board's points-a-second limit is set from this). */
+const secondsSince = (t) => Math.min(86400, Math.max(1, Math.ceil((Date.now() - t) / 1000)));
+
+/** What the result screen and the board need from a game. */
+function resultOf(g, seconds, reason) {
+  return { ...summary(g), seconds, daily: g.daily, reason };
+}
+
+/** Keeps a finished game: stats, today's Cabaran Harian, Arked Warga's progress, the board. */
+function record(result) {
+  lastResult = { ...result, submit: { status: 'pending' } };
+  const t = stats();
+  t.played++;
+  t.best = Math.max(t.best, result.points);
+  t.bestLevel = Math.max(t.bestLevel, result.level);
+  storeSet(K.stats, t);
+  if (result.daily) {
+    const date = todayKL();
+    storeSet(K.daily, { date, status: 'done', result });
+    recordProgress({ date, status: 'done', won: true, score: result.points });
+  }
+  submitResult(lastResult);
+}
 
 function finish(reason, { navigate = true } = {}) {
   const s = session;
@@ -949,21 +1113,7 @@ function finish(reason, { navigate = true } = {}) {
   cancelAnimationFrame(s.raf);
   stopMusic();
   if ($('#dlg-leave').open) $('#dlg-leave').close();
-  const sum = summary(g);
-  // Whole seconds, rounded up (the board's points-a-second limit is set from this).
-  const seconds = Math.min(86400, Math.max(1, Math.ceil((Date.now() - s.startedAt) / 1000)));
-  lastResult = { ...sum, seconds, daily: g.daily, reason, submit: { status: 'pending' } };
-  const t = stats();
-  t.played++;
-  t.best = Math.max(t.best, g.score);
-  t.bestLevel = Math.max(t.bestLevel, g.level);
-  storeSet(K.stats, t);
-  if (g.daily) {
-    const date = todayKL();
-    storeSet(K.daily, { date, status: 'done', result: { ...lastResult, submit: undefined } });
-    recordProgress({ date, status: 'done', won: true, score: g.score });
-  }
-  submitResult(lastResult);
+  record(resultOf(g, secondsSince(s.startedAt), reason));
   if (!navigate) return stopRound();
   // Game over on the board for a moment, then the result.
   s.busy = true;
@@ -992,7 +1142,7 @@ function renderResult() {
   const made = [];
   if (r.made?.bom) made.push(`${r.made.bom} Mercun`);
   if (r.made?.petir) made.push(`${r.made.petir} Petir`);
-  if (r.specialCombos) made.push(`${r.specialCombos} combo khas`);
+  if (r.specialCombos) made.push(`${r.specialCombos} kombo khas`);
   $('#res-made').textContent = made.length ? `Dibuat: ${made.join(' · ')}` : '';
   $('#res-made').hidden = !made.length;
   $('#res-time').textContent = `${number(r.swaps)} gerakan · ${lb.formatDuration(r.seconds)}`;
@@ -1124,6 +1274,14 @@ function init() {
   const board = $('#lt-board');
   $('#lt-rail').addEventListener('click', callRowEarly);
   board.addEventListener('pointerdown', onPointerDown);
+  // Reached with Tab: show the cursor at once (it is the board's focus indicator).
+  board.addEventListener('focus', () => {
+    if (!session || !board.matches(':focus-visible')) return;
+    const cursor = $('#lt-cursor');
+    cursor.hidden = false;
+    setPos(cursor, ...session.cursor);
+    snapCursor();
+  });
   board.addEventListener('pointermove', onPointerMove);
   board.addEventListener('pointerup', onPointerUp);
   board.addEventListener('pointercancel', () => { pointer = null; });
@@ -1134,6 +1292,7 @@ function init() {
   window.addEventListener('blur', pause);
   window.addEventListener('resize', () => { if (session) fit(); });
   window.addEventListener('hashchange', route);
+  settleClosedDaily();
   if (!storeGet(K.seenHelp, false)) {
     storeSet(K.seenHelp, true);
     help();

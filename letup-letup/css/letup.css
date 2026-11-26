@@ -1,4 +1,4 @@
-/* LetupLetup. Builds on ../shared/base.css and ../shared/puzzle-page.css (home, settings, result),
+/* Letup-Letup. Builds on ../shared/base.css and ../shared/puzzle-page.css (home, settings, result),
    so it looks like the other games; this file adds the home cards, the game screen (a dusk sky
    over the campus, a glass board, the next wave above it), the items and their effects, and the
    result's extra rows. js/main.js sets --cell (one square, in px) so the board fits the screen. */
@@ -107,9 +107,35 @@ body:not([data-screen='game']) .lt-scene { display: none; }
   -webkit-backdrop-filter: blur(6px);
 }
 
-/* The next row waits above its columns at full size, so it reads as a whole row; it trembles
-   just before it drops. */
-.lt-rail { position: relative; width: calc(var(--cell) * var(--cols, 6)); height: var(--cell); }
+/* The next row waits above its columns, so it reads as a whole row: a little smaller and dimmer
+   than the board's birds, in a dashed tray labelled "Seterusnya", so it isn't taken for part of
+   the board. It trembles just before it drops. */
+.lt-rail {
+  position: relative;
+  width: calc(var(--cell) * var(--cols, 6));
+  height: var(--cell);
+  border-radius: 12px;
+  outline: 2px dashed rgba(255, 255, 255, 0.32);
+  outline-offset: -1px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.lt-rail::before {
+  content: 'Seterusnya';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 50%;
+  translate: -50% -55%;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #5f3dc4;
+  pointer-events: none;
+}
 .lt-rail .lt-next {
   position: absolute;
   top: 0;
@@ -117,8 +143,11 @@ body:not([data-screen='game']) .lt-scene { display: none; }
   width: var(--cell);
   height: var(--cell);
   translate: calc(var(--c) * var(--cell)) 0;
+  scale: 0.84;
+  opacity: 0.8;
   transition: opacity 0.2s;
 }
+.lt-rail.soon .lt-next { opacity: 1; }
 .lt-rail.soon .lt-next { animation: lt-tremble 0.18s linear infinite; }
 @keyframes lt-tremble { 25% { transform: translate(-1.5px, 0) rotate(-3deg); } 75% { transform: translate(1.5px, 0) rotate(3deg); } }
 /* Its column is full: this one ends the game when it drops. */
@@ -143,7 +172,8 @@ body:not([data-screen='game']) .lt-scene { display: none; }
   outline: none;
   background: rgba(255, 255, 255, 0.05);
 }
-.lt-board:focus-visible { box-shadow: 0 0 0 3px #ffd43b; }
+/* No ring round the whole board when it has keyboard focus: the dashed cursor on a square shows
+   it (and appears as soon as the board is reached with Tab). */
 .lt-cols { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--cols, 6), 1fr); }
 .lt-col { transition: background 0.3s; }
 .lt-col:nth-child(odd) { background: rgba(255, 255, 255, 0.035); }
@@ -199,7 +229,9 @@ body:not([data-screen='game']) .lt-scene { display: none; }
 
 /* Picked: it hops and flaps, excited, on a brighter tile. */
 .lt-piece.sel { z-index: 2; }
-.lt-piece.sel .lt-disc { transform: scale(1.12); background: color-mix(in srgb, var(--k) 45%, transparent); box-shadow: 0 0 0 3px #ffd43b, 0 6px 14px rgba(0, 0, 0, 0.4); }
+/* Picked: the ring and glow are drawn inside the tile (the board clips anything beyond it, so a
+   ring outside would be cut off at the edge columns and the bottom row); the bird hops. */
+.lt-piece.sel .lt-disc { background: color-mix(in srgb, var(--k) 45%, transparent); box-shadow: inset 0 0 0 3px #ffd43b, inset 0 0 14px rgba(255, 212, 59, 0.55); }
 .lt-piece.sel .lt-bob { animation: lt-hop 0.42s ease-in-out infinite; }
 .lt-piece.sel .wing { animation: lt-flap-fast 0.21s ease-in-out infinite; }
 .lt-piece.sel .wing-r { animation-name: lt-flap-fast-r; }
@@ -363,3 +395,34 @@ body:not([data-screen='game']) .lt-scene { display: none; }
 .lt-stats #st-level, .lt-res-stats #res-level { font-size: 1.02rem; line-height: 1.2; }
 /* The level name at the top may take two lines ("Pembelajaran Sepanjang Hayat"). */
 .lt-hud-mid small { max-width: 44vw; line-height: 1.15; }
+
+/* ---------- the hint and the tips ---------- */
+/* Pra Diploma, a while without a move: the two birds of a swap that pops something pulse. */
+.lt-piece.hint .lt-disc { box-shadow: inset 0 0 0 3px rgba(255, 224, 102, 0.9), inset 0 0 14px rgba(255, 224, 102, 0.5); animation: lt-hint 1.1s ease-in-out infinite; }
+/* Inside the tile too, so it isn't cut off at the board's edge. */
+@keyframes lt-hint { 50% { box-shadow: inset 0 0 0 3px rgba(255, 224, 102, 0.35), inset 0 0 6px rgba(255, 224, 102, 0.2); } }
+/* A tip the first time a Mercun, Petir or caged bird turns up: over the top of the board. */
+.lt-tip {
+  position: absolute;
+  z-index: 5;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  color: #2b1a00;
+  background: linear-gradient(180deg, #fff3bf, #ffe066);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+.lt-tip[hidden] { display: none; }
+.lt-tip.show { animation: lt-tip-in 0.3s ease-out; }
+@keyframes lt-tip-in { from { opacity: 0; translate: 0 -8px; } }
+@media (prefers-reduced-motion: reduce) {
+  .lt-piece.hint .lt-disc, .lt-tip.show { animation: none; }
+}
