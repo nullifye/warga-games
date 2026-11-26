@@ -239,6 +239,28 @@
       "shared/leaderboard.js",
       "shared/config.js",
       "shared/reload.js"
+    ],
+    "letup-letup": [
+      "letup-letup/",
+      "shared/base.css",
+      "shared/puzzle-page.css",
+      "letup-letup/css/letup.css",
+      "shared/theme-boot.js",
+      "letup-letup/js/main.js",
+      "letup-letup/js/rules.js",
+      "shared/rng.js",
+      "letup-letup/js/sound.js",
+      "letup-letup/js/birds.js",
+      "shared/appswarga.js",
+      "shared/arked-link.js",
+      "shared/profile.js",
+      "shared/shared-store.js",
+      "shared/profile-options.js",
+      "shared/select.js",
+      "shared/uuid.js",
+      "shared/leaderboard.js",
+      "shared/config.js",
+      "shared/reload.js"
     ]
   }
 }

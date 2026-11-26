@@ -1,0 +1,428 @@
+/* Letup-Letup. Builds on ../shared/base.css and ../shared/puzzle-page.css (home, settings, result),
+   so it looks like the other games; this file adds the home cards, the game screen (a dusk sky
+   over the campus, a glass board, the next wave above it), the items and their effects, and the
+   result's extra rows. js/main.js sets --cell (one square, in px) so the board fits the screen. */
+
+/* ---------- home ---------- */
+.lt-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.lt-card { background: var(--surface); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.lt-card-daily { background: linear-gradient(160deg, color-mix(in srgb, var(--gold-2) 30%, var(--surface)), var(--surface) 60%); }
+.lt-card-free { background: linear-gradient(160deg, color-mix(in srgb, var(--primary) 14%, var(--surface)), var(--surface) 60%); }
+.lt-card-top { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.lt-card-date { font-size: 0.8rem; color: var(--ink-2); font-weight: 600; }
+.lt-card-text { margin: 0; font-size: 0.85rem; color: var(--ink-2); flex: 1; line-height: 1.4; }
+.puzzle-settings { margin-bottom: 14px; }
+.lt-stats { grid-template-columns: repeat(3, 1fr); }
+
+/* ---------- game ---------- */
+/* Sunset over UiTM Shah Alam, whatever the theme (as Congak, Pemadam and 9-Ball keep their own
+   scene): a sky from night to a warm glow, a few stars, and the campus along the bottom
+   (img/kampus.svg). Clouds drift, birds fly past and the odd mortarboard is tossed up
+   (.lt-scene, in index.html). */
+body[data-screen='game'] {
+  background:
+    url('../img/kampus.svg') bottom center / 100% auto no-repeat fixed,
+    radial-gradient(1.5px 1.5px at 12% 6%, #fffc, transparent),
+    radial-gradient(1px 1px at 33% 3%, #fffd, transparent),
+    radial-gradient(1.5px 1.5px at 71% 8%, #fffb, transparent),
+    radial-gradient(1px 1px at 86% 4%, #fffd, transparent),
+    radial-gradient(1px 1px at 55% 11%, #fff9, transparent),
+    radial-gradient(1px 1px at 6% 16%, #fff8, transparent),
+    radial-gradient(120% 40% at 50% 100%, rgba(255, 178, 107, 0.55), transparent 70%) fixed,
+    linear-gradient(180deg, #110a2e 0%, #2a1a5e 22%, #5b2a86 48%, #a63d8c 72%, #e8697a 88%, #ffa45c 100%) fixed;
+}
+.lt-scene { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+body:not([data-screen='game']) .lt-scene { display: none; }
+/* Clouds drifting slowly behind the score. */
+.lt-clouds { position: absolute; left: 0; right: 0; top: 3%; height: 160px; background: url('../img/awan.svg') 0 0 / 800px 160px repeat-x; animation: lt-drift 120s linear infinite; }
+.lt-clouds.low { top: auto; bottom: 14%; opacity: 0.7; animation: lt-drift-low 80s linear infinite; }
+@keyframes lt-drift { to { background-position-x: -800px; } }
+@keyframes lt-drift-low { from { background-position-x: 300px; } to { background-position-x: -500px; } }
+/* Birds flying past, flapping. */
+.lt-flyer { position: absolute; left: 0; width: 22px; height: 12px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 12'%3E%3Cpath d='M1 5q5-5 10 2 5-7 10-2' fill='none' stroke='%231b0f33' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; animation: lt-fly var(--dur, 22s) linear var(--dl, 0s) infinite, lt-flap-sky 0.5s ease-in-out infinite; }
+.lt-flyer.f1 { top: 9%; --dur: 24s; --dl: -3s; }
+.lt-flyer.f2 { top: 13%; --dur: 24s; --dl: -4.2s; transform: scale(0.75); }
+.lt-flyer.f3 { top: 6%; --dur: 31s; --dl: -18s; transform: scale(0.6); }
+@keyframes lt-fly { from { translate: -40px 0; } 50% { translate: 50vw 14px; } to { translate: calc(100vw + 40px) 0; } }
+@keyframes lt-flap-sky { 50% { scale: 1 0.45; } }
+/* Convocation: a mortarboard tossed up from the campus now and then, spinning. */
+.lt-toss { position: absolute; bottom: 8%; width: 26px; height: 20px; opacity: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 20'%3E%3Cpath d='M7 9v4c0 2 3 3 6 3s6-1 6-3V9' fill='%23212529'/%3E%3Cpath d='M13 2l12 5-12 5L1 7z' fill='%23343a40' stroke='%23000' stroke-width='.8'/%3E%3Cpath d='M13 7l7 3v5' fill='none' stroke='%23fcc419' stroke-width='1.2'/%3E%3Ccircle cx='20' cy='16' r='1.3' fill='%23fcc419'/%3E%3C/svg%3E") center / contain no-repeat; animation: lt-toss 14s ease-out var(--dl, 0s) infinite; }
+.lt-toss.t1 { left: 14%; --dl: -2s; }
+.lt-toss.t2 { left: 30%; --dl: -2.3s; }
+.lt-toss.t3 { left: 78%; --dl: -9s; }
+@keyframes lt-toss {
+  0%, 70% { transform: translateY(0) rotate(0); opacity: 0; }
+  72% { opacity: 1; }
+  82% { transform: translateY(-90px) rotate(200deg); opacity: 1; }
+  92% { transform: translateY(-40px) rotate(380deg); opacity: 0.8; }
+  96%, 100% { transform: translateY(-10px) rotate(420deg); opacity: 0; }
+}
+
+.screen-game {
+  --surface: rgba(40, 20, 60, 0.78);
+  --ink: #f6effc;
+  --ink-2: #d6c5e8;
+  --muted: #a993c2;
+  --line: rgba(230, 210, 255, 0.22);
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  color: var(--ink);
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.screen-game .icon-btn { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line), var(--shadow); }
+.screen-game,
+.screen-game * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+/* Score, Semester (with its progress) and items popped. */
+.lt-hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 0 4px; }
+.lt-hud-cell { display: grid; gap: 2px; }
+.lt-hud-cell small { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.lt-hud-cell b { font-size: 1.6rem; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.lt-hud-cell b.bump { animation: lt-bump 0.3s ease; }
+@keyframes lt-bump { 40% { transform: scale(1.18); color: #ffd43b; } }
+.lt-hud-mid { justify-items: center; text-align: center; }
+.lt-hud-mid small { font-size: 0.82rem; letter-spacing: 0.02em; text-transform: none; color: #ffd43b; font-weight: 700; }
+.lt-level-bar { width: 96px; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
+.lt-level-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #f6c54f, #ffd43b); transition: width 0.3s; }
+.lt-hud-end { justify-items: end; text-align: right; }
+.lt-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* The stage fills the rest of the screen; the frame (rail, timer and board) is centred in it. */
+.lt-stage { flex: 1; min-height: 0; display: grid; place-items: center; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+.lt-frame {
+  --cell: 44px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(20, 8, 34, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 20px 40px -16px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* The next row waits above its columns, so it reads as a whole row: a little smaller and dimmer
+   than the board's birds, in a dashed tray labelled "Seterusnya", so it isn't taken for part of
+   the board. It trembles just before it drops. */
+.lt-rail {
+  position: relative;
+  width: calc(var(--cell) * var(--cols, 6));
+  height: var(--cell);
+  border-radius: 12px;
+  outline: 2px dashed rgba(255, 255, 255, 0.32);
+  outline-offset: -1px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.lt-rail::before {
+  content: 'Seterusnya';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 50%;
+  translate: -50% -55%;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #5f3dc4;
+  pointer-events: none;
+}
+.lt-rail .lt-next {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--cell);
+  height: var(--cell);
+  translate: calc(var(--c) * var(--cell)) 0;
+  scale: 0.84;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.lt-rail.soon .lt-next { opacity: 1; }
+.lt-rail.soon .lt-next { animation: lt-tremble 0.18s linear infinite; }
+@keyframes lt-tremble { 25% { transform: translate(-1.5px, 0) rotate(-3deg); } 75% { transform: translate(1.5px, 0) rotate(3deg); } }
+/* Its column is full: this one ends the game when it drops. */
+.lt-next.danger .lt-disc { box-shadow: 0 0 0 3px #ff6b6b, 0 0 14px #ff6b6b; animation: lt-alarm 0.9s ease-in-out infinite; }
+.lt-timer { position: relative; height: 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
+/* The hint over the timer bar: the waiting row can be tapped to drop it now. */
+.lt-timer-hint { position: absolute; inset: 0; display: grid; place-items: center; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); pointer-events: none; }
+.lt-rail { cursor: pointer; }
+.lt-rail:active .lt-next .lt-disc { transform: translateY(3px); }
+.lt-float.early { color: #ffe066; font-size: calc(var(--cell) * 0.36); }
+.lt-timer i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #74c0fc, #b197fc); }
+.lt-timer i.soon { background: linear-gradient(90deg, #ff922b, #ff6b6b); }
+
+/* The board: 6 × 9 squares; items sit on a layer above, placed by row and column. */
+.lt-board {
+  position: relative;
+  width: calc(var(--cell) * var(--cols, 6));
+  height: calc(var(--cell) * 9);
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.05);
+}
+/* No ring round the whole board when it has keyboard focus: the dashed cursor on a square shows
+   it (and appears as soon as the board is reached with Tab). */
+.lt-cols { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--cols, 6), 1fr); }
+.lt-col { transition: background 0.3s; }
+.lt-col:nth-child(odd) { background: rgba(255, 255, 255, 0.035); }
+/* Columns nearly full glow amber, full ones red. */
+.lt-col.warn { background: linear-gradient(180deg, rgba(255, 169, 77, 0.32), transparent 45%); }
+.lt-col.full { background: linear-gradient(180deg, rgba(255, 107, 107, 0.5), rgba(255, 107, 107, 0.08) 60%); animation: lt-alarm 0.9s ease-in-out infinite; }
+@keyframes lt-alarm { 50% { opacity: 0.55; } }
+.lt-pieces, .lt-fx { position: absolute; inset: 0; pointer-events: none; }
+.lt-fx { z-index: 3; }
+
+/* A piece: one square, placed by row and column (--r, --c); it slides there. */
+.lt-piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--cell);
+  height: var(--cell);
+  translate: calc(var(--c) * var(--cell)) calc(var(--r) * var(--cell));
+  transition: translate var(--t, 110ms) var(--ease, ease-out);
+}
+.lt-piece.falling { --ease: cubic-bezier(0.55, 0, 0.9, 0.6); }
+
+/* A bird (js/birds.js) on a faint rounded-square tile tinted with its own colour, so the
+   colour reads at a glance without clutter. */
+.lt-disc {
+  position: absolute;
+  inset: 3%;
+  border-radius: 24%;
+  background: color-mix(in srgb, var(--k) 26%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--k) 55%, transparent);
+  transition: transform 0.12s, box-shadow 0.12s, filter 0.2s;
+}
+.lt-piece[data-type='0'] { --k: #f03e3e; }
+.lt-piece[data-type='1'] { --k: #228be6; }
+.lt-piece[data-type='2'] { --k: #40c057; }
+.lt-piece[data-type='3'] { --k: #fcc419; }
+.lt-piece[data-type='4'] { --k: #ae3ec9; }
+.lt-piece[data-type='5'] { --k: #f8f9fa; }
+.lt-disc .lt-bird { position: absolute; inset: 4%; width: 92%; height: 92%; overflow: visible; }
+
+/* Always a little alive: each bird bobs, blinks, looks about and flaps now and then, each on its
+   own timing (main.js sets random delays), so the flock never moves in step. */
+.lt-bird .lt-bob { transform-box: view-box; transform-origin: 24px 44px; animation: lt-bird-bob var(--bob, 1.6s) ease-in-out var(--d1, 0s) infinite; }
+@keyframes lt-bird-bob { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-1.6px) scale(0.97, 1.03); } }
+.lt-bird .eyes { transform-box: fill-box; transform-origin: center; animation: lt-blink 4.2s linear var(--d2, 0s) infinite; }
+@keyframes lt-blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(0.1); } }
+.lt-bird .pupils { animation: lt-look 6.5s ease-in-out var(--d3, 0s) infinite; }
+@keyframes lt-look { 0%, 30%, 100% { transform: translate(0, 0); } 38%, 52% { transform: translate(-1.3px, 0.3px); } 60%, 74% { transform: translate(1.3px, -0.4px); } 82% { transform: translate(0, 0.6px); } }
+.lt-bird .wing { transform-box: fill-box; transform-origin: 90% 15%; animation: lt-flap 5.5s ease-in-out var(--d4, 0s) infinite; }
+.lt-bird .wing-r { transform-origin: 10% 15%; animation-name: lt-flap-r; }
+@keyframes lt-flap { 0%, 84%, 100% { transform: rotate(0); } 87%, 93% { transform: rotate(28deg); } 90%, 96% { transform: rotate(-6deg); } }
+@keyframes lt-flap-r { 0%, 84%, 100% { transform: rotate(0); } 87%, 93% { transform: rotate(-28deg); } 90%, 96% { transform: rotate(6deg); } }
+
+/* Picked: it hops and flaps, excited, on a brighter tile. */
+.lt-piece.sel { z-index: 2; }
+/* Picked: the ring and glow are drawn inside the tile (the board clips anything beyond it, so a
+   ring outside would be cut off at the edge columns and the bottom row); the bird hops. */
+.lt-piece.sel .lt-disc { background: color-mix(in srgb, var(--k) 45%, transparent); box-shadow: inset 0 0 0 3px #ffd43b, inset 0 0 14px rgba(255, 212, 59, 0.55); }
+.lt-piece.sel .lt-bob { animation: lt-hop 0.42s ease-in-out infinite; }
+.lt-piece.sel .wing { animation: lt-flap-fast 0.21s ease-in-out infinite; }
+.lt-piece.sel .wing-r { animation-name: lt-flap-fast-r; }
+@keyframes lt-hop { 50% { transform: translateY(-3.5px) scale(1.03, 0.97); } }
+@keyframes lt-flap-fast { 50% { transform: rotate(30deg); } }
+@keyframes lt-flap-fast-r { 50% { transform: rotate(-30deg); } }
+/* In a column that is nearly full: they tremble and look up at what's coming. */
+.lt-piece.worried .lt-bob { animation: lt-tremble-bird 0.22s linear var(--d1, 0s) infinite; }
+.lt-piece.worried .pupils { animation: none; transform: translate(0, -1.6px); }
+@keyframes lt-tremble-bird { 25% { transform: translateX(-0.7px) rotate(-2deg); } 75% { transform: translateX(0.7px) rotate(2deg); } }
+.lt-piece.nope .lt-disc { animation: lt-nope 0.28s ease; }
+@keyframes lt-nope { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+/* Specials: a Mercun (a firecracker, glowing orange) and a Petir (a bolt, glowing gold). */
+.lt-badge { position: absolute; right: -4%; bottom: -4%; width: 44%; height: 44%; display: grid; place-items: center; border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
+.lt-badge svg { width: 78%; height: 78%; }
+.lt-piece[data-special='bom'] .lt-badge { background: #e8590c; }
+.lt-piece[data-special='petir'] .lt-badge { background: #364fc7; }
+.lt-piece[data-special='bom'] .lt-disc { animation: lt-glow-bom 1.1s ease-in-out infinite; }
+.lt-piece[data-special='petir'] .lt-disc { animation: lt-glow-petir 0.9s ease-in-out infinite; }
+@keyframes lt-glow-bom { 0%, 100% { box-shadow: 0 0 6px 1px rgba(255, 146, 43, 0.6); } 50% { box-shadow: 0 0 16px 5px #ff922b; } }
+@keyframes lt-glow-petir { 0%, 100% { box-shadow: 0 0 6px 1px rgba(255, 212, 59, 0.6); } 50% { box-shadow: 0 0 18px 6px #ffd43b; } }
+
+/* Caged: behind bars with a padlock, a little greyed, and still (it can't move). */
+.lt-lock { position: absolute; inset: 3%; border-radius: 24%; display: grid; place-items: end center; padding-bottom: 6%; background: repeating-linear-gradient(90deg, transparent 0 17%, rgba(206, 212, 218, 0.9) 17% 21%); box-shadow: inset 0 0 0 calc(var(--cell) * 0.05) #adb5bd, inset 0 calc(var(--cell) * 0.12) 0 rgba(134, 142, 150, 0.85); }
+.lt-lock svg { width: 40%; height: 40%; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
+.lt-piece.locked .lt-disc { filter: grayscale(0.45) brightness(0.85); }
+.lt-piece.locked .lt-bob, .lt-piece.locked .wing { animation-play-state: paused; }
+.lt-piece.unlocking .lt-lock { animation: lt-unlock 0.35s ease-in forwards; }
+@keyframes lt-unlock { 40% { transform: scale(1.15); } to { transform: scale(0.4) rotate(25deg); opacity: 0; } }
+
+/* Popping, and a special appearing. */
+.lt-piece.pop { z-index: 2; }
+.lt-piece.pop .lt-disc { animation: lt-pop 0.26s ease-in forwards; }
+@keyframes lt-pop { 0% { transform: scale(1); } 30% { transform: scale(1.32) rotate(-8deg); filter: brightness(1.4); } 45% { transform: scale(1.38) rotate(6deg); filter: brightness(2.2); opacity: 1; } to { transform: scale(0.2); opacity: 0; } }
+.lt-piece.made .lt-disc { animation: lt-made 0.4s ease-out; }
+@keyframes lt-made { 0% { transform: scale(0.6) rotate(-20deg); } 60% { transform: scale(1.2) rotate(6deg); } }
+.lt-piece.landed .lt-disc { animation: lt-land 0.18s ease-out; }
+@keyframes lt-land { 40% { transform: scale(1.08, 0.88) translateY(6%); } }
+
+/* Keyboard cursor. */
+.lt-cursor { position: absolute; left: 0; top: 0; width: var(--cell); height: var(--cell); translate: calc(var(--c) * var(--cell)) calc(var(--r) * var(--cell)); border: 3px dashed #ffd43b; border-radius: 30%; z-index: 4; pointer-events: none; transition: translate 0.08s; }
+.lt-cursor.held { border-style: solid; box-shadow: 0 0 12px #ffd43b; }
+
+/* Effects: sparks, the Mercun's blast, the Petir's beams, points, the chain and the Semester. */
+.lt-spark { position: absolute; left: 0; top: 0; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--k, #fff); animation: lt-spark 0.5s ease-out forwards; }
+@keyframes lt-spark { to { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; } }
+.lt-spark { box-shadow: 0 0 6px 1px var(--k, #fff); }
+/* Each pop: a white-hot flash, an orange fireball and a shock ring. */
+.lt-boom { position: absolute; left: 0; top: 0; width: calc(var(--cell) * 1.5); height: calc(var(--cell) * 1.5); margin: calc(var(--cell) * -0.75) 0 0 calc(var(--cell) * -0.75); border-radius: 50%; background: radial-gradient(circle, #fff 0%, #fff9db 22%, #ffd43b 40%, #ff922b 58%, rgba(240, 62, 62, 0.55) 70%, transparent 74%); animation: lt-boom 0.45s ease-out forwards; }
+.lt-boom.big { width: calc(var(--cell) * 2.1); height: calc(var(--cell) * 2.1); margin: calc(var(--cell) * -1.05) 0 0 calc(var(--cell) * -1.05); }
+@keyframes lt-boom { 0% { transform: scale(0.15); opacity: 1; } 35% { transform: scale(1); opacity: 1; } to { transform: scale(1.2); opacity: 0; filter: blur(2px); } }
+.lt-ring { position: absolute; left: 0; top: 0; width: calc(var(--cell) * 1.6); height: calc(var(--cell) * 1.6); margin: calc(var(--cell) * -0.8) 0 0 calc(var(--cell) * -0.8); border-radius: 50%; border: 3px solid rgba(255, 243, 191, 0.9); animation: lt-ring 0.5s ease-out forwards; }
+@keyframes lt-ring { from { transform: scale(0.2); opacity: 1; border-width: 6px; } to { transform: scale(1.35); opacity: 0; border-width: 1px; } }
+/* Feathers burst out, then sway down. */
+.lt-feather { position: absolute; left: 0; top: 0; width: calc(var(--cell) * 0.13); height: calc(var(--cell) * 0.32); margin: calc(var(--cell) * -0.16) 0 0 calc(var(--cell) * -0.065); border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%; background: var(--k); box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.15), 0 0 0 0.5px rgba(0, 0, 0, 0.25); rotate: var(--rot); animation: lt-feather 1.05s cubic-bezier(0.2, 0.7, 0.4, 1) forwards; }
+@keyframes lt-feather {
+  0% { transform: translate(0, 0) rotate(0) scale(0.4); opacity: 1; }
+  30% { transform: translate(var(--dx), var(--dy)) rotate(calc(var(--spin) * 0.5)) scale(1); opacity: 1; }
+  to { transform: translate(calc(var(--dx) * 1.15), calc(var(--dy) + var(--cell) * 0.7)) rotate(var(--spin)) scale(0.9); opacity: 0; }
+}
+/* The board jolts on a big explosion. */
+.lt-board.jolt { animation: lt-jolt 0.22s ease-out; }
+.lt-board.jolt-big { animation: lt-jolt-big 0.36s ease-out; }
+@keyframes lt-jolt { 30% { translate: 0 3px; } 60% { translate: 0 -1px; } }
+@keyframes lt-jolt-big { 15% { translate: -5px 4px; } 35% { translate: 5px -3px; } 55% { translate: -3px 2px; } 75% { translate: 2px -1px; } }
+.lt-blast { position: absolute; left: 0; top: 0; width: calc(var(--cell) * 3); height: calc(var(--cell) * 3); margin: calc(var(--cell) * -1.5) 0 0 calc(var(--cell) * -1.5); border-radius: 50%; background: radial-gradient(circle, #fff3bf 0%, #ffa94d 40%, rgba(255, 107, 107, 0.6) 62%, transparent 72%); animation: lt-blast 0.45s ease-out forwards; }
+@keyframes lt-blast { from { transform: scale(0.2); opacity: 1; } to { transform: scale(1.15); opacity: 0; } }
+.lt-beam { position: absolute; background: linear-gradient(90deg, transparent, #fff9db 30%, #fff 50%, #fff9db 70%, transparent); box-shadow: 0 0 18px 6px rgba(255, 212, 59, 0.75); animation: lt-beam 0.45s ease-out forwards; }
+.lt-beam.row { left: 0; right: 0; height: calc(var(--cell) * 0.5); margin-top: calc(var(--cell) * -0.25); }
+.lt-beam.col { top: 0; bottom: 0; width: calc(var(--cell) * 0.5); margin-left: calc(var(--cell) * -0.25); background: linear-gradient(180deg, transparent, #fff9db 30%, #fff 50%, #fff9db 70%, transparent); }
+@keyframes lt-beam { from { opacity: 1; transform: scale(1, 0.2); } 30% { transform: scale(1, 1); } to { opacity: 0; } }
+.lt-beam.col { animation-name: lt-beam-col; }
+@keyframes lt-beam-col { from { opacity: 1; transform: scale(0.2, 1); } 30% { transform: scale(1, 1); } to { opacity: 0; } }
+.lt-float { position: absolute; left: 0; top: 0; translate: -50% -50%; font-weight: 800; font-size: calc(var(--cell) * 0.42); color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.4); white-space: nowrap; animation: lt-float 0.9s ease-out forwards; }
+@keyframes lt-float { 0% { transform: translateY(0) scale(0.7); opacity: 0; } 20% { transform: translateY(-6px) scale(1.1); opacity: 1; } to { transform: translateY(calc(var(--cell) * -0.9)); opacity: 0; } }
+.lt-banner { position: absolute; left: 50%; top: 42%; translate: -50% -50%; padding: 6px 18px; border-radius: 999px; font-weight: 800; font-size: calc(var(--cell) * 0.5); white-space: nowrap; color: #2b1a00; background: linear-gradient(180deg, #ffe066, #fab005); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); animation: lt-banner 1.3s ease-out forwards; }
+.lt-banner.chain { top: 30%; color: #fff; background: linear-gradient(180deg, #da77f2, #ae3ec9); font-size: calc(var(--cell) * 0.42); animation-duration: 0.8s; }
+.lt-banner.over { color: #fff; background: linear-gradient(180deg, #ff8787, #e03131); animation: lt-banner-stay 1.5s ease-out forwards; }
+@keyframes lt-banner { 0% { transform: scale(0.4); opacity: 0; } 18% { transform: scale(1.12); opacity: 1; } 30%, 75% { transform: scale(1); opacity: 1; } to { transform: translateY(-14px); opacity: 0; } }
+@keyframes lt-banner-stay { 0% { transform: scale(0.4); opacity: 0; } 20% { transform: scale(1.12); opacity: 1; } 32%, 100% { transform: scale(1); opacity: 1; } }
+/* "Tahniah!" on every level up: a card over the board, confetti falling; a new programme gets
+   the graduation version (gold and purple, mortarboards tossed). */
+.lt-levelup { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; overflow: hidden; border-radius: inherit; background: rgba(20, 8, 34, 0.55); animation: lt-fade-in 0.2s ease-out; cursor: pointer; }
+.lt-levelup.closing { opacity: 0; transition: opacity 0.2s; }
+@keyframes lt-fade-in { from { opacity: 0; } }
+.lt-levelup-card { position: relative; z-index: 1; width: min(84%, 300px); padding: 18px 16px 12px; border-radius: 22px; text-align: center; color: #2b1a00; background: linear-gradient(180deg, #fff9db, #ffe066 60%, #fcc419); box-shadow: 0 0 0 3px #fff3bf, 0 14px 34px rgba(0, 0, 0, 0.5); animation: lt-card-in 0.42s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.lt-levelup.grad .lt-levelup-card { color: #fff; background: linear-gradient(180deg, #9c36b5, #6f2c91 55%, #4b1a6b); box-shadow: 0 0 0 3px #fcc419, 0 0 30px rgba(252, 196, 25, 0.45), 0 14px 34px rgba(0, 0, 0, 0.55); }
+@keyframes lt-card-in { from { transform: scale(0.4) rotate(-6deg); opacity: 0; } }
+.lt-levelup-cap { position: absolute; left: 50%; top: -26px; width: 60px; height: 50px; translate: -50% 0; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.4)); animation: lt-cap-bob 1.2s ease-in-out infinite; }
+.lt-levelup-cap svg { width: 100%; height: 100%; }
+@keyframes lt-cap-bob { 50% { transform: translateY(-4px) rotate(-6deg); } }
+.lt-levelup-hi { margin: 14px 0 0; font-size: 1.9rem; font-weight: 800; letter-spacing: 0.01em; line-height: 1.1; }
+.lt-levelup.grad .lt-levelup-hi { color: #ffd43b; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+.lt-levelup-title { margin: 4px 0 0; font-size: 1.15rem; font-weight: 800; line-height: 1.2; }
+.lt-levelup-sub { margin: 2px 0 0; font-size: 0.9rem; font-weight: 600; opacity: 0.85; }
+.lt-levelup-list { list-style: none; margin: 10px 0 0; padding: 8px 10px; display: grid; gap: 3px; border-radius: 12px; background: rgba(255, 255, 255, 0.45); font-size: 0.82rem; font-weight: 600; }
+.lt-levelup.grad .lt-levelup-list { background: rgba(255, 255, 255, 0.14); }
+.lt-levelup-new { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; font-size: 0.85rem; font-weight: 800; }
+.lt-levelup-bird { width: 40px; height: 40px; }
+.lt-levelup-bird svg { width: 100%; height: 100%; }
+.lt-levelup-tap { display: block; margin-top: 8px; font-size: 0.7rem; opacity: 0.7; }
+.lt-levelup-bit { position: absolute; top: -12px; width: 8px; height: 13px; border-radius: 2px; background: var(--k); animation: lt-bit-fall var(--dur, 2s) linear var(--dl, 0s) forwards; }
+@keyframes lt-bit-fall { to { transform: translate(var(--sx, 0), 115cqh) rotate(540deg); } }
+.lt-levelup { container-type: size; }
+.lt-levelup-toss { position: absolute; bottom: -40px; width: 38px; height: 32px; animation: lt-cap-toss 1.6s cubic-bezier(0.25, 0.9, 0.45, 1) var(--dl, 0s) forwards; }
+.lt-levelup-toss svg { width: 100%; height: 100%; }
+@keyframes lt-cap-toss { 0% { transform: translateY(0) rotate(0); } 55% { transform: translateY(-78cqh) rotate(calc(var(--spin) * 0.6)); } 100% { transform: translateY(-58cqh) rotate(var(--spin)); opacity: 0; } }
+
+/* The combo badge, at the top of the board, and its draining bar. */
+.lt-combo { position: absolute; left: 50%; top: 6px; z-index: 4; translate: -50% 0; display: grid; grid-template-columns: auto auto; align-items: baseline; gap: 2px 8px; padding: 5px 12px 7px; border-radius: 14px; color: #fff; background: linear-gradient(180deg, #f76707, #d9480f); box-shadow: 0 0 0 2px #ffd43b, 0 6px 14px rgba(0, 0, 0, 0.45); pointer-events: none; }
+.lt-combo b { font-size: calc(var(--cell) * 0.32); font-weight: 800; }
+.lt-combo span { font-size: calc(var(--cell) * 0.3); font-weight: 800; color: #ffe066; }
+.lt-combo > i { grid-column: 1 / -1; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.3); overflow: hidden; }
+.lt-combo > i > i { display: block; height: 100%; border-radius: inherit; background: #ffe066; }
+.lt-combo.pop { animation: lt-combo-pop 0.35s ease-out; }
+.lt-combo.ending { animation: lt-combo-blink 0.3s ease-in-out infinite; }
+@keyframes lt-combo-pop { 40% { scale: 1.25; } }
+@keyframes lt-combo-blink { 50% { opacity: 0.55; } }
+.lt-banner.combo { top: 22%; color: #fff; background: linear-gradient(180deg, #ff922b, #e8590c); font-size: calc(var(--cell) * 0.4); animation-duration: 0.9s; }
+.lt-banner.super { top: 40%; color: #fff; background: linear-gradient(180deg, #4dabf7, #1c7ed6 50%, #364fc7); box-shadow: 0 0 0 3px #ffd43b, 0 0 30px rgba(255, 212, 59, 0.6); font-size: calc(var(--cell) * 0.55); }
+/* Two specials together: the whole board flashes; a huge fireball, or lightning. */
+.lt-flash { position: absolute; inset: 0; background: #fff9db; animation: lt-flash 0.5s ease-out forwards; }
+@keyframes lt-flash { from { opacity: 0.9; } to { opacity: 0; } }
+.lt-blast.huge { width: calc(var(--cell) * 5.4); height: calc(var(--cell) * 5.4); margin: calc(var(--cell) * -2.7) 0 0 calc(var(--cell) * -2.7); animation-duration: 0.6s; }
+.lt-bolt { position: absolute; top: 0; width: calc(var(--cell) * 0.16); margin-left: calc(var(--cell) * -0.08); background: linear-gradient(180deg, transparent, #fff 20%, #ffe066 70%, #fff); box-shadow: 0 0 12px 4px rgba(255, 212, 59, 0.8); clip-path: polygon(40% 0, 100% 0, 60% 38%, 100% 38%, 20% 100%, 45% 55%, 0 55%); animation: lt-bolt 0.55s ease-out both; }
+@keyframes lt-bolt { 0% { opacity: 0; transform: scaleY(0.2); transform-origin: top; } 20% { opacity: 1; transform: scaleY(1); } 60% { opacity: 1; } to { opacity: 0; } }
+
+/* The game is over: the board shakes and dims. */
+.lt-board.over { animation: lt-shake 0.45s ease-in-out; }
+.lt-board.over .lt-piece { filter: grayscale(0.8) brightness(0.7); transition: filter 0.5s; }
+@keyframes lt-shake { 20%, 60% { translate: -6px 0; } 40%, 80% { translate: 6px 0; } }
+
+/* Jeda: over the board. */
+.lt-pause { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border-radius: inherit; background: rgba(20, 8, 34, 0.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.lt-pause-title { margin: 0 0 6px; font-size: 1.8rem; font-weight: 800; }
+.lt-pause .btn { min-width: 180px; }
+.lt-pause .btn-ghost { background: rgba(255, 255, 255, 0.92); }
+
+/* ---------- result ---------- */
+.lt-res-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; margin: 4px 0 0; }
+.lt-res-stats div { background: var(--surface); border-radius: 14px; padding: 10px 6px; text-align: center; box-shadow: var(--shadow); }
+.lt-res-stats dt { font-size: 0.72rem; color: var(--ink-2); }
+.lt-res-stats dd { margin: 2px 0 0; font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.puzzle-result .lt-res-made { margin: 12px 0 0; color: var(--ink-2); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lt-piece { transition: none; }
+  .lt-piece .lt-disc, .lt-rail.soon .lt-next, .lt-col.full, .lt-board.over, .lt-hud-cell b.bump { animation: none !important; }
+  .lt-spark, .lt-blast, .lt-beam, .lt-float, .lt-boom, .lt-ring, .lt-feather, .lt-flash, .lt-bolt { display: none; }
+  .lt-combo.pop, .lt-combo.ending { animation: none; }
+  .lt-clouds, .lt-flyer, .lt-toss { animation: none !important; }
+  .lt-toss { display: none; }
+  .lt-bird .lt-bob, .lt-bird .eyes, .lt-bird .pupils, .lt-bird .wing, .lt-board.jolt, .lt-board.jolt-big { animation: none !important; }
+  .lt-banner { animation: none; }
+  .lt-levelup, .lt-levelup-card, .lt-levelup-cap { animation: none; }
+  .lt-levelup-bit, .lt-levelup-toss { display: none; }
+}
+
+/* Level names ("Sarjana S3") in the stat boxes, a little smaller than numbers. */
+.lt-stats #st-level, .lt-res-stats #res-level { font-size: 1.02rem; line-height: 1.2; }
+/* The level name at the top may take two lines ("Pembelajaran Sepanjang Hayat"). */
+.lt-hud-mid small { max-width: 44vw; line-height: 1.15; }
+
+/* ---------- the hint and the tips ---------- */
+/* Pra Diploma, a while without a move: the two birds of a swap that pops something pulse. */
+.lt-piece.hint .lt-disc { box-shadow: inset 0 0 0 3px rgba(255, 224, 102, 0.9), inset 0 0 14px rgba(255, 224, 102, 0.5); animation: lt-hint 1.1s ease-in-out infinite; }
+/* Inside the tile too, so it isn't cut off at the board's edge. */
+@keyframes lt-hint { 50% { box-shadow: inset 0 0 0 3px rgba(255, 224, 102, 0.35), inset 0 0 6px rgba(255, 224, 102, 0.2); } }
+/* A tip the first time a Mercun, Petir or caged bird turns up: over the top of the board. */
+.lt-tip {
+  position: absolute;
+  z-index: 5;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  color: #2b1a00;
+  background: linear-gradient(180deg, #fff3bf, #ffe066);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+.lt-tip[hidden] { display: none; }
+.lt-tip.show { animation: lt-tip-in 0.3s ease-out; }
+@keyframes lt-tip-in { from { opacity: 0; translate: 0 -8px; } }
+@media (prefers-reduced-motion: reduce) {
+  .lt-piece.hint .lt-disc, .lt-tip.show { animation: none; }
+}

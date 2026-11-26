@@ -16,6 +16,7 @@ AppsWarga app (hub repo: `nullifye/arcade`). Static site on GitHub Pages, no bui
 | 9-Ball (pool, against the AI or a friend) | [`9balls/`](9balls/) | https://nullifye.github.io/warga-games/9balls/ |
 | Pemadam (3D eraser flicking, against the AI) | [`pemadam/`](pemadam/) | https://nullifye.github.io/warga-games/pemadam/ |
 | Congak Matematik (mental arithmetic on a blackboard) | [`congak/`](congak/) | https://nullifye.github.io/warga-games/congak/ |
+| Letup-Letup (falling-stack match-3 with campus birds) | [`letup-letup/`](letup-letup/) | https://nullifye.github.io/warga-games/letup-letup/ |
 
 The site root redirects to the hub. Each game shows its version at the bottom of its home
 screen (tap it for a fresh reload); bump it when the game changes.
@@ -102,6 +103,7 @@ The hub's `supabase/arked.sql` explains each limit; keep it in step with any sco
 | 9-Ball | 2,000 | 400 |
 | Pemadam | 1,000 | 100 |
 | Congak Matematik | 8,000 | 150 |
+| Letup-Letup | 50,000 | 300 |
 
 ## Teka Kata
 
@@ -376,3 +378,72 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   snap in Nyawa. Chalk sounds, synthesised, with a **Bunyi** switch. The result shows accuracy,
   best combo, average time, accuracy by operation with a practice tip ("× 33%: latih sifir 7 dan
   8"), and the wrong answers. The chalk is Cabin Sketch, on the board only.
+
+## Letup-Letup
+
+- A falling-stack match-3 on a 6 × 9 board (6 columns keep the birds big on a phone and the options few, so the pressure stays on). The pieces are six round birds (`js/birds.js`,
+  inline SVG), each a body colour far from the others (red, blue, green, yellow, purple, white)
+  on a faint tile of its own colour, with its own headwear from campus life (a sweatband,
+  glasses, a songkok, a safety helmet, a mortarboard, a ribbon), so types are easy to tell apart.
+- Every few seconds a **full row** of birds (shown above the board) drops, one into each column.
+  A row that meets a full column ends the game (nearly full columns glow amber, full ones red,
+  their birds tremble and look up, a warning sounds and the music speeds up).
+- Swipe a bird onto a neighbour to trade them (or tap one, then its neighbour; or the arrows,
+  Space, then an arrow), or slide it sideways into an empty space, where it falls. Swaps are free:
+  they needn't make a line. 3 or more of a colour across or down explode; birds above fall, and
+  new lines explode in a chain. **4 in a line** leaves a **Mercun** (blasts the 3 × 3 round it
+  when it explodes); **5 in a line** or an **L / T** leaves a **Petir** (its row and column).
+  Blasts set off other specials. **Caged** birds can't be moved or matched; an explosion beside
+  one frees it, a blast clears it.
+- **Levels** follow a study path, a level for every 35 birds popped: **Pra Diploma** (the first,
+  one level), **Diploma** Semester 1–6, **Ijazah** 1–4, **Sarjana** 1–3, **PhD** 1–6, then
+  **Pembelajaran Sepanjang Hayat**, the 21st and last: the hardest, with no end, played until a
+  column is stuck at the top. Each step is harder: rows come every 8 s in Pra Diploma, sooner
+  every level, down to 3.5 s in Pembelajaran
+  Sepanjang Hayat; caged birds rise from none to 18%; the sixth bird (white) joins from Ijazah. Every level
+  up shows a "Tahniah!" popup over the board (the new level, the row speed, caged birds, a new
+  bird when one joins; confetti; a graduation version with tossed mortarboards and a longer
+  fanfare for a new programme). It closes after about 2 s or on a tap, and the row timer waits. The row timer only runs while nothing is moving, and pauses
+  (Jeda) when the page is hidden, AppsWarga goes to the background, or a dialog is open. A greedy
+  test player (scoring swaps only, one every 1.2 s) lasts about 2 minutes, to around Diploma
+  Semester 2. **Tap the waiting row** (or J) to drop it at once, for 3 points a second saved if you have
+  popped something since the last row (calling rows down without playing earns nothing).
+- The game screen is sunset over UiTM Shah Alam: Dewan Agung Tuanku Canselor, PTAR, Menara SAAS,
+  a faculty block and Masjid Tuanku Mizan along the bottom with Pintu Utama in front
+  (`img/kampus.svg`); clouds drift (`img/awan.svg`), birds fly past, and now and then a
+  mortarboard is tossed up. The next row waits above the board at full size.
+- **Combos.** Every move that explodes something within 4 s of the last explosion (game time:
+  pauses and Tahniah popups don't count) adds to the combo, which multiplies that move's points:
+  2 → ×1.5, 3–4 → ×2, 5–7 → ×2.5, 8+ → ×3; moves that explode nothing don't break it, time does.
+  A badge on the board shows it with a bar draining over the 4 s. **Special combos**: two
+  specials swapped into each other go off together: Mercun + Mercun = **Mercun Besar** (5 × 5,
+  +50), Mercun + Petir = **Petir Berganda** (three rows and three columns, +75), Petir + Petir
+  = **Ribut Petir** (every bird of both colours, +100); they set off other specials they reach.
+- Always a little alive: each bird bobs, blinks, looks about and flaps now and then, on its own
+  random timing; a picked one hops and flaps. An explosion: a flash, a fireball, a shock ring,
+  sparks and the bird's feathers; big ones (blasts, chains of 3+) jolt the board.
+- **Music**: an original synthesised loop (16 bars: melody, bass, off-beat chords, drums) at a
+  steady 118 BPM whatever the level. It follows how close the stack is to the top instead: tense
+  (132 BPM, a driving bass) when a column has two spaces left, panicky (148 BPM, a ticking clock
+  and an alarm pulse) with one or none; the tempo eases between them. It stops on pause, at the
+  end and off screen. Settings: **Bunyi**
+  (sound effects, with chirps; a falling row whooshes, then thuds bird by bird as each lands) and **Muzik**, each on its own.
+- **Cabaran Harian**: the same board and rows for everyone that day (each row seeded on its
+  own, so players at the same level see the same rows), one try. **Main Bebas**: a new board
+  each time. Leaving with points (or leaving the daily try) ends the game and records it, after
+  asking.
+- Points, kept modest so a game weighs about as much as the other games' rounds on the hub's
+  combined board: 5 a bird popped (blasted ones too) × the chain link (×1 to ×5), +15 a Mercun
+  made, +30 a Petir, +3 a bird freed, +50 / +75 / +100 a special combo; then × the move's combo
+  (×1.5 to ×3); +3 a second saved by calling a row down early, after a pop since the last row.
+  A move that pops anything keeps input locked for at least 0.45 s (`MIN_MOVE_S`), and the page
+  records whole seconds rounded up. Tested, combos included: the best opening bursts (every pair
+  of first swaps, and greedy runs of up to 12 back to back) stay under 300 a second (worst seen
+  ~218); a greedy player as fast as the game allows peaks around 19 a second over whole games;
+  calling rows down without playing earns no early points.
+- Help: five short points; a tip shows (once) the first time a Mercun, a Petir, two specials or
+  a caged bird turns up. In Pra Diploma, after 5 s without a move, the two birds of a swap that
+  pops something pulse. The next row waits in a dashed "Seterusnya" tray, a little smaller and
+  dimmer than the board's birds.
+- Rules in `letup-letup/js/rules.js` (unit-tested); every game goes to `arked_record`. `?debug`
+  exposes `window.__lt` for browser tests.
