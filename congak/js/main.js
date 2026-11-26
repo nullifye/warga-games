@@ -152,9 +152,32 @@ function startDaily() {
     return go('tamat', { replace: true });
   }
   const date = todayKL();
-  storeSet(K.daily, { date, status: 'playing' });
   recordProgress({ date, status: 'playing' });
   startRound(newRound({ ...DAILY, seed: dailySeed(date), daily: true }));
+  saveDailyProgress();
+}
+
+/**
+ * Cabaran Harian is one try. While it plays, the result so far is kept on the phone, so a game
+ * cut off by closing the app (or the page reloading) still counts: see settleClosedDaily.
+ */
+function saveDailyProgress() {
+  const s = session;
+  if (!s?.r.daily || s.r.over) return;
+  storeSet(K.daily, { date: todayKL(), status: 'playing', result: resultOf(s.r, secondsSince(s.startedAt), 'closed') });
+}
+
+/**
+ * Opening the game with today's Cabaran Harian still marked as playing means it was cut off
+ * (the app closed, the page reloaded): it counts as today's try, with the score it had, and is
+ * recorded; no second try.
+ */
+function settleClosedDaily() {
+  const d = todaysDaily();
+  if (d?.status !== 'playing' || session) return;
+  const result = d.result ?? resultOf(newRound({ ...DAILY, seed: dailySeed(d.date), daily: true }), 1, 'closed');
+  record(result, { bestStreak: result.bestStreak ?? 0 });
+  toast('Cabaran Harian yang terhenti tadi telah direkodkan.');
 }
 
 function startFree() {
@@ -372,6 +395,7 @@ async function choose(i) {
   unlockSound();
   const seconds = (performance.now() - s.unlockedAt) / 1000;
   const res = answer(r, q.choices[i], seconds);
+  saveDailyProgress();
   const box = $('#ck-answers');
   box.classList.add('locked');
   for (const b of box.children) b.disabled = true;
@@ -483,7 +507,31 @@ const REASON = {
   lives: 'Ketiga-tiga batang kapur sudah patah.',
   all: `Habis ${MAX_QUESTIONS} soalan. Hebat!`,
   quit: 'Anda keluar sebelum tamat.',
+  closed: 'Permainan ditutup sebelum tamat. Cubaan hari ini dikira dengan markah setakat itu.',
 };
+
+const secondsSince = (t) => Math.min(86400, Math.max(1, Math.round((Date.now() - t) / 1000)));
+
+/** What the result screen and the board need from a round. */
+function resultOf(r, seconds, reason) {
+  return { ...summary(r), points: r.score, seconds, level: r.level, mode: r.mode, daily: r.daily, reason };
+}
+
+/** Keeps a finished round: stats, today's Cabaran Harian, Arked Warga's progress, the board. */
+function record(result, { bestStreak }) {
+  lastResult = { ...result, submit: { status: 'pending' } };
+  const t = stats();
+  t.played++;
+  t.best = Math.max(t.best, result.points);
+  t.bestStreak = Math.max(t.bestStreak, bestStreak);
+  storeSet(K.stats, t);
+  if (result.daily) {
+    const date = todayKL();
+    storeSet(K.daily, { date, status: 'done', result });
+    recordProgress({ date, status: 'done', won: true, score: result.points });
+  }
+  submitResult(lastResult);
+}
 
 function finish(reason, { navigate = true } = {}) {
   const s = session;
@@ -492,26 +540,11 @@ function finish(reason, { navigate = true } = {}) {
   end(r, reason);
   clearInterval(s.clock);
   if ($('#dlg-leave').open) $('#dlg-leave').close();
-  const sum = summary(r);
-  const seconds = Math.min(86400, Math.max(1, Math.round((Date.now() - s.startedAt) / 1000)));
-  lastResult = {
-    ...sum, points: r.score, seconds, level: r.level, mode: r.mode, daily: r.daily, reason, submit: { status: 'pending' },
-  };
-  const t = stats();
-  t.played++;
-  t.best = Math.max(t.best, r.score);
-  t.bestStreak = Math.max(t.bestStreak, r.bestStreak);
-  storeSet(K.stats, t);
-  if (r.daily) {
-    const date = todayKL();
-    storeSet(K.daily, { date, status: 'done', result: { ...lastResult, submit: undefined } });
-    recordProgress({ date, status: 'done', won: true, score: r.score });
-  }
+  record(resultOf(r, secondsSince(s.startedAt), reason), { bestStreak: r.bestStreak });
   if (navigate) {
     playSound('end');
     appsWargaHaptic('notification', 'success');
   }
-  submitResult(lastResult);
   stopRound();
   if (navigate) go('tamat', { replace: true });
 }
@@ -673,6 +706,7 @@ function init() {
   document.fonts?.ready.then(refit);
   window.addEventListener('resize', refit);
   window.addEventListener('hashchange', route);
+  settleClosedDaily();
   if (!storeGet(K.seenHelp, false)) {
     storeSet(K.seenHelp, true);
     help();
