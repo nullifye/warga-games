@@ -14,7 +14,7 @@ import { dirname, join, posix, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-export const GAMES = ['teka-kata', 'ular', 'duga-kata', 'kejar-lapan', '2048', 'blok', 'memori', 'congkak', '9balls', 'pemadam', 'congak'];
+export const GAMES = ['teka-kata', 'ular', 'duga-kata', 'kejar-lapan', '2048', 'blok', 'memori', 'congkak', '9balls', 'pemadam', 'congak', 'letup-letup'];
 // Files the hub doesn't prefetch: too big to fetch on the chance the game is played.
 const PREFETCH_MAX_BYTES = 150_000;
 const START = '<!-- modulepreload:start (tools/preload.mjs) -->';
@@ -67,7 +67,8 @@ export function preloadBlock(info) {
 
 export function withPreloads(info) {
   const block = preloadBlock(info);
-  if (info.html.includes(START)) return info.html.replace(new RegExp(`${START}[\\s\\S]*?${END}`), block);
+  const literal = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (info.html.includes(START)) return info.html.replace(new RegExp(`${literal(START)}[\\s\\S]*?${literal(END)}`), block);
   // First run: put the block just before the module script.
   return info.html.replace(/( *)<script type="module" src=/, `$1${block}\n$1<script type="module" src=`);
 }
