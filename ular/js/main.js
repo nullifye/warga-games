@@ -1,5 +1,6 @@
 // Ular: screens, the game loop, drawing, input, results and the leaderboard.
 import { createGame, step, stepMs, turn, POINTS } from './snake.js';
+import { setMuted, unlockSound, play as playSound } from './sound.js';
 import { initAppsWarga, appsWargaHaptic, appsWargaShare, closeMiniApp, notifyAppReady } from '../../shared/appswarga.js';
 import { initFromArked, backToArked, shareUrl } from '../../shared/arked-link.js';
 import { initProfile, loadProfile, withProfile } from '../../shared/profile.js';
@@ -32,7 +33,7 @@ const store = {
   },
 };
 
-const settings = () => ({ walls: true, dpad: true, ...store.get(K.settings, {}) });
+const settings = () => ({ walls: true, dpad: true, sound: true, ...store.get(K.settings, {}) });
 
 let game = null; // { state, phase: 'ready'|'running'|'paused'|'over', playedMs, lastTs, acc }
 let lastResult = null;
@@ -107,6 +108,9 @@ function renderSettings() {
     : `Tembus ke sisi lain · ${POINTS.open} mata`;
   $('#set-dpad').setAttribute('aria-checked', String(s.dpad));
   $('#set-dpad-hint').textContent = s.dpad ? 'Butang arah di skrin' : 'Leret sahaja';
+  $('#set-sound').setAttribute('aria-checked', String(s.sound));
+  $('#set-sound-hint').textContent = s.sound ? 'Kesan bunyi' : 'Senyap';
+  setMuted(!s.sound);
 }
 
 function toggleSetting(key) {
@@ -143,6 +147,8 @@ function startGame() {
 
 function start() {
   if (!game || game.phase === 'running' || game.phase === 'over') return;
+  unlockSound();
+  playSound('go');
   game.phase = 'running';
   game.lastTs = 0;
   overlay(null);
@@ -154,6 +160,7 @@ function pause() {
   if (game?.phase !== 'running') return;
   game.phase = 'paused';
   cancelAnimationFrame(rafId);
+  playSound('rest');
   overlay('Rehat', 'Sambung', start); // ‹ at the top leaves the game
 }
 
@@ -188,8 +195,10 @@ function tick(ts) {
     const ev = step(state);
     if (ev === 'eat') {
       appsWargaHaptic('impact', 'light');
+      playSound('eat', state.foods);
       renderScore();
     } else if (ev === 'dead' || ev === 'won') {
+      playSound(ev === 'won' ? 'won' : 'crash');
       draw();
       return finish(ev === 'won');
     }
@@ -201,8 +210,10 @@ function tick(ts) {
 function steer(dir) {
   if (!game || game.phase === 'over') return;
   if (game.phase === 'paused') return;
-  turn(game.state, dir);
+  unlockSound();
+  const turned = turn(game.state, dir);
   if (game.phase === 'ready') start();
+  else if (turned) playSound('turn');
 }
 
 function renderScore() {
@@ -237,7 +248,9 @@ async function finish(won) {
   };
   if (lastResult.submit.status === 'pending') submitResult(lastResult);
   await new Promise((r) => setTimeout(r, 700)); // let the crash register
-  if (game === g) go('tamat', true);
+  if (game !== g) return;
+  go('tamat', true);
+  if (lastResult.newBest) playSound('best');
 }
 
 // ---------- drawing ----------
@@ -490,6 +503,7 @@ function init() {
   });
   $('#set-walls').addEventListener('click', () => toggleSetting('walls'));
   $('#set-dpad').addEventListener('click', () => toggleSetting('dpad'));
+  $('#set-sound').addEventListener('click', () => { toggleSetting('sound'); unlockSound(); playSound('eat', 8); });
   $('#btn-play').addEventListener('click', () => go('main'));
   $('#btn-board').addEventListener('click', () => go('papan'));
 

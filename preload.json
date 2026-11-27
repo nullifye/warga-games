@@ -53,6 +53,7 @@
       "shared/theme-boot.js",
       "ular/js/main.js",
       "ular/js/snake.js",
+      "ular/js/sound.js",
       "shared/appswarga.js",
       "shared/arked-link.js",
       "shared/profile.js",

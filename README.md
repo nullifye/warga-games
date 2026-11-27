@@ -131,6 +131,9 @@ The hub's `supabase/arked.sql` explains each limit; keep it in step with any sco
 - **Dinding** on: hitting the edge ends the game, 15 points a food. Off: the snake wraps
   around, 10 points a food. Hitting itself always ends it.
 - **Butang arah** (on-screen D-pad) on or off; swiping on the board and arrow keys / WASD always work.
+- **Bunyi** (on by default): synthesised effects (`ular/js/sound.js`, no files): a chirp to
+  go, a soft tick on each turn, a chomp that climbs about an octave over the first 40 foods, a
+  crash, a fanfare for a full board, two soft notes for Rehat, and a sparkle for a new best.
 - Pauses when the page is hidden or AppsWarga goes to the background.
 - Rules in `ular/js/snake.js` (unit-tested); every round with points goes to `arked_record`.
 

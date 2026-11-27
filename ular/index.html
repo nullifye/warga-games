@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/ular.css">
   <!-- modulepreload:start (tools/preload.mjs) -->
   <link rel="modulepreload" href="js/snake.js">
+  <link rel="modulepreload" href="js/sound.js">
   <link rel="modulepreload" href="../shared/appswarga.js">
   <link rel="modulepreload" href="../shared/arked-link.js">
   <link rel="modulepreload" href="../shared/profile.js">
@@ -81,6 +82,13 @@
           </span>
           <span class="switch" aria-hidden="true"></span>
         </button>
+        <button type="button" class="switch-row" id="set-sound" role="switch" aria-checked="true">
+          <span class="switch-text">
+            <strong>Bunyi</strong>
+            <small id="set-sound-hint">Kesan bunyi</small>
+          </span>
+          <span class="switch" aria-hidden="true"></span>
+        </button>
       </div>
 
       <button type="button" class="btn btn-primary btn-wide" id="btn-play">Main</button>
@@ -89,7 +97,7 @@
         Papan Markah
       </button>
 
-      <button type="button" class="app-version" id="btn-version" aria-label="Versi 1.4. Ketik untuk muat semula permainan.">Versi 1.4</button>
+      <button type="button" class="app-version" id="btn-version" aria-label="Versi 1.5. Ketik untuk muat semula permainan.">Versi 1.5</button>
     </section>
 
     <!-- Permainan -->
