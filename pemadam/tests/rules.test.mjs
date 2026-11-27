@@ -157,7 +157,7 @@ test('flicks: along the direction, harder with power; a soft one stays lower', (
   assert.ok(hard.w.x < 0);
 });
 
-// ---------- in the physics (Rapier, vendor/rapier.es.js) ----------
+// ---------- in the physics (Rapier, shared/vendor/rapier.es.js) ----------
 
 async function rapier() {
   const warn = console.warn;

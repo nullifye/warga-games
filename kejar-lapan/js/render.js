@@ -1,6 +1,6 @@
 // Kejar Lapan: drawing a run with Three.js. Reads the sim's state each frame; never changes it.
 // Everything is built once (models.js) and pooled, so a long run doesn't grow memory.
-import * as THREE from '../vendor/three.module.min.js';
+import * as THREE from '../../shared/vendor/three.module.min.js';
 import { createTrailEffect } from './trails.js';
 import { campusAt } from './campus.js';
 import { LANES, SHIELD } from './config.js';

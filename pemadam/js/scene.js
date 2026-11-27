@@ -1,8 +1,8 @@
-// Pemadam in 3D (Three.js, shared with Kejar Lapan): a wooden school desk with a pencil case and
+// Pemadam in 3D (Three.js from shared/vendor): a wooden school desk with a pencil case and
 // a pencil on it, and two rubber flag erasers with rounded edges, in soft light and shadow. The
 // physics (js/physics.js) moves the erasers; this file draws them, takes the slingshot aim (press
 // on your eraser, pull back, let go), shows the aim arrow, and replays a point up close.
-import * as THREE from '../../kejar-lapan/vendor/three.module.min.js';
+import * as THREE from '../../shared/vendor/three.module.min.js';
 import { ERASER, DESK, PROPS, PLAYER, AI } from './rules.js';
 import { paintFlag, AI_FLAGS } from './flags.js';
 

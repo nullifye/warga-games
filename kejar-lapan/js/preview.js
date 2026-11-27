@@ -1,5 +1,5 @@
 // The wardrobe renders the runner model and the same trail emitter used in-game.
-import * as THREE from '../vendor/three.module.min.js';
+import * as THREE from '../../shared/vendor/three.module.min.js';
 import { createTrailEffect, buildTrailMark, styleTrailMark } from './trails.js';
 import { buildPlayer, buildCosmeticItem, voxelMat } from './models.js';
 

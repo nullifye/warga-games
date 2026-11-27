@@ -143,7 +143,7 @@ The hub's `supabase/arked.sql` explains each limit; keep it in step with any sco
 ## Kejar Lapan
 
 A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
-`kejar-lapan/vendor/` with its licence; no CDN, no build step).
+`shared/vendor/` with its licence, shared by the 3D games; no CDN, no build step).
 
 **Play**
 
@@ -272,7 +272,7 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
 - AI levels: Mudah plays at random; Sederhana, Susah and Pakar look 1, 2 and 4 moves ahead.
   Only a win scores: 55–100% of the level's maximum (100, 500, 800, 1,000), more for a fuller
   store.
-- 3D with Three.js (Kejar Lapan's `vendor/` copy, fetched while the home screen shows): a maroon
+- 3D with Three.js (`shared/vendor/`, fetched while the home screen shows): a maroon
   lacquered board with carved stars and ferns, glass marbles, and a hand that scoops and sows
   them one by one while the camera follows it. Each hole's and store's count sits beside it,
   off the board; the marbles in hand show under the status line. Swipe or the arrow keys turn
@@ -317,7 +317,7 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
 - **3D view** (the default; **3D**/**2D** in the game's header, or **Paparan 3D** on the home
   screen, remembered): the same balls, rules and physics, seen from behind the cue ball as a
   player stands at the table, filling the whole screen with no frame, as in Pemadam (the bar,
-  score row float over it, and the picture is centred below them) (`9balls/js/scene3d.js`, Three.js from `kejar-lapan/vendor`, loaded
+  score row float over it, and the picture is centred below them) (`9balls/js/scene3d.js`, Three.js from `shared/vendor/`, loaded
   only when the 3D view is used). A drag sideways turns the aim and the camera with it; a tap
   aims at that spot; press, hold and pull for power as on the flat table. The cue (tip offset by
   the spin), the guide (every path a ball-wide lane: the cue ball's to a ghost ball, the
@@ -353,7 +353,7 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   passes. First to 5 wins. Rules, what counts as on top (outlines overlapping, the upper one's
   underside on the lower one's face, both lying flat and still) and the turn order are in
   `pemadam/js/rules.js` (unit-tested).
-- Real physics: Rapier 3D (`pemadam/vendor/rapier.es.js`, the `@dimforge/rapier3d-compat`
+- Real physics: Rapier 3D (`shared/vendor/rapier.es.js`, the `@dimforge/rapier3d-compat`
   0.17.3 build with its WebAssembly inside, Apache-2.0; fetched while the home screen shows),
   stepped at a fixed 120 Hz. The erasers are soft rubber blocks with rounded edges; the pencil
   case and the pencil on the desk are solid. An eraser left standing on a side or an end is
@@ -368,7 +368,7 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   miss by a little less at each level (`planFlick` in `pemadam/js/physics.js`). The AI shows its
   arrow and gauge as it aims. Only a win scores: the level's maximum (100, 400, 700, 1,000) less
   a tenth for each point the AI got.
-- 3D with Three.js (Kejar Lapan's `vendor/` copy): a light wooden school desk with grain, knots
+- 3D with Three.js (`shared/vendor/`): a light wooden school desk with grain, knots
   and old scratches on a steel frame, soft shadows, and flag erasers: yours the Jalur Gemilang,
   the AI's one of 11 others, a different one each match (Japan, Indonesia, Thailand, Singapore,
   Germany, France, Italy, Netherlands, Ukraine, Bangladesh, Poland). Each is drawn to its official

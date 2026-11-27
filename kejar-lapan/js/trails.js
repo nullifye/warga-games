@@ -1,6 +1,6 @@
 // Shared decorative trail geometry for the runner and wardrobe. Four cached shapes,
 // fixed-size mesh pools, no simulation inputs or per-frame geometry allocation.
-import * as THREE from '../vendor/three.module.min.js';
+import * as THREE from '../../shared/vendor/three.module.min.js';
 import { voxels } from './models.js';
 
 const material = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });

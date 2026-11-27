@@ -100,7 +100,7 @@ test('all items start locked and saved test selections cannot bypass milestones'
 });
 
 test('shared trail emitter uses identical transforms for preview and game samples', async () => {
-  const THREE = await import('../vendor/three.module.min.js');
+  const THREE = await import('../../shared/vendor/three.module.min.js');
   const { createTrailEffect } = await import('../js/trails.js');
   for (const cosmetic of COSMETICS.filter((item) => item.slot === 'trail')) {
     const game = new THREE.Group();
@@ -177,7 +177,7 @@ test('removed sling selections fall back to original and new items use face/hand
 
 
 test('robe and vest change the clothing silhouette while sharing the runner joints', async () => {
-  const THREE = await import('../vendor/three.module.min.js');
+  const THREE = await import('../../shared/vendor/three.module.min.js');
   const robe = COSMETICS.find((item) => item.design === 'robe');
   const vest = COSMETICS.find((item) => item.design === 'vest');
   const robeSize = new THREE.Box3().setFromObject(buildCosmeticItem('staf', robe)).getSize(new THREE.Vector3());

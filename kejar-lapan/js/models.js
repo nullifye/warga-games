@@ -1,6 +1,6 @@
 // Kejar Lapan: voxel models. Each model is many boxes merged into one geometry with vertex
 // colours, drawn with one shared material: one draw call per model, built once and reused.
-import * as THREE from '../vendor/three.module.min.js';
+import * as THREE from '../../shared/vendor/three.module.min.js';
 import { LANDMARKS } from './config.js';
 
 /** The one material for every vertex-coloured voxel model. */

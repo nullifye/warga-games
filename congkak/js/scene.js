@@ -1,9 +1,9 @@
-// Congkak in 3D (Three.js, shared with Kejar Lapan), modelled on a traditional board: dark
+// Congkak in 3D (Three.js from shared/vendor), modelled on a traditional board: dark
 // maroon lacquered wood with chamfered ends, deep round holes, carved stars and ferns, and glass
 // marbles, seen at an angle from one end. A hand sows the marbles one by one and
 // the camera follows it. HTML labels over the canvas show each hole's and store's count; a counter
 // at the top of the board area shows how many marbles the hand holds.
-import * as THREE from '../../kejar-lapan/vendor/three.module.min.js';
+import * as THREE from '../../shared/vendor/three.module.min.js';
 import { PLAYER, AI, STORE } from './rules.js';
 
 const HOLE_R = 0.45; // bigger holes, but always smaller than the stores

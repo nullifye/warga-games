@@ -1,4 +1,4 @@
-// 9-Ball in 3D (Three.js, shared with Kejar Lapan and Congkak): the same balls, rules and physics
+// 9-Ball in 3D (Three.js from shared/vendor, as Kejar Lapan, Congkak and Pemadam use): the same balls, rules and physics
 // as the flat table (js/rules.js), seen from behind the cue ball as a player stands at the table.
 // The camera turns with the aim; while a shot runs it rises to watch it; with ball in hand it
 // looks straight down so the cue ball can be dragged into place. Loaded only when the 3D view is
@@ -6,7 +6,7 @@
 //
 // World units are table units (js/rules.js): x across the table, z along it (the table's y), with
 // the cloth at y = 0 and the table's centre at the origin.
-import * as THREE from '../../kejar-lapan/vendor/three.module.min.js';
+import * as THREE from '../../shared/vendor/three.module.min.js';
 import {
   TABLE_W, TABLE_H, PLAY_LEFT, PLAY_RIGHT, PLAY_TOP, PLAY_BOTTOM, PLAY_W, PLAY_H, BALL_R, POCKETS,
   TABLE_WIDTH_IN, cueBall, lowestBall, aimRay, tracePath, validPlacement,

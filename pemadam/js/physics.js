@@ -1,4 +1,4 @@
-// Pemadam physics: the desk, its props and the two erasers in Rapier (vendor/rapier.es.js, the
+// Pemadam physics: the desk, its props and the two erasers in Rapier (shared/vendor/rapier.es.js, the
 // build with the WebAssembly inside), stepped at a fixed 120 Hz so a flick plays out the same on
 // any screen. The AI tries its flicks out in a copy of the world (planFlick), judged by the same
 // referee as the real game (rules.js).
@@ -13,7 +13,7 @@ let R = null;
 /** Loads Rapier once (about 2.4 MB of script, then its WebAssembly is compiled). */
 export async function loadPhysics() {
   if (R) return R;
-  const mod = await import('../vendor/rapier.es.js');
+  const mod = await import('../../shared/vendor/rapier.es.js');
   await mod.init();
   R = mod;
   return R;
