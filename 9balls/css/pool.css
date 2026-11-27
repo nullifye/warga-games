@@ -40,42 +40,42 @@ body[data-screen='game'] { background: radial-gradient(circle at 50% 45%, #1e293
   --key: #334155;
   --key-off: #334155;
   --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --gold: #facc15; /* the 1 and the 9's yellow: the turn, the next ball, the score row */
   /* The theme colour, lightened so it stands out on the dark: the turn outline, buttons. */
   --accent: color-mix(in srgb, var(--primary) 55%, #fff);
   color: var(--ink);
 }
 .screen-game .btn-ghost { color: var(--accent); }
 .screen-game .icon-btn { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line), var(--shadow); }
-.screen-game .pl-player { border: 1px solid var(--line); }
 .screen-game { position: relative; height: 100dvh; min-height: 0; overflow: hidden; gap: 8px; }
 /* The cue's own layer over the whole screen: it isn't clipped to the table, passes under the
    bar, the players and the aim row, and never takes a tap. */
 .pl-cue-layer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-.screen-game .bar, .pl-hud, .pl-strip, .pl-aim { position: relative; z-index: 2; }
+.screen-game .bar, .pl-hud { position: relative; z-index: 2; }
 .screen-game,
 .screen-game * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 
-/* Players, side by side: [• Anda      2] [1      AI •]. The one to play is highlighted; the
-   number is how many balls each has potted, at the card's outer edge. */
-.pl-hud { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 8px; }
-.pl-player {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-  padding: 7px 10px;
-  border-radius: 14px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  opacity: 0.6;
-  transition: opacity 0.2s, box-shadow 0.2s;
-}
-.pl-player.active { opacity: 1; box-shadow: inset 0 0 0 2px var(--accent, var(--primary)), var(--shadow); }
-.pl-name { flex: 1; min-width: 0; font-weight: 700; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pl-player.right .pl-name { text-align: right; }
-.pl-pots { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center; font-size: 0.78rem; background: var(--surface-2); color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.pl-turn { width: 9px; height: 9px; border-radius: 50%; background: var(--key-off); flex: none; }
-.pl-player.active .pl-turn { background: var(--accent, var(--primary)); animation: pl-pulse 1.2s ease-in-out infinite; }
+/* The score row, as in Letup-Letup: plain text over the game, no cards. At each side a player's
+   name (small capitals) over the balls they have potted (big); a gold dot pulses beside the one
+   to play, the other side dims. In the middle, the balls still on the table (the next to hit
+   ringed in gold). Shadowed to stay legible over the 3D room. */
+.pl-hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; padding: 0 2px; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+.pl-hud-cell { display: grid; gap: 3px; min-width: 0; transition: opacity 0.2s; }
+.pl-hud-cell small { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+.pl-hud-cell small span { overflow: hidden; text-overflow: ellipsis; }
+.pl-hud-cell b { font-size: 1.6rem; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pl-hud-cell b.bump { animation: pl-bump 0.35s ease; }
+@keyframes pl-bump { 40% { transform: scale(1.2); color: var(--gold); } }
+#pl-p1:not(.active), #pl-p2:not(.active) { opacity: 0.55; }
+.pl-hud-mid { justify-items: center; text-align: center; gap: 6px; }
+/* Whose turn it is is read out (the dot shows it on screen), so the ball row sits alone in the
+   middle, level with the players. */
+.pl-hud-mid { align-self: center; }
+.pl-hud-mid small { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pl-hud-end { justify-items: end; text-align: right; }
+.pl-hud-end small { justify-content: flex-end; }
+.pl-turn { width: 8px; height: 8px; border-radius: 50%; background: transparent; flex: none; }
+.pl-hud-cell.active .pl-turn { background: var(--gold); box-shadow: 0 0 6px var(--gold); animation: pl-pulse 1.2s ease-in-out infinite; }
 @keyframes pl-pulse { 50% { opacity: 0.35; } }
 
 /* Ball badges in the balls' own colours, as little 3D balls: a white number circle, a sharp
@@ -100,15 +100,35 @@ body[data-screen='game'] { background: radial-gradient(circle at 50% 45%, #1e293
   background: var(--shine), var(--disc), var(--shade),
     linear-gradient(#f8fafc 0 22%, var(--ball) 22% 78%, #f8fafc 78%);
 }
-.pl-strip { display: flex; justify-content: center; gap: 5px; }
-.pl-dot-ball { width: 22px; height: 22px; font-size: 0.56rem; transition: opacity 0.2s, transform 0.2s; }
+.pl-strip { display: flex; justify-content: center; gap: 2px; }
+.pl-dot-ball { width: 18px; height: 18px; font-size: 0.48rem; text-shadow: none; transition: opacity 0.2s, transform 0.2s; }
 .pl-dot-ball.gone { opacity: 0.2; transform: scale(0.8); }
 .pl-dot-ball.next { transform: scale(1.2); box-shadow: 0 0 0 2px var(--gold), 0 2px 3px rgba(0, 0, 0, 0.35); }
 
 /* The table, sized by js/main.js to keep its shape. */
 .pl-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+/* The flat table takes all the room below the score row, nearly edge to edge; the spin button
+   sits at the screen's bottom-right corner, as in 3D, over the table's corner. */
+.screen-game:not(.pl-3d) .pl-stage { margin: 0 -10px; }
 .pl-table { position: relative; flex: none; border-radius: 22px; overflow: hidden; background: #2b170a; box-shadow: 0 14px 34px rgba(20, 8, 40, 0.35), 0 0 0 2px rgba(255, 255, 255, 0.08); }
 #pl-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+/* The 3D view: its canvas fills the whole stage in place of the flat table's; the cue is in the
+   scene, so the cue's own layer is hidden. */
+#pl-canvas3d { display: none; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.pl-3d #pl-canvas { display: none; }
+.pl-3d #pl-canvas3d { display: block; }
+.pl-3d .pl-cue-layer { display: none; }
+/* In 3D the scene fills the whole window, as in Pemadam: wider than the 520px column, with no
+   frame; the bar, the players and the ball strip float over it, in the column. */
+.screen-game.pl-3d { width: 100vw; margin-left: calc(50% - 50vw); padding-left: 0; padding-right: 0; padding-bottom: 0; }
+.pl-3d .bar, .pl-3d .pl-hud { width: 100%; max-width: 520px; margin-left: auto; margin-right: auto; padding-left: 16px; padding-right: 16px; }
+.pl-3d .pl-stage { position: absolute; inset: 0; z-index: 0; }
+.pl-3d .pl-table { border-radius: 0; box-shadow: none; background: #120c08; }
+/* Messages and prompts keep clear of the bar at the top (--pl-top: below the ball strip). */
+.pl-3d .pl-toast { top: var(--pl-top, 150px); }
+.pl-3d .pl-bih { bottom: max(16px, env(safe-area-inset-bottom)); }
+.pl-bar-actions { grid-column: 3; justify-self: end; display: flex; gap: 8px; }
+.pl-view-btn { font-weight: 800; font-size: 0.85rem; letter-spacing: 0.02em; }
 
 .pl-toast {
   position: absolute;
@@ -139,6 +159,9 @@ body[data-screen='game'] { background: radial-gradient(circle at 50% 45%, #1e293
 
 /* The table draws its own rounded corners; its box shows nothing behind them. */
 .pl-table { background: transparent; }
+/* The flat table's canvas rounds its own corners, so its box needn't clip: prompts over it may
+   be wider than the table. */
+.screen-game:not(.pl-3d) .pl-table { overflow: visible; }
 
 /* Push-out: the toggle on the shot after the break, and the opponent's choice afterwards. */
 /* (The toggle sits in a box like the ball-in-hand prompt: a label over a full-size button.) */
@@ -151,7 +174,9 @@ body[data-screen='game'] { background: radial-gradient(circle at 50% 45%, #1e293
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 86%;
+  /* The same width in both views (not a share of the table, which is narrower in 2D, and on a
+     wide screen narrower still): it may reach past the flat table's sides. */
+  width: min(340px, calc(100vw - 32px));
   padding: 16px;
   border-radius: 18px;
   display: grid;
@@ -164,7 +189,7 @@ body[data-screen='game'] { background: radial-gradient(circle at 50% 45%, #1e293
 .pl-push-choice[hidden] { display: none; }
 .pl-push-choice p { margin: 0; font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
 .pl-push-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.pl-push-actions .btn { min-height: 42px; padding: 8px 10px; }
+.pl-push-actions .btn { min-height: 42px; padding: 8px 10px; white-space: nowrap; }
 .pl-bih { position: absolute; z-index: 3; left: 50%; bottom: 14px; transform: translateX(-50%); width: 90%; display: grid; justify-items: center; gap: 8px; }
 .pl-bih[hidden] { display: none; }
 .pl-bih span { padding: 5px 12px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; color: #fcd34d; background: rgba(2, 6, 23, 0.9); text-align: center; }
@@ -228,29 +253,36 @@ body[data-screen='game'] { background: radial-gradient(circle at 50% 45%, #1e293
 }
 @keyframes pl-gauge-in { from { opacity: 0; scale: 0.85; } }
 
-/* Fine aim: hold to turn slowly. */
-.pl-aim { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
-.pl-aim-btn { min-height: 44px; padding: 8px 10px; font-size: 0.85rem; gap: 6px; touch-action: none; }
-.pl-aim-btn:disabled { opacity: 0.45; }
-.pl-aim-btn svg { width: 18px; height: 18px; }
-/* Spin: the small cue ball in the bottom row, its red dot the strike point. */
-.pl-spin-btn { display: grid; justify-items: center; gap: 2px; padding: 2px 6px; border: 0; background: none; color: var(--ink-2); font: inherit; }
+/* Spin: just a small cue ball floating at the bottom right, its red dot the strike point (its
+   name, Kesan pukulan, is read out). Hidden while a prompt (ball in hand, push-out) takes the
+   bottom of the screen. */
+.pl-spin-btn {
+  position: absolute;
+  z-index: 3;
+  right: 18px;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: grid;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font: inherit;
+}
+.screen-game:has(.pl-bih:not([hidden]), .pl-push-choice:not([hidden])) .pl-spin-btn { display: none; }
 .pl-spin-btn:disabled { opacity: 0.4; }
 .pl-spin-btn.showing { opacity: 1; } /* the AI's strike point, shown while it plays */
-.pl-spin-btn small { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-.pl-spin-btn.set small { color: var(--accent, var(--primary)); }
 .pl-spin-mini {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: radial-gradient(circle at 34% 28%, #fff 0 12%, #f1f5f9 30%, #cbd5e1 75%, #94a3b8);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 .pl-spin-btn.set .pl-spin-mini { box-shadow: 0 0 0 2px var(--accent, var(--primary)), 0 2px 5px rgba(0, 0, 0, 0.45); }
 .pl-spin-mini i,
 .pl-spin-dot { position: absolute; left: 50%; top: 50%; border-radius: 50%; background: #e11d48; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9); }
-.pl-spin-mini i { width: 8px; height: 8px; }
+.pl-spin-mini i { width: 9px; height: 9px; }
 
 /* The spin panel: a big cue ball over the bottom of the screen. */
 .pl-spin-panel {
@@ -361,5 +393,5 @@ body[data-screen='game'] { background: radial-gradient(circle at 50% 45%, #1e293
 .pl-coin-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .pl-player.active .pl-turn, .pl-gauge, .pl-coin-result span { animation: none; }
+  .pl-hud-cell.active .pl-turn, .pl-hud-cell b.bump, .pl-gauge, .pl-coin-result span { animation: none; }
 }

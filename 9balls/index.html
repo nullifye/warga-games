@@ -89,6 +89,10 @@
           <span class="switch-text"><strong>Laluan lanjutan</strong><small id="set-guide-hint">Garisan terus ke bola pertama</small></span>
           <span class="switch" aria-hidden="true"></span>
         </button>
+        <button type="button" class="switch-row" id="set-view" role="switch" aria-checked="true">
+          <span class="switch-text"><strong>Paparan 3D</strong><small id="set-view-hint">Dari belakang bola putih</small></span>
+          <span class="switch" aria-hidden="true"></span>
+        </button>
         <button type="button" class="switch-row" id="set-sound" role="switch" aria-checked="true">
           <span class="switch-text"><strong>Bunyi</strong><small id="set-sound-hint">Kesan bunyi</small></span>
           <span class="switch" aria-hidden="true"></span>
@@ -101,7 +105,7 @@
         Papan Markah
       </button>
 
-      <button type="button" class="app-version" id="btn-version" aria-label="Versi 1.0. Ketik untuk muat semula permainan.">Versi 1.0</button>
+      <button type="button" class="app-version" id="btn-version" aria-label="Versi 2.0. Ketik untuk muat semula permainan.">Versi 2.0</button>
     </section>
 
     <!-- Permainan -->
@@ -114,19 +118,35 @@
           <span class="bar-title" id="game-score" aria-live="polite">0 mata</span>
           <span class="bar-sub" id="game-mode"></span>
         </div>
-        <button type="button" class="icon-btn" id="btn-game-help" aria-label="Cara bermain">?</button>
+        <div class="pl-bar-actions">
+          <!-- 3D (behind the cue ball) or 2D (the table from above); remembered. -->
+          <button type="button" class="icon-btn pl-view-btn" id="btn-view" aria-label="Tukar ke paparan 2D">2D</button>
+          <button type="button" class="icon-btn" id="btn-game-help" aria-label="Cara bermain">?</button>
+        </div>
       </header>
 
-      <!-- Players (the one to play highlighted) with the balls each has potted, then the balls still on the table. -->
-      <div class="pl-hud">
-        <div class="pl-player" id="pl-p1"><span class="pl-turn" aria-hidden="true"></span><span class="pl-name" id="pl-p1-name">Anda</span><b class="pl-pots" id="pl-p1-pots" aria-label="bola masuk">0</b></div>
-        <div class="pl-player right" id="pl-p2"><b class="pl-pots" id="pl-p2-pots" aria-label="bola masuk">0</b><span class="pl-name" id="pl-p2-name">AI</span><span class="pl-turn" aria-hidden="true"></span></div>
+      <!-- The score row, as in Letup-Letup: each player's balls potted at the sides (a gold dot on
+           the one to play), and in the middle whose turn it is over the balls still on the table. -->
+      <div class="pl-hud" id="pl-hud">
+        <div class="pl-hud-cell" id="pl-p1">
+          <small><i class="pl-turn" aria-hidden="true"></i><span id="pl-p1-name">Anda</span></small>
+          <b id="pl-p1-pots" aria-label="bola masuk">0</b>
+        </div>
+        <div class="pl-hud-cell pl-hud-mid">
+          <small id="pl-turn-text" aria-live="polite"></small>
+          <div class="pl-strip" id="pl-strip" aria-label="Bola di atas meja"></div>
+        </div>
+        <div class="pl-hud-cell pl-hud-end" id="pl-p2">
+          <small><span id="pl-p2-name">AI</span><i class="pl-turn" aria-hidden="true"></i></small>
+          <b id="pl-p2-pots" aria-label="bola masuk">0</b>
+        </div>
       </div>
-      <div class="pl-strip" id="pl-strip" aria-label="Bola di atas meja"></div>
 
       <div class="pl-stage" id="pl-stage">
         <div class="pl-table" id="pl-table">
           <canvas id="pl-canvas" aria-label="Meja biliar"></canvas>
+          <!-- The 3D view (js/scene3d.js, loaded when chosen). -->
+          <canvas id="pl-canvas3d" aria-label="Meja biliar 3D"></canvas>
           <p class="pl-toast" id="pl-toast" role="status" aria-live="polite"></p>
           <!-- The power gauge: appears beside the finger after pressing and holding on the table. -->
           <div class="pl-gauge" id="pl-gauge" role="meter" aria-label="Kuasa pukulan" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
@@ -176,19 +196,10 @@
         </div>
       </div>
 
-      <div class="pl-aim">
-        <button type="button" class="btn btn-ghost pl-aim-btn" id="pl-aim-left" aria-label="Halakan sedikit ke kiri">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 0 1 5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Kiri
-        </button>
-        <!-- Spin: the strike point on the cue ball; opens the panel below. -->
-        <button type="button" class="pl-spin-btn" id="pl-spin-btn" aria-label="Kesan pukulan" aria-expanded="false" aria-controls="pl-spin-panel">
-          <span class="pl-spin-mini" aria-hidden="true"><i id="pl-spin-mini-dot"></i></span>
-          <small>Putaran</small>
-        </button>
-        <button type="button" class="btn btn-ghost pl-aim-btn" id="pl-aim-right" aria-label="Halakan sedikit ke kanan">
-          Kanan<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7l5 5-5 5M20 12H9a5 5 0 0 0-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-      </div>
+      <!-- Spin: the strike point on the cue ball, floating at the bottom right; opens the panel. -->
+      <button type="button" class="pl-spin-btn" id="pl-spin-btn" aria-label="Kesan pukulan" aria-expanded="false" aria-controls="pl-spin-panel">
+        <span class="pl-spin-mini" aria-hidden="true"><i id="pl-spin-mini-dot"></i></span>
+      </button>
     </section>
 
     <!-- Keputusan -->
@@ -310,12 +321,13 @@
     <h2>Cara Bermain</h2>
     <ol class="help-list">
       <li><b>Lambung syiling</b> dahulu: teka betul, anda pecah rak.</li>
-      <li><b>Bidik</b>: seret di meja. Tahan <b>Kiri</b>/<b>Kanan</b> untuk halus.</li>
+      <li><b>Bidik</b>: seret di meja (dalam 3D, seret ke kiri atau kanan untuk berpusing), atau ketik di mana hendak dibidik.</li>
+      <li><b>3D</b> atau <b>2D</b> (butang di atas): lihat dari belakang bola putih, atau meja dari atas.</li>
       <li><b>Pukul</b>: tekan dan tahan di meja, tarik ke bawah, lepas.</li>
       <li>Kena <b>bola terkecil</b> dahulu. Bola masuk: main lagi.</li>
       <li>Masukkan <b>bola 9</b> untuk <b>menang</b>.</li>
       <li><b>Salah</b> (bola putih masuk, kena bola lain dahulu, dan lain-lain): lawan dapat bola putih di tangan. Tiga kali berturut-turut: kalah.</li>
-      <li><b>Putaran</b> (bola kecil di bawah): atas untuk ikut, bawah untuk tarik balik.</li>
+      <li><b>Putaran</b> (bola putih kecil di bawah kanan): atas untuk ikut, bawah untuk tarik balik.</li>
       <li>Selepas pecah rak, boleh <b>tolak keluar</b>.</li>
     </ol>
     <div class="dialog-actions">

@@ -8,6 +8,25 @@ import {
 export const BALL_COLORS = ['#f8fafc', '#facc15', '#2563eb', '#dc2626', '#7c3aed', '#f97316', '#16a34a', '#881337', '#18181b', '#facc15'];
 const FONT = `800 ${(BALL_R * 0.74).toFixed(1)}px Lexend, system-ui, sans-serif`; // sized to the ball
 
+/** The head string (behind it the cue ball goes for the break) and the spots, on the cloth. */
+function drawMarkings(ctx) {
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(PLAY_LEFT + 6, HEAD_STRING_Y);
+  ctx.lineTo(PLAY_RIGHT - 6, HEAD_STRING_Y);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.beginPath();
+  ctx.arc(TOP_SPOT.x, TOP_SPOT.y, 3.5, 0, Math.PI * 2);
+  ctx.arc(TOP_SPOT.x, HEAD_STRING_Y, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
+ * The table itself, painted. Used until (or unless) the 3D table's picture from above is set
+ * (setTableImage): that needs WebGL.
+ */
 function drawTable(ctx) {
   // Mahogany frame with brass corners.
   const wood = ctx.createLinearGradient(0, 0, TABLE_W, TABLE_H);
@@ -30,18 +49,7 @@ function drawTable(ctx) {
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
   ctx.lineWidth = 7;
   ctx.strokeRect(PLAY_LEFT + 2, PLAY_TOP + 2, PLAY_W - 4, PLAY_H - 4);
-  // Head string and spots.
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(PLAY_LEFT + 6, HEAD_STRING_Y);
-  ctx.lineTo(PLAY_RIGHT - 6, HEAD_STRING_Y);
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-  ctx.beginPath();
-  ctx.arc(TOP_SPOT.x, TOP_SPOT.y, 3.5, 0, Math.PI * 2);
-  ctx.arc(TOP_SPOT.x, HEAD_STRING_Y, 3.5, 0, Math.PI * 2);
-  ctx.fill();
+  drawMarkings(ctx);
   // Diamond sights on the rails.
   ctx.fillStyle = '#fde68a';
   const diamond = (x, y) => {
@@ -475,6 +483,15 @@ export function drawCue(ctx, balls, angle, back, side = 0) {
 // their gradients and shapes 60 times a second.
 let tableCache = null;
 const TABLE_CORNER = 30; // table units: about the 22px rounding of its box on a phone
+let tableImage = null;
+/**
+ * Draws the flat table from a picture (the 3D table seen from above, scene3d.js
+ * renderTableImage) instead of painting it, so the flat and 3D views show the same table.
+ */
+export function setTableImage(img) {
+  tableImage = img;
+  tableCache = null;
+}
 function cachedTable(scale) {
   if (tableCache?.scale !== scale) {
     const c = document.createElement('canvas');
@@ -487,7 +504,10 @@ function cachedTable(scale) {
     tctx.beginPath();
     tctx.roundRect(0, 0, TABLE_W, TABLE_H, TABLE_CORNER);
     tctx.clip();
-    drawTable(tctx);
+    if (tableImage) {
+      tctx.drawImage(tableImage, 0, 0, TABLE_W, TABLE_H);
+      drawMarkings(tctx);
+    } else drawTable(tctx);
     tableCache = { scale, canvas: c };
   }
   return tableCache.canvas;

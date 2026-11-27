@@ -5,7 +5,8 @@ import {
   rack, cueBall, lowestBall, newShot, strike, tick, moving, judge, foulText, spotBall, validPlacement,
   returnCueBall, planShot, placeCueForAI, roundPoints, acceptPush, FOULS_TO_LOSE,
 } from './rules.js';
-import { draw, drawCue, BALL_COLORS, resetSpin } from './render.js';
+// js/scene3d.js (and Three.js) are loaded only when the 3D view is chosen: see useView3d.
+import { draw, drawCue, BALL_COLORS, resetSpin, setTableImage } from './render.js';
 import { setMuted, unlockSound, play as playSound } from './sound.js';
 import { initAppsWarga, appsWargaHaptic, closeMiniApp, notifyAppReady } from '../../shared/appswarga.js';
 import { initFromArked, backToArked } from '../../shared/arked-link.js';
@@ -20,7 +21,6 @@ const SCREENS = ['home', 'game', 'result', 'board'];
 const K = { stats: '9balls.stats', settings: '9balls.settings', seenHelp: '9balls.seenHelp' };
 const TICK_MS = 1000 / TICKS_PER_SECOND;
 const MIN_POWER = 0.08; // a lighter pull is a cancelled shot
-const AIM_SPEED = 0.00035; // radians a millisecond while a fine-aim button is held
 const $ = (sel) => document.querySelector(sel);
 const number = (n) => Number(n).toLocaleString('ms-MY');
 const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
@@ -36,7 +36,7 @@ function h(tag, className, text) {
 
 function settings() {
   // `extendedGuide` (off by default) replaces an older key, `guide`, which is ignored.
-  const s = { mode: 'ai', level: 'sederhana', sound: true, extendedGuide: false, ...storeGet(K.settings, {}) };
+  const s = { mode: 'ai', level: 'sederhana', sound: true, extendedGuide: false, view3d: true, ...storeGet(K.settings, {}) };
   if (!AI_LEVELS[s.level]) s.level = 'sederhana';
   if (s.mode !== 'duo') s.mode = 'ai';
   return s;
@@ -108,6 +108,8 @@ function renderSettings() {
   $('#level-hint').textContent = `Bonus menang ${number(AI_LEVELS[s.level].bonus)} mata`;
   $('#set-guide').setAttribute('aria-checked', String(s.extendedGuide));
   $('#set-guide-hint').textContent = s.extendedGuide ? 'Tunjuk lantunan dan laluan bola sasaran' : 'Garisan terus ke bola pertama';
+  $('#set-view').setAttribute('aria-checked', String(s.view3d));
+  $('#set-view-hint').textContent = s.view3d ? 'Dari belakang bola putih' : 'Meja dari atas';
   $('#set-sound').setAttribute('aria-checked', String(s.sound));
   $('#set-sound-hint').textContent = s.sound ? 'Kesan bunyi' : 'Senyap';
 }
@@ -133,6 +135,8 @@ function startGame() {
   unlockSound();
   const { mode, level } = settings();
   resetSpin(); // a new rack: every number faces up again
+  scene3d?.reset();
+  scene3d?.snap();
   g = {
     balls: rack(), mode, level, current: 1, state: 'toss', isBreak: true, aim: -Math.PI / 2, power: 0,
     shot: null, pots: { 1: 0, 2: 0 }, startedAt: Date.now(), aiShot: null, spin: { x: 0, y: 0 },
@@ -260,7 +264,6 @@ function endRound() {
   $('#pl-push-choice').hidden = true;
   $('#pl-push-box').hidden = true;
   closeSpin();
-  aimHold = 0;
   g = null;
 }
 
@@ -282,10 +285,16 @@ function hud() {
   }
   $('#pl-p1-name').textContent = n1;
   $('#pl-p2-name').textContent = n2;
-  $('#pl-p1-pots').textContent = g.pots[1];
-  $('#pl-p2-pots').textContent = g.pots[2];
-  $('#pl-p1').classList.toggle('active', g.current === 1);
-  $('#pl-p2').classList.toggle('active', g.current === 2);
+  for (const p of [1, 2]) {
+    const el = $(`#pl-p${p}-pots`);
+    if (el.textContent !== String(g.pots[p])) {
+      // A ball potted: the number pops, as Letup-Letup's score does.
+      if (Number(el.textContent) < g.pots[p]) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+      el.textContent = g.pots[p];
+    }
+    $(`#pl-p${p}`).classList.toggle('active', g.current === p);
+  }
+  $('#pl-turn-text').textContent = g.state === 'over' ? 'Tamat' : g.mode === 'ai' && g.current === 1 ? 'Giliran anda' : `Giliran ${names()[g.current - 1]}`;
   const target = lowestBall(g.balls);
   for (const b of g.balls) {
     if (!b.id) continue;
@@ -295,7 +304,7 @@ function hud() {
   }
   const canAim = g.state === 'aim' && personToPlay();
   showPushToggle();
-  for (const id of ['#pl-aim-left', '#pl-aim-right', '#pl-spin-btn']) $(id).disabled = !canAim;
+  $('#pl-spin-btn').disabled = !canAim;
   if (!canAim) closeSpin();
   // While the AI strikes, its spin button shows where its cue meets the ball.
   $('#pl-spin-btn').classList.toggle('showing', aiToPlay() && (g.state === 'ai-cue' || g.state === 'stroke'));
@@ -590,7 +599,7 @@ function setupSpin() {
 
 // ---------- the loop: physics at a fixed 60 ticks a second, drawing every frame ----------
 
-let raf = 0, last = 0, accumulated = 0, aimHold = 0;
+let raf = 0, last = 0, accumulated = 0;
 let dpr = 1; // canvas pixels per table unit
 let guideExtended = false; // the aiming guide shows bounces (setting)
 function startLoop() {
@@ -621,8 +630,6 @@ function frame(now) {
         break;
       }
     }
-  } else if (g.state === 'aim' && aimHold && personToPlay()) {
-    g.aim += aimHold * AIM_SPEED * dt;
   } else if (g.state === 'stroke' && g.stroke) {
     // The cue thrusts forward to the ball, then the ball goes.
     const t = Math.min(1, (now - g.stroke.start) / g.stroke.ms);
@@ -645,20 +652,92 @@ function frame(now) {
     }
   }
   if (!g) return;
+  const showCue = (g.state === 'aim' && personToPlay()) || g.state === 'ai-cue' || g.state === 'stroke';
+  const showGuide = (g.state === 'aim' && personToPlay()) || (aiToPlay() && (g.state === 'ai-cue' || g.state === 'stroke'));
+  if (view3d && scene3d) {
+    scene3d.render({
+      balls: g.balls,
+      aim: g.aim,
+      state: g.state,
+      showGuide,
+      extended: guideExtended,
+      placing: g.state === 'placing',
+      isBreak: g.isBreak,
+      now,
+      dragging: aimDragging,
+      // The cue tip: drawn back by the power, and off-centre where the spin strikes.
+      cue: showCue ? {
+        back: g.state === 'stroke' && g.stroke ? g.stroke.back ?? g.stroke.from : cueBack(g.power),
+        side: g.spin.x * MAX_TIP * BALL_R,
+        lift: g.spin.y * MAX_TIP * BALL_R,
+      } : null,
+    }, dt);
+    return;
+  }
   const ctx = canvas().getContext('2d');
   draw(ctx, {
     balls: g.balls,
     aim: g.aim,
     // The aiming guide while a player aims, and while the AI draws back and strikes (it shows
     // where the AI's shot is going, the same way, extended or not).
-    showGuide: (g.state === 'aim' && personToPlay()) || (aiToPlay() && (g.state === 'ai-cue' || g.state === 'stroke')),
+    showGuide,
     extended: guideExtended,
     scale: dpr,
     placing: g.state === 'placing',
     isBreak: g.isBreak,
     now,
   });
-  drawCueLayer((g.state === 'aim' && personToPlay()) || g.state === 'ai-cue' || g.state === 'stroke');
+  drawCueLayer(showCue);
+}
+
+// ---------- the 3D view ----------
+
+let view3d = false; // showing the 3D view (setting `view3d`)
+let scene3d = null; // js/scene3d.js's scene, once loaded
+let scene3dLoad = null;
+let scene3dModule = null; // js/scene3d.js (with Three.js), imported once for the 3D view and the flat table's picture
+const loadScene3dModule = () => (scene3dModule ??= import('./scene3d.js').catch((e) => { scene3dModule = null; throw e; }));
+let aimDragging = false; // a finger is turning the aim (the 3D camera follows it closely)
+
+/**
+ * The flat table shows the 3D table seen from above (rendered once, when the page is idle), so
+ * both views show the same table. Without WebGL it stays painted.
+ */
+function useTablePicture() {
+  loadScene3dModule().then((mod) => {
+    if (!mod.webglAvailable()) return;
+    const idle = window.requestIdleCallback ?? ((fn) => setTimeout(fn, 200));
+    idle(() => {
+      try {
+        setTableImage(mod.renderTableImage(Math.round(TABLE_W * dpr), Math.round(TABLE_H * dpr)));
+      } catch { /* it stays painted */ }
+    }, { timeout: 1500 });
+  }).catch(() => { /* offline: it stays painted */ });
+}
+
+/** Switches between the 3D view and the flat table, loading the 3D scene the first time. */
+async function useView3d(on) {
+  if (on && !scene3d) {
+    scene3dLoad ??= loadScene3dModule().then((mod) => {
+      if (!mod.webglAvailable()) throw new Error('no WebGL');
+      scene3d = mod.createScene3d($('#pl-canvas3d'));
+    });
+    try {
+      await scene3dLoad;
+    } catch {
+      scene3dLoad = null;
+      on = false;
+      if (document.body.dataset.screen === 'game') toast('Paparan 3D tidak dapat dibuka pada peranti ini.');
+    }
+  }
+  view3d = on;
+  $('#screen-game').classList.toggle('pl-3d', on);
+  const btn = $('#btn-view');
+  btn.textContent = on ? '2D' : '3D';
+  btn.setAttribute('aria-label', on ? 'Tukar ke paparan 2D' : 'Tukar ke paparan 3D');
+  fitTable();
+  if (on) scene3d.snap();
+  else sizeCueLayer();
 }
 
 /**
@@ -694,6 +773,16 @@ function sizeCueLayer() {
 function fitTable() {
   const stage = $('#pl-stage'), wrap = $('#pl-table');
   const r = stage.getBoundingClientRect();
+  if (view3d) {
+    // The 3D view fills the window; the bar, players and ball strip float over its top, so the
+    // picture is centred in the part below them (and prompts start below them too).
+    wrap.style.width = `${Math.floor(r.width)}px`;
+    wrap.style.height = `${Math.floor(r.height)}px`;
+    const top = Math.max(0, $('#pl-hud').getBoundingClientRect().bottom - r.top + 8);
+    wrap.style.setProperty('--pl-top', `${Math.round(top)}px`);
+    scene3d?.resize(Math.floor(r.width), Math.floor(r.height), { top, bottom: 76 });
+    return;
+  }
   const maxW = Math.max(120, r.width), maxH = Math.max(200, r.height);
   const height = Math.min(maxH, maxW * (TABLE_H / TABLE_W));
   wrap.style.height = `${Math.floor(height)}px`;
@@ -705,16 +794,20 @@ function fitTable() {
 /** The cue ball's place in the table's box (CSS pixels), for the keyboard's power gauge. */
 function cueOnScreen() {
   const r = $('#pl-table').getBoundingClientRect(), cue = cueBall(g.balls);
+  if (view3d && scene3d) return scene3d.project(cue.x, cue.y);
   return { x: (cue.x / TABLE_W) * r.width, y: (cue.y / TABLE_H) * r.height };
 }
 
+/** The table point under the pointer (table units); null in 3D when it points off the table's plane. */
 function tablePoint(e) {
+  if (view3d && scene3d) return scene3d.pick(e.clientX, e.clientY);
   const r = canvas().getBoundingClientRect();
   return { x: ((e.clientX - r.left) / r.width) * TABLE_W, y: ((e.clientY - r.top) / r.height) * TABLE_H };
 }
 
 function placeCueAt(e) {
   const p = tablePoint(e);
+  if (!p) return;
   const cue = cueBall(g.balls);
   // On a touch screen the ball sits a little above the finger, so the finger doesn't hide it.
   const lift = e.pointerType === 'touch' ? 38 : 0;
@@ -726,8 +819,9 @@ function setupControls() {
   // On the table: a quick drag turns the aim, a quick tap aims at that spot, and pressing and
   // holding still brings up the power gauge beside the finger: pull down for power (the cue
   // draws back with it), let go to shoot, slide back up to 0% to cancel. With ball in hand,
-  // dragging places the cue ball.
-  const c = canvas();
+  // dragging places the cue ball. In 3D the same, except that a drag turns the aim by how far the
+  // finger moves sideways (the camera turns with it).
+  const AIM_DRAG_3D = 0.0042; // radians per pixel
   // A hold may wobble up to MOVE_PX and still count. Full power is a pull of PULL_PX, or less
   // when the press is low on the screen: there must be room to pull all the way before the
   // screen's bottom edge (where a phone's own swipe gestures start), or the gauge would stop
@@ -740,16 +834,17 @@ function setupControls() {
   };
   const angleTo = (e) => {
     const cue = cueBall(g.balls), p = tablePoint(e);
-    return Math.atan2(p.y - cue.y, p.x - cue.x);
+    return p ? Math.atan2(p.y - cue.y, p.x - cue.x) : null;
   };
-  c.addEventListener('pointerdown', (e) => {
+  const onDown = (e) => {
+    const c = e.currentTarget;
     if (!g || !personToPlay()) return;
     unlockSound();
     if (g.state === 'placing') {
       drag = { id: e.pointerId, kind: 'place' };
       placeCueAt(e);
     } else if (g.state === 'aim') {
-      drag = { id: e.pointerId, kind: 'pending', x: e.clientX, y: e.clientY, angle: angleTo(e), at: local(e) };
+      drag = { id: e.pointerId, kind: 'pending', x: e.clientX, y: e.clientY, lastX: e.clientX, angle: angleTo(e), at: local(e) };
       drag.timer = setTimeout(() => {
         if (drag?.kind !== 'pending' || g?.state !== 'aim') return;
         drag.kind = 'power';
@@ -761,8 +856,8 @@ function setupControls() {
       }, HOLD_MS);
     } else return;
     try { c.setPointerCapture(e.pointerId); } catch { /* already gone */ }
-  });
-  c.addEventListener('pointermove', (e) => {
+  };
+  const onMove = (e) => {
     if (!drag || e.pointerId !== drag.id || !g) return;
     if (drag.kind === 'place') return g.state === 'placing' && placeCueAt(e);
     if (g.state !== 'aim') return;
@@ -770,9 +865,14 @@ function setupControls() {
       if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < MOVE_PX) return;
       clearTimeout(drag.timer);
       drag.kind = 'aim'; // a drag: turn the aim from here on, relative to the finger's turn
+      aimDragging = true;
     }
-    if (drag.kind === 'aim') {
+    if (drag.kind === 'aim' && view3d) {
+      g.aim += (e.clientX - drag.lastX) * AIM_DRAG_3D;
+      drag.lastX = e.clientX;
+    } else if (drag.kind === 'aim') {
       const angle = angleTo(e);
+      if (angle == null || drag.angle == null) { drag.angle = angle; return; }
       let d = angle - drag.angle;
       while (d > Math.PI) d -= Math.PI * 2;
       while (d < -Math.PI) d += Math.PI * 2;
@@ -781,34 +881,28 @@ function setupControls() {
     } else if (drag.kind === 'power') {
       setPower((e.clientY - drag.y0) / drag.pull);
     }
-  });
+  };
   const endDrag = (e, cancelled = false) => {
     if (!drag || (e && e.pointerId !== drag.id)) return;
     const d = drag;
     drag = null;
+    aimDragging = false;
     clearTimeout(d.timer);
     if (!g || g.state !== 'aim') return;
-    if (d.kind === 'pending' && !cancelled) g.aim = d.angle; // a tap: aim at that spot
+    if (d.kind === 'pending' && !cancelled && d.angle != null) g.aim = d.angle; // a tap: aim at that spot
     if (d.kind === 'power') {
       if (!cancelled && g.power >= MIN_POWER) stroke(g.aim, g.power);
       else setPower(0, { hide: true });
       hud();
     }
   };
-  c.addEventListener('pointerup', (e) => endDrag(e));
-  c.addEventListener('pointercancel', (e) => endDrag(e, true));
-
-  // Fine aim: hold to turn slowly.
-  for (const [id, dir] of [['#pl-aim-left', -1], ['#pl-aim-right', 1]]) {
-    const b = $(id);
-    b.addEventListener('pointerdown', (e) => {
-      if (!g || g.state !== 'aim' || !personToPlay()) return;
-      g.aim += dir * 0.008;
-      aimHold = dir;
-      try { b.setPointerCapture(e.pointerId); } catch { /* already gone */ }
-    });
-    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(ev, () => { aimHold = 0; });
+  for (const c of [canvas(), $('#pl-canvas3d')]) {
+    c.addEventListener('pointerdown', onDown);
+    c.addEventListener('pointermove', onMove);
+    c.addEventListener('pointerup', (e) => endDrag(e));
+    c.addEventListener('pointercancel', (e) => endDrag(e, true));
   }
+
 
   // Keyboard: ← → aim (Shift for fine), ↓ ↑ power, Space or Enter to shoot.
   document.addEventListener('keydown', (e) => {
@@ -966,6 +1060,8 @@ function init() {
   for (const b of document.querySelectorAll('[data-level]')) b.addEventListener('click', () => saveSetting('level', b.dataset.level));
   $('#set-sound').addEventListener('click', () => { saveSetting('sound', !settings().sound); unlockSound(); playSound('ball', 10); });
   $('#set-guide').addEventListener('click', () => { saveSetting('extendedGuide', !settings().extendedGuide); guideExtended = settings().extendedGuide; });
+  $('#set-view').addEventListener('click', () => { saveSetting('view3d', !settings().view3d); useView3d(settings().view3d); });
+  $('#btn-view').addEventListener('click', () => { saveSetting('view3d', !view3d); useView3d(settings().view3d); });
   guideExtended = settings().extendedGuide;
 
   $('#btn-play').addEventListener('click', () => go('main'));
@@ -978,6 +1074,9 @@ function init() {
   $('#btn-board-refresh').addEventListener('click', () => loadTab(boardTab));
   for (const b of document.querySelectorAll('.tabs [data-tab]')) b.addEventListener('click', () => setTab(b.dataset.tab));
   setupControls();
+  // The 3D view (the default) starts loading now, so it is ready by the time a game opens.
+  useView3d(settings().view3d);
+  useTablePicture();
 
   window.addEventListener('hashchange', route);
   if (!storeGet(K.seenHelp, false)) {

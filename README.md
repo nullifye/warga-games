@@ -300,23 +300,45 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   two players taking turns on one phone. Only rounds against the AI are recorded: 100 a ball
   the player pots, plus 200, 500 or 900 for a win by level.
 - Drag on the table to aim (the guide shows the ghost ball, the target's path, and red for the
-  wrong ball), or tap where to aim; hold Kiri/Kanan to fine-tune. To shoot, press and hold on
+  wrong ball), or tap where to aim. To shoot, press and hold on
   the table until a power gauge appears beside the finger, pull down (the cue draws back with
   it) and let go; back up to 0% cancels. The
   **Laluan lanjutan** setting extends the guide: the cue ball's and the struck ball's paths to
   their first cushion bounce (a pocket the struck ball heads for ringed in green), and where the
-  cue ball glances off (`tracePath` in rules.js). **Putaran** (the small cue ball at the bottom)
+  cue ball glances off (`tracePath` in rules.js). **Putaran** (the small cue ball at the screen's bottom-right corner)
   sets where the cue strikes: high to follow through, low to draw back, to a side for english
   that turns the rebound off a cushion (and squirts the ball very slightly); it goes back to the
   centre after each shot. Keyboard:
   ← → aim (Shift for fine), ↓ ↑ power, Space or Enter to shoot.
+- **Score row** (as in Letup-Letup, in 9-Ball's yellow): each player's name over the balls they
+  have potted at the sides, a pulsing dot on the one to play (the other side dims), and in the
+  middle the balls still on the table, the next to hit ringed (whose turn it is is read out);
+  a potted ball makes the number pop. The header shows the round's points against the AI.
+- **3D view** (the default; **3D**/**2D** in the game's header, or **Paparan 3D** on the home
+  screen, remembered): the same balls, rules and physics, seen from behind the cue ball as a
+  player stands at the table, filling the whole screen with no frame, as in Pemadam (the bar,
+  score row float over it, and the picture is centred below them) (`9balls/js/scene3d.js`, Three.js from `kejar-lapan/vendor`, loaded
+  only when the 3D view is used). A drag sideways turns the aim and the camera with it; a tap
+  aims at that spot; press, hold and pull for power as on the flat table. The cue (tip offset by
+  the spin), the guide (every path a ball-wide lane: the cue ball's to a ghost ball, the
+  struck ball's in gold, and with Laluan lanjutan each carries on past its cushion bounce, and
+  the cue ball's glance shows in faint blue); the cue lifts over the rail when the ball is near
+  a cushion, and the camera rises above it and a gold ring on the ball to hit are in the scene. While a shot runs the
+  camera rises behind it to watch; with ball in hand it looks straight down so the cue ball can
+  be dragged into place; balls right in front of the camera turn see-through. The table is the
+  real one's shape: cushions ending at the pocket mouths, pockets cut through the cloth and rails,
+  sights on the rails and brass caps on its four corners (as on the flat table), in a panelled
+  room under a lamp. The picture is only redrawn when
+  something moves. Without WebGL it falls back to the flat table.
 - The physics runs at a fixed 60 ticks a second, so shots play out the same on 60 Hz and 120 Hz
   screens, and a ball can't slip off the table at a pocket's jaw. It follows a real table: a
   struck ball slides, then rolls at 5/7 of its speed and slows steadily; balls trade speed but
   keep their spin, so a sliding cue ball stops on a full hit (stun) and a rolling one follows
   through; cushions return 80% across, grip a little along, and briefly check the spin. The
   drawn balls turn with their actual spin (a sliding ball doesn't roll). A potted ball slides
-  into the pocket, shrinking and darkening as it sinks. For battery life the table is drawn once
+  into the pocket, shrinking and darkening as it sinks. The flat table is the 3D table's own picture
+  from straight above (`renderTableImage` in scene3d.js, rendered once when the page is idle; it
+  stays painted without WebGL), with the head string and spots drawn on it. For battery life the table is drawn once
   into an offscreen canvas and copied each frame, and each ball's image is only redrawn while it
   turns. The game screen is
   dark slate round the table, whatever the theme. Rules, physics and AI are in
