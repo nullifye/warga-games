@@ -12,9 +12,13 @@ const HUB_HOST = 'nullifye.github.io';
 // the game's first page after the hub, or null when it wasn't opened straight from the hub.
 const flagKey = () => `arked.from:${location.pathname}`;
 
-/** The hub's address; on a local dev server (tools/dev-server.mjs in arked), the local copy. */
+/**
+ * The hub's address: always the real hub, wherever this game is hosted (GitHub Pages, Vercel, …);
+ * only on a local dev server (tools/dev-server.mjs in arked) the local copy.
+ */
 export function hubUrl(here = location) {
-  return here.hostname === HUB_HOST ? `https://${HUB_HOST}/arcade/` : `${here.origin}/arcade/`;
+  const local = here.hostname === 'localhost' || here.hostname === '127.0.0.1';
+  return local ? `${here.origin}/arcade/` : `https://${HUB_HOST}/arcade/`;
 }
 
 const session = {

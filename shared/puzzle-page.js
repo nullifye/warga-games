@@ -5,6 +5,7 @@ import { initProfile, loadProfile, withProfile } from './profile.js';
 import { gameKey, readShared, writeShared } from './shared-store.js';
 import { todayKL } from './rng.js';
 import * as lb from './leaderboard.js';
+import { createBoard } from './board.js';
 import { hardReload } from './reload.js';
 import { MEMORY_ICONS } from './memory-icons.js';
 import { playPuzzle, setPuzzleMuted, unlockPuzzleSound } from './puzzle-sound.js';
@@ -38,9 +39,10 @@ const games = {
 };
 const config = games[gameId];
 if (!config) throw new Error(`Unknown game: ${gameId}`);
+const board = createBoard({ game: gameId }); // Papan Markah (shared/board.js)
 
-let game = null, playedMs = 0, lastTick = 0, lastResult = null, boardTab = 'daily';
-let selectedPiece = 0, settleTimer = 0, timer = 0, boardRequest = 0;
+let game = null, playedMs = 0, lastTick = 0, lastResult = null;
+let selectedPiece = 0, settleTimer = 0, timer = 0;
 // 2048 tiles by cell, and the slide in progress (its finishing step runs early if another move comes).
 let tileEls = new Map(), slide = null;
 // A Susun Blok line clear in progress, like `slide`.
@@ -427,18 +429,7 @@ async function submitResult(r) {
   catch (error) { r.submit = { status: 'error', message: error.message }; }
   finally { r.sending = false; if (lastResult === r) renderSubmit(); }
 }
-function openBoard() { show('board'); setTab('daily'); } // always opens on Hari Ini (no tab is remembered)
-function setTab(tab) { boardTab = tab; const buttons = [...document.querySelectorAll('.tabs [data-tab]')]; buttons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.tab === tab))); $('.tabs').style.setProperty('--tab-index', String(buttons.findIndex(button => button.dataset.tab === tab))); loadTab(tab); }
-function boardMessage(message, retry) { const box = h('div', 'lb-empty'); box.append(h('p', null, message)); if (retry) { const b = h('button', 'btn btn-ghost', 'Cuba semula'); b.addEventListener('click', retry); box.append(b); } $('#lb-body').replaceChildren(box); }
-async function loadTab(tab) {
-  const request = ++boardRequest;
-  $('#board-sub').textContent = tab === 'daily' ? 'Jumlah markah hari ini' : tab === 'alltime' ? 'Jumlah markah & masa bermain' : 'Jumlah markah semua pemain kampus';
-  if (!lb.boardsConfigured()) return boardMessage('Papan markah belum dikonfigurasi.');
-  $('#lb-body').replaceChildren(h('div', 'lb-loading', 'Memuatkan…'));
-  const profile = loadProfile();
-  try { const rows = tab === 'campus' ? await lb.topCampuses(gameId) : await lb.topPlayers(gameId, profile?.playerId, tab === 'daily' ? todayKL() : null); if (request !== boardRequest) return; if (!rows?.length) return boardMessage(tab === 'daily' ? 'Belum ada markah hari ini. Jadilah yang pertama!' : 'Belum ada markah.'); $('#lb-body').replaceChildren(tab === 'campus' ? lb.campusList(rows, profile?.campus) : lb.playersList(rows, { showPlays: tab === 'daily' })); }
-  catch (error) { if (request === boardRequest) boardMessage(`Gagal memuatkan: ${error.message}`, () => loadTab(tab)); }
-}
+function openBoard() { show('board'); board.open(); } // shared/board.js: always opens on Hari Ini
 function init() {
   // A list of rules shows as a numbered list, like the other games' help.
   if (Array.isArray(config.help)) {
@@ -459,8 +450,7 @@ function init() {
   $('#btn-hub').addEventListener('click', backToArked); $('#btn-close-app').addEventListener('click', closeMiniApp); $('#btn-version').addEventListener('click', hardReload);
   $('#btn-play').addEventListener('click', () => go('main')); $('#btn-board').addEventListener('click', () => go('papan')); $('#btn-quit').addEventListener('click', () => go(''));
   $('#res-home').addEventListener('click', () => go('')); $('#res-again').addEventListener('click', () => { game = null; go('main', { replace: true }); }); $('#res-board').addEventListener('click', () => go('papan'));
-  $('#btn-board-back').addEventListener('click', () => go('')); $('#btn-board-refresh').addEventListener('click', () => loadTab(boardTab)); for (const button of document.querySelectorAll('.tabs [data-tab]')) button.addEventListener('click', () => setTab(button.dataset.tab));
-  document.addEventListener('keydown', event => { if (gameId !== '2048' || document.body.dataset.screen !== 'game' || document.querySelector('dialog[open]')) return; const dir = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' }[event.key]; if (dir) { event.preventDefault(); move2048(dir); } });
+  $('#btn-board-back').addEventListener('click', () => go(''));  document.addEventListener('keydown', event => { if (gameId !== '2048' || document.body.dataset.screen !== 'game' || document.querySelector('dialog[open]')) return; const dir = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' }[event.key]; if (dir) { event.preventDefault(); move2048(dir); } });
   let touch = null; $('#game-grid').addEventListener('pointerdown', event => { if (gameId !== '2048') return; touch = { x: event.clientX, y: event.clientY }; try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ } }); $('#game-grid').addEventListener('pointercancel', () => { touch = null; }); $('#game-grid').addEventListener('pointerup', event => { if (!touch || gameId !== '2048') return; const dx = event.clientX - touch.x, dy = event.clientY - touch.y; touch = null; if (Math.max(Math.abs(dx), Math.abs(dy)) >= 24) move2048(Math.abs(dx) > Math.abs(dy) ? dx > 0 ? 'right' : 'left' : dy > 0 ? 'down' : 'up'); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopClock(); else if (activeClock()) lastTick = performance.now(); });
   window.addEventListener('hashchange', route); timer = setInterval(updateClock, 100); route(); requestAnimationFrame(notifyAppReady);

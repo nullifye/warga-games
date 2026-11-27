@@ -14,9 +14,11 @@ import { initProfile, loadProfile, withProfile } from '../../shared/profile.js';
 import { gameKey, readShared, writeShared } from '../../shared/shared-store.js';
 import { todayKL } from '../../shared/rng.js';
 import * as lb from '../../shared/leaderboard.js';
+import { createBoard } from '../../shared/board.js';
 import { hardReload } from '../../shared/reload.js';
 
 const GAME_ID = '9balls';
+const board = createBoard({ game: GAME_ID }); // Papan Markah (shared/board.js)
 const SCREENS = ['home', 'game', 'result', 'board'];
 const K = { stats: '9balls.stats', settings: '9balls.settings', seenHelp: '9balls.seenHelp' };
 const TICK_MS = 1000 / TICKS_PER_SECOND;
@@ -51,8 +53,6 @@ const stats = () => ({ played: 0, won: 0, best: 0, ...storeGet(K.stats, {}) });
  */
 let g = null;
 let lastResult = null;
-let boardTab = 'daily';
-let boardRequest = 0;
 let aiTimer = 0;
 let toastTimer = 0;
 
@@ -991,41 +991,7 @@ async function submitResult(r) {
 
 // ---------- leaderboard ----------
 
-function openBoard() { show('board'); setTab('daily'); } // always opens on Hari Ini (no tab is remembered)
-function setTab(tab) {
-  boardTab = tab;
-  const buttons = [...document.querySelectorAll('.tabs [data-tab]')];
-  buttons.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-  $('.tabs').style.setProperty('--tab-index', String(buttons.findIndex((b) => b.dataset.tab === tab)));
-  loadTab(tab);
-}
-function boardMessage(text, retry) {
-  const box = h('div', 'lb-empty');
-  box.append(h('p', null, text));
-  if (retry) {
-    const b = h('button', 'btn btn-ghost', 'Cuba semula');
-    b.type = 'button';
-    b.addEventListener('click', retry);
-    box.append(b);
-  }
-  $('#lb-body').replaceChildren(box);
-}
-async function loadTab(tab) {
-  const request = ++boardRequest;
-  $('#board-sub').textContent = tab === 'daily' ? 'Jumlah markah hari ini' : tab === 'alltime' ? 'Jumlah markah & masa bermain' : 'Jumlah markah semua pemain kampus';
-  if (!lb.boardsConfigured()) return boardMessage('Papan markah belum dikonfigurasi.');
-  $('#lb-body').replaceChildren(h('div', 'lb-loading', 'Memuatkan…'));
-  const profile = loadProfile();
-  try {
-    const rows = tab === 'campus' ? await lb.topCampuses(GAME_ID) : await lb.topPlayers(GAME_ID, profile?.playerId, tab === 'daily' ? todayKL() : null);
-    if (request !== boardRequest) return;
-    if (!rows?.length) return boardMessage(tab === 'daily' ? 'Belum ada markah hari ini. Jadilah yang pertama!' : 'Belum ada markah.');
-    $('#lb-body').replaceChildren(tab === 'campus' ? lb.campusList(rows, profile?.campus) : lb.playersList(rows, { showPlays: tab === 'daily' }));
-  } catch (err) {
-    if (request === boardRequest) boardMessage(`Gagal memuatkan: ${err.message}`, () => loadTab(tab));
-  }
-}
-
+function openBoard() { show('board'); board.open(); } // shared/board.js: always opens on Hari Ini
 // ---------- wiring ----------
 
 function init() {
@@ -1071,8 +1037,7 @@ function init() {
   $('#res-again').addEventListener('click', () => go('main', { replace: true }));
   $('#res-board').addEventListener('click', () => go('papan'));
   $('#btn-board-back').addEventListener('click', () => go(''));
-  $('#btn-board-refresh').addEventListener('click', () => loadTab(boardTab));
-  for (const b of document.querySelectorAll('.tabs [data-tab]')) b.addEventListener('click', () => setTab(b.dataset.tab));
+
   setupControls();
   // The 3D view (the default) starts loading now, so it is ready by the time a game opens.
   useView3d(settings().view3d);

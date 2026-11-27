@@ -15,9 +15,11 @@ import { initProfile, loadProfile, withProfile } from '../../shared/profile.js';
 import { gameKey, readShared, writeShared } from '../../shared/shared-store.js';
 import { todayKL, randomSeed } from '../../shared/rng.js';
 import * as lb from '../../shared/leaderboard.js';
+import { createBoard } from '../../shared/board.js';
 import { hardReload } from '../../shared/reload.js';
 
 const GAME_ID = 'letup-letup';
+const board = createBoard({ game: GAME_ID }); // Papan Markah (shared/board.js)
 const PROGRESS_KEY = gameKey(GAME_ID);
 const SCREENS = ['home', 'game', 'result', 'board'];
 const K = { stats: 'letup.stats', settings: 'letup.settings', daily: 'letup.daily', seenHelp: 'letup.seenHelp', tips: 'letup.tips' };
@@ -61,8 +63,6 @@ const todaysDaily = () => { const d = storeGet(K.daily, null); return d?.date ==
  */
 let session = null;
 let lastResult = null;
-let boardTab = 'daily';
-let boardRequest = 0;
 let cell = 44; // px, one square
 let pointer = null;
 
@@ -153,7 +153,9 @@ function startDaily() {
   }
   const date = todayKL();
   recordProgress({ date, status: 'playing' });
-  startGame(newGame({ seed: dailySeed(date), daily: true }));
+  const g = newGame({ seed: dailySeed(date), daily: true });
+  g.date = date; // the challenge's day, sent with its score
+  startGame(g);
   saveDailyProgress();
 }
 
@@ -165,7 +167,7 @@ function startDaily() {
 function saveDailyProgress() {
   const s = session;
   if (!s?.g.daily || s.g.over) return;
-  storeSet(K.daily, { date: todayKL(), status: 'playing', result: resultOf(s.g, secondsSince(s.startedAt), 'closed') });
+  storeSet(K.daily, { date: s.g.date ?? todayKL(), status: 'playing', result: resultOf(s.g, secondsSince(s.startedAt), 'closed') });
 }
 
 /**
@@ -175,7 +177,7 @@ function saveDailyProgress() {
 function settleClosedDaily() {
   const d = todaysDaily();
   if (d?.status !== 'playing' || session) return;
-  record(d.result ?? resultOf(newGame({ seed: dailySeed(d.date), daily: true }), 1, 'closed'));
+  record({ ...(d.result ?? resultOf(newGame({ seed: dailySeed(d.date), daily: true }), 1, 'closed')), date: d.date });
   toast('Cabaran Harian yang terhenti tadi telah direkodkan.');
 }
 
@@ -1257,7 +1259,7 @@ const secondsSince = (t) => Math.min(86400, Math.max(1, Math.ceil((Date.now() - 
 
 /** What the result screen and the board need from a game. */
 function resultOf(g, seconds, reason) {
-  return { ...summary(g), seconds, daily: g.daily, reason };
+  return { ...summary(g), seconds, daily: g.daily, date: g.daily ? g.date ?? null : null, reason };
 }
 
 /** Keeps a finished game: stats, today's Cabaran Harian, Arked Warga's progress, the board. */
@@ -1330,9 +1332,10 @@ function renderSubmit() {
   box.textContent = st === 'offline' ? 'Papan markah belum dikonfigurasi. Markah disimpan dalam peranti ini sahaja.'
     : st === 'sending' || st === 'pending' ? 'Menghantar markah…'
       : st === 'done' ? 'Markah direkodkan.'
+        : st === 'dup' ? 'Markah Cabaran Harian anda sudah direkodkan hari ini.'
         : st === 'saved' ? 'Keputusan Cabaran Harian anda hari ini.'
           : `Gagal menghantar: ${r.submit.message}`;
-  if (st === 'done') box.classList.add('ok');
+  if (st === 'done' || st === 'dup') box.classList.add('ok');
   if (st === 'error') {
     box.classList.add('err');
     const retry = h('button', 'btn btn-link', 'Cuba semula');
@@ -1351,10 +1354,14 @@ async function submitResult(r) {
   r.submit = { status: 'sending' };
   renderSubmit();
   try {
-    await lb.recordRound({ game: GAME_ID, profile, points: r.points, seconds: r.seconds, date: todayKL() });
+    // Cabaran Harian goes with the daily mark and its own day, so the database takes only one a
+    // player a day (game contract: arked_record's p_daily).
+    await lb.recordRound({ game: GAME_ID, profile, points: r.points, seconds: r.seconds, daily: Boolean(r.daily), date: (r.daily && r.date) || todayKL() });
     r.submit = { status: 'done' };
   } catch (err) {
-    r.submit = { status: 'error', message: err.code === '54000' ? 'Terlalu cepat. Tunggu sebentar.' : err.message };
+    // Already recorded today (e.g. sent before, then retried): that counts as sent.
+    r.submit = err.code === '23505' ? { status: 'dup' }
+      : { status: 'error', message: err.code === '54000' ? 'Terlalu cepat. Tunggu sebentar.' : err.message };
   } finally {
     r.sending = false;
     if (lastResult === r) renderSubmit();
@@ -1363,41 +1370,7 @@ async function submitResult(r) {
 
 // ---------- leaderboard ----------
 
-function openBoard() { show('board'); setTab('daily'); } // always opens on Hari Ini (no tab is remembered)
-function setTab(tab) {
-  boardTab = tab;
-  const buttons = [...document.querySelectorAll('.tabs [data-tab]')];
-  buttons.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-  $('.tabs').style.setProperty('--tab-index', String(buttons.findIndex((b) => b.dataset.tab === tab)));
-  loadTab(tab);
-}
-function boardMessage(text, retry) {
-  const box = h('div', 'lb-empty');
-  box.append(h('p', null, text));
-  if (retry) {
-    const b = h('button', 'btn btn-ghost', 'Cuba semula');
-    b.type = 'button';
-    b.addEventListener('click', retry);
-    box.append(b);
-  }
-  $('#lb-body').replaceChildren(box);
-}
-async function loadTab(tab) {
-  const request = ++boardRequest;
-  $('#board-sub').textContent = tab === 'daily' ? 'Jumlah markah hari ini' : tab === 'alltime' ? 'Jumlah markah & masa bermain' : 'Jumlah markah semua pemain kampus';
-  if (!lb.boardsConfigured()) return boardMessage('Papan markah belum dikonfigurasi.');
-  $('#lb-body').replaceChildren(h('div', 'lb-loading', 'Memuatkan…'));
-  const profile = loadProfile();
-  try {
-    const rows = tab === 'campus' ? await lb.topCampuses(GAME_ID) : await lb.topPlayers(GAME_ID, profile?.playerId, tab === 'daily' ? todayKL() : null);
-    if (request !== boardRequest) return;
-    if (!rows?.length) return boardMessage(tab === 'daily' ? 'Belum ada markah hari ini. Jadilah yang pertama!' : 'Belum ada markah.');
-    $('#lb-body').replaceChildren(tab === 'campus' ? lb.campusList(rows, profile?.campus) : lb.playersList(rows, { showPlays: tab === 'daily' }));
-  } catch (err) {
-    if (request === boardRequest) boardMessage(`Gagal memuatkan: ${err.message}`, () => loadTab(tab));
-  }
-}
-
+function openBoard() { show('board'); board.open(); } // shared/board.js: always opens on Hari Ini
 // ---------- wiring ----------
 
 function init() {
@@ -1444,8 +1417,7 @@ function init() {
   $('#res-again').addEventListener('click', () => go('bebas', { replace: true }));
   $('#res-board').addEventListener('click', () => go('papan'));
   $('#btn-board-back').addEventListener('click', () => go(''));
-  $('#btn-board-refresh').addEventListener('click', () => loadTab(boardTab));
-  for (const b of document.querySelectorAll('.tabs [data-tab]')) b.addEventListener('click', () => setTab(b.dataset.tab));
+
 
   const board = $('#lt-board');
   $('#lt-rail').addEventListener('click', callRowEarly);

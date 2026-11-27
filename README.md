@@ -31,7 +31,11 @@ node tools/preload.mjs   # after changing a game's imports, stylesheets or scrip
 
 ## Shared code (`shared/`)
 
-One copy for every game; games import it from `../shared/` (or `../../shared/` from `js/`).
+One copy for every game; games import it from `../shared/` (or `../../shared/` from `js/`). It is
+the kit that implements the [Arked Warga game contract](https://github.com/nullifye/arcade/blob/main/docs/game-contract.md)
+(what every game must do with the hub, wherever it is hosted), and it is self-contained: its
+modules import only from `shared/`, so a game on another host can copy the folder
+([`shared/README.md`](shared/README.md); `tests/kit.test.mjs` checks it).
 
 | File | What |
 |---|---|
@@ -39,6 +43,7 @@ One copy for every game; games import it from `../shared/` (or `../../shared/` f
 | `shared-store.js` | Profile and progress shared with the hub, across hosts (AppsWarga bridge storage). Keep identical to the hub's copy |
 | `arked-link.js` | `?dari=arked`: the ‹ back-to-Arked button, and share links without it |
 | `profile.js` | The profile chip and dialog (shared `arked.profile`) |
+| `board.js` | Papan Markah, the same in every game: tabs, loading, empty and error states; always opens on Hari Ini |
 | `leaderboard.js` | `arked_record` / `arked_top` / `arked_campus_rank` and the board lists |
 | `rng.js` | Seeded PRNG, shuffle and Malaysia-time dates, for daily puzzles everyone shares |
 | `base.css` | Tokens, buttons, header, top bar, leaderboard, dialogs, dropdown, toast |
@@ -46,6 +51,7 @@ One copy for every game; games import it from `../shared/` (or `../../shared/` f
 | `puzzle-page.js`, `puzzle-page.css` | The one page shell behind 2048, Susun Blok and Memori (each page sets `<html data-game>`) |
 | `puzzle-engines.js` | Their rules: `Game2048`, `BlockGame`, `MemoryGame` (unit-tested in `tests/`) |
 | `puzzle-sound.js`, `memory-icons.js` | Their synthesised sound effects, and Memori's card pictures |
+| `vendor/` | Three.js and Rapier with their licences, for the 3D games |
 
 The hub keeps its own copies of `appswarga.js`, `select.js`, `profile-options.js`,
 `config.js` and `shared-store.js`; change both when they change.
@@ -75,8 +81,10 @@ The hub keeps its own copies of `appswarga.js`, `select.js`, `profile-options.js
    the profile chip, dialog, ‹ button and board markup. A simple puzzle can reuse the puzzle
    shell instead: copy `2048/index.html`, set `data-game`, and add its rules and config.
 2. In its script: `initFromArked()`, `initAppsWarga()`, `initProfile()`; write
-   `arked.game.<id>` when a round starts; send each round with `recordRound()`; show boards
-   with `topPlayers()` / `topCampuses()`.
+   `arked.game.<id>` when a round starts; send each round with `recordRound()`; for the board,
+   `const board = createBoard({ game: GAME_ID })` (`shared/board.js`) and `board.open()` when
+   the board screen shows. The [game contract](https://github.com/nullifye/arcade/blob/main/docs/game-contract.md)
+   lists everything a game must do.
 3. Supabase (hub repo `supabase/arked.sql`): add the game to `arked_games` with its point bounds,
    explaining in a comment how they follow from the rules.
 4. Hub: add it to `js/games.js` with `url: 'https://nullifye.github.io/warga-games/<folder>/'`

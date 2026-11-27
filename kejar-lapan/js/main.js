@@ -13,6 +13,7 @@ import { initFromArked, backToArked } from '../../shared/arked-link.js';
 import { initProfile, loadProfile, withProfile } from '../../shared/profile.js';
 import { gameKey, readShared, writeShared } from '../../shared/shared-store.js';
 import * as lb from '../../shared/leaderboard.js';
+import { createBoard } from '../../shared/board.js';
 import { hardReload } from '../../shared/reload.js';
 import { runPlan, MODE_LABELS } from './modes.js';
 import { createRecording, recordTick, validReplay, createGhost, stepGhost, betterRun, MAX_REPLAY_TICKS } from './replay.js';
@@ -22,6 +23,7 @@ import { SLOTS, COSMETICS, isUnlocked, equippedCosmetics, newlyUnlocked, milesto
 import { createRotationCode } from './rotation-code.js';
 
 const GAME_ID = 'kejar-lapan';
+const board = createBoard({ game: GAME_ID }); // Papan Markah (shared/board.js)
 const K = { settings: 'kl.settings', stats: 'kl.stats', seenHelp: 'kl.seenHelp', cosmetics: 'kl.cosmetics' };
 const SCREENS = ['home', 'game', 'result', 'board'];
 const OBSTACLE_NAME = { cone: 'kon', pothole: 'lubang jalan', monkey: 'monyet', barrier: 'palang', car: 'kereta', bus: 'bas kampus' };
@@ -92,7 +94,6 @@ let rafId = 0;
 let lastResult = null;
 let toastTimer = 0;
 let hudToastTimer = 0;
-let boardTab = 'daily';
 const hudCache = {};
 /** `?debug` only: a test player that drives the sim (see tests/bot.mjs), and window.__kl. */
 const debug = new URLSearchParams(location.search).has('debug');
@@ -120,10 +121,6 @@ function setText(id, text) {
   if (hudCache[id] === text) return;
   hudCache[id] = text;
   document.getElementById(id).textContent = text;
-}
-
-function todayKL(date = new Date()) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 }
 
 // ---------- routing ----------
@@ -832,50 +829,7 @@ async function shareResult() {
 
 function openBoard() {
   show('board');
-  setTab('daily'); // always opens on Hari Ini (no tab is remembered)
-}
-
-function setTab(tab) {
-  boardTab = tab;
-  const buttons = [...document.querySelectorAll('.tabs [data-tab]')];
-  buttons.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-  $('.tabs').style.setProperty('--tab-index', String(buttons.findIndex((b) => b.dataset.tab === tab)));
-  loadTab(tab);
-}
-
-function boardMessage(text, retry) {
-  const box = h('div', 'lb-empty');
-  box.append(h('p', null, text));
-  if (retry) {
-    const b = h('button', 'btn btn-ghost', 'Cuba semula');
-    b.type = 'button';
-    b.addEventListener('click', retry);
-    box.append(b);
-  }
-  $('#lb-body').replaceChildren(box);
-}
-
-async function loadTab(tab) {
-  $('#board-sub').textContent =
-    tab === 'daily' ? 'Jumlah markah hari ini' : tab === 'alltime' ? 'Jumlah markah & masa bermain' : 'Jumlah markah semua pemain kampus';
-  if (!lb.boardsConfigured()) return boardMessage('Papan markah belum dikonfigurasi.');
-  $('#lb-body').replaceChildren(h('div', 'lb-loading', 'Memuatkan…'));
-  const profile = loadProfile();
-  try {
-    const rows =
-      tab === 'campus'
-        ? await lb.topCampuses(GAME_ID)
-        : await lb.topPlayers(GAME_ID, profile?.playerId, tab === 'daily' ? todayKL() : null);
-    if (boardTab !== tab) return;
-    if (!rows?.length) {
-      return boardMessage(tab === 'daily' ? 'Belum ada markah hari ini. Jadilah yang pertama!' : 'Belum ada markah.');
-    }
-    $('#lb-body').replaceChildren(
-      tab === 'campus' ? lb.campusList(rows, profile?.campus) : lb.playersList(rows, { showPlays: tab === 'daily' }),
-    );
-  } catch (err) {
-    if (boardTab === tab) boardMessage(`Gagal memuatkan: ${err.message}`, () => loadTab(tab));
-  }
+  board.open(); // shared/board.js: always opens on Hari Ini
 }
 
 // ---------- wiring ----------
@@ -997,8 +951,7 @@ function init() {
   $('#res-home').addEventListener('click', () => go(''));
 
   $('#btn-board-back').addEventListener('click', () => go(''));
-  $('#btn-board-refresh').addEventListener('click', () => loadTab(boardTab));
-  for (const b of document.querySelectorAll('.tabs [data-tab]')) b.addEventListener('click', () => setTab(b.dataset.tab));
+
 
   // Pause when the player looks away: the page is hidden, or AppsWarga goes to the background.
   document.addEventListener('visibilitychange', () => {

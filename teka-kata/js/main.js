@@ -14,6 +14,7 @@ import { mulberry32, hashString, randomSeed, todayKL } from '../../shared/rng.js
 import { computeScore, formatTime } from './score.js';
 import { BoardView } from './board.js';
 import * as lb from '../../shared/leaderboard.js';
+import { createBoard } from '../../shared/board.js';
 import { USER_TYPES, CAMPUSES, NON_UITM_CAMPUS, userTypeLabel } from '../../shared/profile-options.js';
 import { enhanceSelect, refreshSelect, closeSelectSheet } from '../../shared/select.js';
 import { store, uuid } from './storage.js';
@@ -34,6 +35,7 @@ const $ = (sel) => document.querySelector(sel);
 // Teka Kata's own. 'tk.profile' is where the profile was kept before Arked Warga.
 const K = { daily: 'tk.daily', stats: 'tk.stats', seen: 'tk.freeSeen' };
 const GAME_ID = 'teka-kata';
+const board = createBoard({ game: GAME_ID, subtitles: { daily: (date) => `Jumlah hari ini · ${formatDateMs(date)}` } }); // Papan Markah (shared/board.js)
 const PROGRESS_KEY = gameKey(GAME_ID);
 const SCREENS = ['home', 'game', 'result', 'board'];
 
@@ -42,7 +44,6 @@ let lastResult = null;
 let timerId = 0;
 let afterProfile = null;
 let appAllowedTypes = null; // user types the AppsWarga account may use (null = any)
-let boardTab = 'daily';
 let submitting = false;
 let toastTimer = 0;
 
@@ -614,63 +615,7 @@ async function shareResult() {
 
 function openBoard() {
   show('board');
-  setTab('daily'); // always opens on Hari Ini (no tab is remembered)
-}
-
-function setTab(tab) {
-  boardTab = tab;
-  const buttons = [...document.querySelectorAll('.tabs [data-tab]')];
-  buttons.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-  // Slides the selected-tab pill (css .tabs::before) to this tab.
-  $('.tabs').style.setProperty('--tab-index', String(buttons.findIndex((b) => b.dataset.tab === tab)));
-  loadTab(tab);
-}
-
-function boardMessage(text, retry) {
-  const body = $('#lb-body');
-  const box = h('div', 'lb-empty');
-  box.append(h('p', null, text));
-  if (retry) {
-    const b = h('button', 'btn btn-ghost', 'Cuba semula');
-    b.type = 'button';
-    b.addEventListener('click', retry);
-    box.append(b);
-  }
-  body.replaceChildren(box);
-}
-
-async function loadTab(tab) {
-  const date = todayKL();
-  // Every board ranks by cumulative points, with total play time and games played.
-  $('#board-sub').textContent =
-    tab === 'daily'
-      ? `Jumlah hari ini · ${formatDateMs(date)}`
-      : tab === 'alltime'
-        ? 'Jumlah markah & masa bermain'
-        : 'Jumlah markah semua pemain kampus';
-  if (!lb.boardsConfigured()) {
-    boardMessage('Papan markah belum dikonfigurasi.');
-    return;
-  }
-  const body = $('#lb-body');
-  body.replaceChildren(h('div', 'lb-loading', 'Memuatkan…'));
-  const profile = loadProfile();
-  try {
-    const rows =
-      tab === 'campus'
-        ? await lb.topCampuses(GAME_ID)
-        : await lb.topPlayers(GAME_ID, profile?.playerId, tab === 'daily' ? date : null);
-    if (boardTab !== tab) return; // user switched tabs meanwhile
-    if (!rows?.length) {
-      boardMessage(tab === 'daily' ? 'Belum ada markah hari ini. Jadilah yang pertama!' : 'Belum ada markah.');
-      return;
-    }
-    body.replaceChildren(
-      tab === 'campus' ? lb.campusList(rows, profile?.campus) : lb.playersList(rows, { showPlays: tab === 'daily' }),
-    );
-  } catch (err) {
-    if (boardTab === tab) boardMessage(`Gagal memuatkan: ${err.message}`, () => loadTab(tab));
-  }
+  board.open(); // shared/board.js: always opens on Hari Ini
 }
 
 // ---------- wiring ----------
@@ -723,10 +668,6 @@ function init() {
   $('#res-home').addEventListener('click', () => go(''));
 
   $('#btn-board-back').addEventListener('click', () => go(''));
-  $('#btn-board-refresh').addEventListener('click', () => loadTab(boardTab));
-  for (const b of document.querySelectorAll('.tabs [data-tab]')) {
-    b.addEventListener('click', () => setTab(b.dataset.tab));
-  }
 
   document.addEventListener('keydown', (e) => {
     if (document.body.dataset.screen !== 'game' || !session) return;
