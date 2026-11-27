@@ -832,7 +832,7 @@ async function shareResult() {
 
 function openBoard() {
   show('board');
-  setTab(boardTab);
+  setTab('daily'); // always opens on Hari Ini (no tab is remembered)
 }
 
 function setTab(tab) {
@@ -993,10 +993,7 @@ function init() {
 
   $('#res-again').addEventListener('click', () => go('lari', true));
   $('#res-share').addEventListener('click', shareResult);
-  $('#res-board').addEventListener('click', () => {
-    boardTab = 'daily';
-    go('papan');
-  });
+  $('#res-board').addEventListener('click', () => go('papan'));
   $('#res-home').addEventListener('click', () => go(''));
 
   $('#btn-board-back').addEventListener('click', () => go(''));

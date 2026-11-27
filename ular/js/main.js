@@ -473,7 +473,7 @@ async function shareResult() {
 
 function openBoard() {
   show('board');
-  setTab(boardTab);
+  setTab('daily'); // always opens on Hari Ini (no tab is remembered)
 }
 
 function setTab(tab) {

@@ -366,7 +366,7 @@ async function submitResult(r) {
 
 // ---------- leaderboard ----------
 
-function openBoard() { show('board'); setTab(boardTab); }
+function openBoard() { show('board'); setTab('daily'); } // always opens on Hari Ini (no tab is remembered)
 function setTab(tab) {
   boardTab = tab;
   const buttons = [...document.querySelectorAll('.tabs [data-tab]')];
@@ -429,7 +429,7 @@ function init() {
 
   $('#res-home').addEventListener('click', () => go(''));
   $('#res-again').addEventListener('click', () => go('main', { replace: true }));
-  $('#res-board').addEventListener('click', () => { boardTab = 'alltime'; go('papan'); });
+  $('#res-board').addEventListener('click', () => go('papan'));
   $('#btn-board-back').addEventListener('click', () => go(''));
   $('#btn-board-refresh').addEventListener('click', () => loadTab(boardTab));
   for (const b of document.querySelectorAll('.tabs [data-tab]')) b.addEventListener('click', () => setTab(b.dataset.tab));

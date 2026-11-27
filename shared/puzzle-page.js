@@ -427,7 +427,7 @@ async function submitResult(r) {
   catch (error) { r.submit = { status: 'error', message: error.message }; }
   finally { r.sending = false; if (lastResult === r) renderSubmit(); }
 }
-function openBoard() { show('board'); setTab(boardTab); }
+function openBoard() { show('board'); setTab('daily'); } // always opens on Hari Ini (no tab is remembered)
 function setTab(tab) { boardTab = tab; const buttons = [...document.querySelectorAll('.tabs [data-tab]')]; buttons.forEach(button => button.setAttribute('aria-selected', String(button.dataset.tab === tab))); $('.tabs').style.setProperty('--tab-index', String(buttons.findIndex(button => button.dataset.tab === tab))); loadTab(tab); }
 function boardMessage(message, retry) { const box = h('div', 'lb-empty'); box.append(h('p', null, message)); if (retry) { const b = h('button', 'btn btn-ghost', 'Cuba semula'); b.addEventListener('click', retry); box.append(b); } $('#lb-body').replaceChildren(box); }
 async function loadTab(tab) {
@@ -458,7 +458,7 @@ function init() {
   $('#set-sound')?.addEventListener('click', () => toggleSetting('sound'));
   $('#btn-hub').addEventListener('click', backToArked); $('#btn-close-app').addEventListener('click', closeMiniApp); $('#btn-version').addEventListener('click', hardReload);
   $('#btn-play').addEventListener('click', () => go('main')); $('#btn-board').addEventListener('click', () => go('papan')); $('#btn-quit').addEventListener('click', () => go(''));
-  $('#res-home').addEventListener('click', () => go('')); $('#res-again').addEventListener('click', () => { game = null; go('main', { replace: true }); }); $('#res-board').addEventListener('click', () => { boardTab = 'alltime'; go('papan'); });
+  $('#res-home').addEventListener('click', () => go('')); $('#res-again').addEventListener('click', () => { game = null; go('main', { replace: true }); }); $('#res-board').addEventListener('click', () => go('papan'));
   $('#btn-board-back').addEventListener('click', () => go('')); $('#btn-board-refresh').addEventListener('click', () => loadTab(boardTab)); for (const button of document.querySelectorAll('.tabs [data-tab]')) button.addEventListener('click', () => setTab(button.dataset.tab));
   document.addEventListener('keydown', event => { if (gameId !== '2048' || document.body.dataset.screen !== 'game' || document.querySelector('dialog[open]')) return; const dir = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' }[event.key]; if (dir) { event.preventDefault(); move2048(dir); } });
   let touch = null; $('#game-grid').addEventListener('pointerdown', event => { if (gameId !== '2048') return; touch = { x: event.clientX, y: event.clientY }; try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* pointer already gone */ } }); $('#game-grid').addEventListener('pointercancel', () => { touch = null; }); $('#game-grid').addEventListener('pointerup', event => { if (!touch || gameId !== '2048') return; const dx = event.clientX - touch.x, dy = event.clientY - touch.y; touch = null; if (Math.max(Math.abs(dx), Math.abs(dy)) >= 24) move2048(Math.abs(dx) > Math.abs(dy) ? dx > 0 ? 'right' : 'left' : dy > 0 ? 'down' : 'up'); });
