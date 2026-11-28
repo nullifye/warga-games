@@ -17,6 +17,7 @@ AppsWarga app (hub repo: `nullifye/arcade`). Static site on GitHub Pages, no bui
 | Pemadam (3D eraser flicking, against the AI) | [`pemadam/`](pemadam/) | https://nullifye.github.io/warga-games/pemadam/ |
 | Congak Matematik (mental arithmetic on a blackboard) | [`congak/`](congak/) | https://nullifye.github.io/warga-games/congak/ |
 | Letup-Letup (falling-stack match-3 with campus birds) | [`letup-letup/`](letup-letup/) | https://nullifye.github.io/warga-games/letup-letup/ |
+| Sudoku (daily and four levels, puzzles made in code) | [`sudoku/`](sudoku/) | https://nullifye.github.io/warga-games/sudoku/ |
 
 The site root redirects to the hub. Each game shows its version at the bottom of its home
 screen (tap it for a fresh reload); bump it when the game changes.
@@ -112,6 +113,7 @@ The hub's `supabase/arked.sql` explains each limit; keep it in step with any sco
 | Pemadam | 1,000 | 100 |
 | Congak Matematik | 8,000 | 150 |
 | Letup-Letup | 50,000 | 300 |
+| Sudoku | 2,000 | 100 |
 
 ## Teka Kata
 
@@ -497,3 +499,50 @@ A three-lane voxel runner through UiTM Shah Alam (Three.js 0.170.0, vendored in
   dimmer than the board's birds.
 - Rules in `letup-letup/js/rules.js` (unit-tested); every game goes to `arked_record`. `?debug`
   exposes `window.__lt` for browser tests.
+
+## Sudoku
+
+- Fill every row, column and 3 × 3 box with 1 to 9. Tap a cell, then a number; **Pensel** for
+  notes, **Padam**, **Buat asal** (never a mistake or a hint), **Petunjuk** (three a game: the
+  selected cell, else the open cell with the fewest candidates). Arrows, 1–9, 0 / Backspace, N,
+  U or Ctrl+Z, H and P on a keyboard.
+- Every number is checked as it goes in: a right one is locked and clears that digit from the
+  notes in its row, column and box; a wrong one shows red and is a mistake. Three mistakes end
+  the game (the answers then show faintly). The selected cell's row, column and box are tinted,
+  and so is every cell with its number; the pad shows how many of each digit are left. A row,
+  column or box done flashes gold; a solved puzzle sweeps gold across the board.
+- **Puzzles are made in code** (`sudoku/js/generator.js`), so the same seed makes the same
+  puzzle on every phone: a seeded solution, then cells taken away in symmetric pairs while the
+  answer stays unique. A human-style solver rates them: singles (tier 1), or also pointing /
+  claiming and naked / hidden pairs (tier 2); every puzzle is solved by logic, no guessing.
+  Mudah 36–40 cells given, Sederhana 30–34 (singles only for both), Susah 26–29, Pakar 24–27
+  (always needs a tier-2 step). Attempts are counted, never timed (at most 200; Pakar needs about
+  17 on average, 148 at worst over 2,000 seeds; about 14 ms, 110 ms at worst on a laptop), and
+  the game screen shows before the puzzle is made. **Changing the generator (or
+  `GENERATOR_VERSION`) changes which puzzle falls on which day**; the tests pin three days.
+- **Cabaran Harian**: one puzzle a day for everyone, its level by weekday (Ahad Pakar, Isnin
+  Mudah, Selasa Sederhana, Rabu Susah, Khamis Sederhana, Jumaat Mudah, Sabtu Susah), numbered
+  from 28 November 2026. Saved after every move (`sudoku.daily`), so leaving or closing the app
+  resumes it later that day; the clock keeps running (as in Duga Kata). A save that doesn't match
+  the day's puzzle is dropped. Sent with the daily mark, so the database keeps one a day.
+  **Main Bebas**: any level; its clock counts only time played (paused when the page is hidden,
+  AppsWarga goes to the background, or a dialog is open), and leaving it part-way asks first and
+  drops it. Jeda hides the numbers.
+- Points: the level's base (Mudah 200, Sederhana 400, Susah 700, Pakar 1,000) plus a time bonus
+  of the base again, shrinking to nothing at par (5, 10, 15, 20 minutes), × 1 / 0.8 / 0.6 for
+  0 / 1 / 2 mistakes, × 0.85 for each hint; at most 2,000. A lost game is 0 and still counts as a
+  play. A perfect solve (no mistake, no hint) is an **Anugerah Dekan**. The board's 100 a second
+  follows from taps: each open cell needs two (the cell, then the number), so even at 0.25 s a
+  tap the fastest Pakar solve (54 open cells) takes about 27 s, about 74 a second at most.
+- The **Markah** between the mistakes and the clock shows the points if the puzzle were finished
+  now: it falls with time and drops with each mistake or hint.
+- Sound, all synthesised through a soft room reverb (`sudoku/js/sound.js`, no files):
+  **Bunyi** (a wood-block tap to pick; a marimba note for a number, its own pitch for each digit,
+  1 low to 9 high; a kalimba tick for a note; a soft bonk for a mistake; a marimba run when a row,
+  column or box is done; a small fanfare with a bell and a gong for a solve) and **Muzik**, each
+  its own switch. **Lagu** picks one of three original loops, and plays a few seconds of it when
+  picked: **Lo-fi** (electric piano chords, a soft swung beat), **Gamelan** (a five-note slendro
+  scale: saron, bonang, kenong and gong) and **Ceria** (bright marimba over a light groove). The
+  music plays only while a puzzle is on: it stops on Jeda, off screen, on leaving and at the end.
+- Rules in `sudoku/js/rules.js`, the generator in `generator.js` (both unit-tested). `?debug`
+  exposes `window.__sd` (it fills cells through the same input as a tap).
