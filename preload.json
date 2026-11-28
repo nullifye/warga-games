@@ -277,6 +277,29 @@
       "shared/config.js",
       "shared/board.js",
       "shared/reload.js"
+    ],
+    "sudoku": [
+      "sudoku/",
+      "shared/base.css",
+      "shared/puzzle-page.css",
+      "sudoku/css/sudoku.css",
+      "shared/theme-boot.js",
+      "sudoku/js/main.js",
+      "sudoku/js/rules.js",
+      "sudoku/js/generator.js",
+      "shared/rng.js",
+      "sudoku/js/sound.js",
+      "shared/appswarga.js",
+      "shared/arked-link.js",
+      "shared/profile.js",
+      "shared/shared-store.js",
+      "shared/profile-options.js",
+      "shared/select.js",
+      "shared/uuid.js",
+      "shared/leaderboard.js",
+      "shared/config.js",
+      "shared/board.js",
+      "shared/reload.js"
     ]
   }
 }

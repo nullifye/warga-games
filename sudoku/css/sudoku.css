@@ -1,0 +1,148 @@
+/* Sudoku. Builds on ../shared/base.css and ../shared/puzzle-page.css (home, settings, result),
+   so it follows the AppsWarga theme like the other puzzles; this file adds the home cards and
+   level picker, the board (nine boxes of nine cells), the tools and the number pad. */
+
+/* ---------- home ---------- */
+.sd-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.sd-card { background: var(--surface); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sd-card-daily { background: linear-gradient(160deg, color-mix(in srgb, var(--gold-2) 30%, var(--surface)), var(--surface) 60%); }
+.sd-card-free { background: linear-gradient(160deg, color-mix(in srgb, var(--primary) 14%, var(--surface)), var(--surface) 60%); }
+.sd-card-top { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.sd-card-date { font-size: 0.8rem; color: var(--ink-2); font-weight: 600; }
+.sd-card-text { margin: 0; font-size: 0.85rem; color: var(--ink-2); flex: 1; line-height: 1.4; }
+.puzzle-settings { margin-bottom: 14px; }
+.sd-pick-row { padding: 12px 14px; display: grid; gap: 10px; border-bottom: 1px solid var(--track); }
+.sd-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--track); }
+.sd-pick button { border: 0; border-radius: 10px; min-height: 40px; padding: 6px 2px; background: none; color: var(--ink-2); font-weight: 600; font-size: 0.8rem; transition: background 0.2s, color 0.2s; }
+.sd-pick button[aria-pressed='true'] { background: var(--key); color: var(--primary); box-shadow: var(--shadow); }
+.sd-pick-3 { grid-template-columns: repeat(3, 1fr); }
+/* The Lagu picker sits under the Muzik switch; dimmed while the music is off. */
+.sd-track-row { border-bottom: 0; border-top: 1px solid var(--track); }
+.sd-track-row.off { opacity: 0.45; }
+.sd-stats { grid-template-columns: repeat(3, 1fr); }
+
+/* ---------- game ---------- */
+.screen-game { height: 100dvh; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.screen-game,
+.screen-game * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.sd-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Mistakes (three dots) and the clock. */
+.sd-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; }
+.sd-status small { display: block; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.sd-dots { display: flex; gap: 6px; margin-top: 4px; }
+.sd-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--track); box-shadow: inset 0 0 0 2px var(--line); transition: background 0.2s, box-shadow 0.2s; }
+.sd-dots i.on { background: var(--bad); box-shadow: none; }
+.sd-mistakes.hit .sd-dots { animation: sd-shake 0.4s ease; }
+.sd-points { text-align: center; }
+.sd-points b { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--primary); }
+.sd-points b.drop { animation: sd-points-drop 0.4s ease; }
+@keyframes sd-points-drop { 40% { transform: scale(0.88); color: var(--bad); } }
+.sd-clock { text-align: right; }
+.sd-clock b { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* The board: js/main.js sizes it to the room left, and the status, board, tools and pad sit
+   together in the middle of the screen; nine boxes, each nine cells. */
+.sd-status { margin-top: auto; }
+.sd-pad { margin-bottom: auto; }
+.sd-stage { position: relative; flex: none; display: grid; place-items: center; }
+.sd-board {
+  --size: min(100%, 460px);
+  position: relative;
+  width: var(--size);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 3px;
+  padding: 3px;
+  border-radius: 14px;
+  background: var(--ink-2);
+  box-shadow: var(--shadow);
+}
+.sd-loading { grid-column: 1 / -1; align-self: center; margin: 0; text-align: center; color: var(--surface); font-weight: 600; }
+.sd-box { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 1px; background: var(--line); overflow: hidden; }
+.sd-box:nth-child(1) { border-top-left-radius: 11px; }
+.sd-box:nth-child(3) { border-top-right-radius: 11px; }
+.sd-box:nth-child(7) { border-bottom-left-radius: 11px; }
+.sd-box:nth-child(9) { border-bottom-right-radius: 11px; }
+.sd-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: calc(var(--cell, 40px) * 0.58);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: background 0.12s;
+}
+.sd-cell.given { font-weight: 800; }
+.sd-cell.mine { color: var(--primary); }
+.sd-cell.hinted { color: color-mix(in srgb, var(--gold) 70%, var(--ink)); }
+.sd-cell.wrong { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, var(--surface)); }
+/* Selection: the cell, its row, column and box, and every cell with the same number. */
+.sd-cell.peer { background: color-mix(in srgb, var(--primary) 9%, var(--surface)); }
+.sd-cell.same { background: color-mix(in srgb, var(--primary) 24%, var(--surface)); }
+.sd-cell.sel { background: color-mix(in srgb, var(--primary) 36%, var(--surface)); box-shadow: inset 0 0 0 2px var(--primary); }
+.sd-cell.wrong.sel, .sd-cell.wrong.same { background: color-mix(in srgb, var(--bad) 24%, var(--surface)); }
+.sd-cell:focus { outline: none; }
+.sd-cell:focus-visible { box-shadow: inset 0 0 0 3px var(--gold); }
+/* Notes: a 3 × 3 of small digits. */
+.sd-notes { position: absolute; inset: 2px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); place-items: center; }
+.sd-notes span { font-size: calc(var(--cell, 40px) * 0.24); font-weight: 600; color: var(--muted); line-height: 1; }
+.sd-notes span.same { color: var(--primary); font-weight: 800; }
+/* A number going in, a mistake, a row / column / box done (a gold wave), the puzzle solved. */
+.sd-cell.pop { animation: sd-pop 0.2s ease-out; }
+.sd-cell.bad { animation: sd-shake 0.35s ease; }
+.sd-cell.done { animation: sd-done 0.55s ease-out var(--d, 0s) both; }
+.sd-board.won .sd-cell { animation: sd-won 0.7s ease-out var(--d, 0s) both; }
+.sd-board.lost .sd-cell.answer { color: var(--muted); font-weight: 500; }
+@keyframes sd-pop { 40% { transform: scale(1.18); } }
+@keyframes sd-shake { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+@keyframes sd-done { 40% { background: color-mix(in srgb, var(--gold-2) 70%, var(--surface)); transform: scale(1.06); } }
+@keyframes sd-won { 35% { background: var(--gold-2); color: var(--gold-ink); transform: scale(1.1); } }
+
+/* Jeda: the board's numbers are hidden. */
+.sd-pause { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; text-align: center; border-radius: 14px; background: color-mix(in srgb, var(--bg) 94%, transparent); }
+.sd-pause-title { margin: 0; font-size: 1.8rem; font-weight: 800; }
+.sd-pause-note { margin: 0 0 6px; max-width: 28ch; color: var(--ink-2); font-size: 0.88rem; }
+.sd-pause-note:empty { display: none; }
+.sd-board.paused .sd-cell { color: transparent; }
+.sd-board.paused .sd-notes { visibility: hidden; }
+
+/* Tools: Buat asal, Padam, Pensel (on / off), Petunjuk (how many left). */
+.sd-tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.sd-tool { display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 52px; padding: 6px 2px; border: 0; border-radius: 14px; background: none; color: var(--ink-2); font-size: 0.72rem; font-weight: 600; }
+.sd-tool svg { width: 24px; height: 24px; }
+.sd-tool b { font-weight: 800; }
+.sd-tool[aria-pressed='true'] { background: color-mix(in srgb, var(--primary) 16%, transparent); color: var(--primary); }
+.sd-tool:disabled { opacity: 0.4; }
+.sd-tool:active:not(:disabled) { transform: translateY(1px); }
+
+/* The number pad: each digit with how many are still to place. */
+.sd-pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; padding-bottom: max(6px, env(safe-area-inset-bottom)); }
+.sd-num { position: relative; display: grid; place-items: center; min-height: 56px; padding: 4px 0 12px; border: 0; border-radius: 12px; background: var(--key); color: var(--primary); box-shadow: 0 3px 0 var(--line); font-size: 1.55rem; font-weight: 700; }
+.sd-num small { position: absolute; bottom: 4px; left: 0; right: 0; font-size: 0.62rem; font-weight: 600; color: var(--muted); }
+.sd-num:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.sd-num:disabled { opacity: 0.3; box-shadow: none; }
+.sd-pad.pencil .sd-num { color: var(--ink-2); background: color-mix(in srgb, var(--primary) 10%, var(--key)); font-size: 1.1rem; font-weight: 600; }
+/* Short phones: a lower pad. */
+@media (max-height: 700px) { .sd-num { min-height: 46px; font-size: 1.3rem; } .sd-tool { min-height: 44px; } }
+
+/* ---------- result ---------- */
+.sd-res-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin: 4px 0 0; }
+.sd-res-stats div { background: var(--surface); border-radius: 14px; padding: 10px 6px; text-align: center; box-shadow: var(--shadow); }
+.sd-res-stats dt { font-size: 0.72rem; color: var(--ink-2); }
+.sd-res-stats dd { margin: 2px 0 0; font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.sd-res-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-cell, .sd-dots i { transition: none; }
+  .sd-cell.pop, .sd-cell.bad, .sd-cell.done, .sd-board.won .sd-cell, .sd-mistakes.hit .sd-dots, .sd-points b.drop { animation: none; }
+}
