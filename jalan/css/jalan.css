@@ -1,0 +1,443 @@
+/* Jalan. Builds on ../shared/base.css (tokens, buttons, header, dialogs, leaderboard). */
+
+/* ---------- back to Arked (shared/arked-link.js) ---------- */
+#btn-close-app,
+#btn-hub {
+  display: none;
+}
+
+html.in-appswarga #btn-close-app,
+html.from-arked #btn-hub {
+  display: grid;
+}
+
+/* Opened from Arked Warga: people leave AppsWarga from the hub, so no ✕ here. */
+html.from-arked #btn-close-app {
+  display: none;
+}
+
+html.from-arked .profile-chip {
+  margin-right: auto;
+}
+
+/* ---------- home ---------- */
+.screen-home > .btn {
+  margin-top: 12px;
+}
+
+.jl-brand {
+  text-align: center;
+  margin: 22px 0 18px;
+  animation: rise 0.4s both ease-out;
+}
+
+.jl-brand img {
+  display: block;
+  margin: 0 auto 10px;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.jl-brand h1 {
+  font-size: clamp(2rem, 9vw, 2.6rem);
+  line-height: 1.05;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.jl-brand p {
+  color: var(--ink-2);
+  margin: 8px auto 0;
+  max-width: 32ch;
+}
+
+.jl-facts {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.jl-facts li {
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  border-radius: 14px;
+  padding: 10px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.jl-facts b {
+  font-weight: 800;
+  font-size: 1.35rem;
+}
+
+.jl-facts span {
+  font-size: 0.72rem;
+  color: var(--ink-2);
+}
+
+.jl-settings {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.switch-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 0;
+  background: none;
+  text-align: left;
+  min-height: 60px;
+}
+
+.switch-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.switch-text small {
+  color: var(--ink-2);
+  font-size: 0.78rem;
+}
+
+.switch {
+  flex: none;
+  position: relative;
+  width: 50px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--key-off);
+  transition: background 0.2s;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s;
+}
+
+.switch-row[aria-checked='true'] .switch {
+  background: var(--primary);
+}
+
+.switch-row[aria-checked='true'] .switch::after {
+  transform: translateX(20px);
+}
+
+.screen-home .app-version {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+/* ---------- game ---------- */
+.screen-game {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.jl-status {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 4px 0;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+.jl-lives {
+  font-size: 1.05rem;
+  letter-spacing: 2px;
+}
+
+.jl-lives .lost {
+  filter: grayscale(1);
+  opacity: 0.3;
+}
+
+.jl-lives.shake {
+  animation: shake 0.35s ease;
+}
+
+.jl-status b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.jl-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 8px 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #9fd6f5;
+  box-shadow: var(--shadow);
+  touch-action: none;
+}
+
+.jl-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.jl-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(10, 20, 40, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.jl-card {
+  width: min(100%, 340px);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 22px;
+  padding: 18px 16px 16px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  animation: rise 0.3s ease both;
+}
+
+.jl-card h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.jl-card p {
+  margin: 6px 0 14px;
+  color: var(--ink-2);
+}
+
+.jl-card p.jl-level {
+  margin: 0 0 2px;
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.jl-card .btn {
+  min-width: 160px;
+}
+
+.jl-card-actions {
+  display: grid;
+  gap: 8px;
+}
+
+/* The controls: move on the left thumb, jump on the right. */
+.jl-pads {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  touch-action: none;
+}
+
+.jl-move {
+  display: flex;
+  gap: 12px;
+}
+
+.jl-pad {
+  width: 76px;
+  height: 68px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--key);
+  color: var(--key-ink);
+  box-shadow: 0 5px 0 var(--line);
+  display: grid;
+  place-items: center;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  transition: transform 0.05s, box-shadow 0.05s;
+}
+
+.jl-pad svg {
+  width: 30px;
+  height: 30px;
+}
+
+.jl-pad.on {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.jl-jump {
+  width: 128px;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  color: var(--gold-ink);
+  box-shadow: 0 5px 0 #b07a10;
+}
+
+.jl-jump.on {
+  box-shadow: 0 1px 0 #b07a10;
+}
+
+@media (max-height: 680px) {
+  .jl-pad { height: 56px; width: 66px; }
+  .jl-jump { width: 112px; }
+}
+
+/* ---------- result ---------- */
+#screen-result .bar {
+  margin-bottom: 12px;
+}
+
+.jl-result {
+  margin: auto 0;
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 24px 18px 18px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  animation: rise 0.4s ease both;
+}
+
+.jl-result-badge {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.jl-result h2 {
+  margin: 10px 0 2px;
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.res-mode {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.85rem;
+}
+
+.res-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 20px 0 10px;
+}
+
+.res-stats div {
+  background: var(--bg-2);
+  border-radius: 14px;
+  padding: 10px 4px;
+}
+
+.res-stats div.hl {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  color: var(--gold-ink);
+}
+
+.res-stats dt {
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.res-stats dd {
+  margin: 2px 0 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.res-extra {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.res-submit {
+  min-height: 24px;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.res-submit.ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.res-submit.err {
+  color: var(--bad);
+}
+
+.res-submit.busy span::after {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.res-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.res-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.res-row .btn {
+  padding-inline: 10px;
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+
+/* ---------- animations ---------- */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}

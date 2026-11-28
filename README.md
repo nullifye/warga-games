@@ -17,6 +17,7 @@ AppsWarga app (hub repo: `nullifye/arcade`). Static site on GitHub Pages, no bui
 | Pemadam (3D eraser flicking, against the AI) | [`pemadam/`](pemadam/) | https://nullifye.github.io/warga-games/pemadam/ |
 | Congak Matematik (mental arithmetic on a blackboard) | [`congak/`](congak/) | https://nullifye.github.io/warga-games/congak/ |
 | Letup-Letup (falling-stack match-3 with campus birds) | [`letup-letup/`](letup-letup/) | https://nullifye.github.io/warga-games/letup-letup/ |
+| Jalan (troll platformer: random tricks, 3 lives) | [`jalan/`](jalan/) | https://nullifye.github.io/warga-games/jalan/ |
 
 The site root redirects to the hub. Each game shows its version at the bottom of its home
 screen (tap it for a fresh reload); bump it when the game changes.

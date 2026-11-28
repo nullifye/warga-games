@@ -277,6 +277,29 @@
       "shared/config.js",
       "shared/board.js",
       "shared/reload.js"
+    ],
+    "jalan": [
+      "jalan/",
+      "shared/base.css",
+      "jalan/css/jalan.css",
+      "shared/theme-boot.js",
+      "jalan/js/main.js",
+      "jalan/js/road.js",
+      "jalan/js/gen.js",
+      "jalan/js/scene.js",
+      "shared/rng.js",
+      "jalan/js/sound.js",
+      "shared/appswarga.js",
+      "shared/arked-link.js",
+      "shared/profile.js",
+      "shared/shared-store.js",
+      "shared/profile-options.js",
+      "shared/select.js",
+      "shared/uuid.js",
+      "shared/leaderboard.js",
+      "shared/config.js",
+      "shared/board.js",
+      "shared/reload.js"
     ]
   }
 }
