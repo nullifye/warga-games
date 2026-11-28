@@ -193,11 +193,15 @@ function pause() {
   const btn = h('button', 'btn btn-gold', 'Sambung');
   btn.type = 'button';
   btn.addEventListener('click', start);
+  // A way out if ever stuck: try the level again, for a life.
+  const again = h('button', 'btn btn-ghost', 'Ulang tahap (−1 ❤️)');
+  again.type = 'button';
+  again.addEventListener('click', restartLevel);
   const end = h('button', 'btn btn-ghost', 'Tamatkan & rekod markah');
   end.type = 'button';
   end.addEventListener('click', () => finish(false));
   const row = h('div', 'jl-card-actions');
-  row.append(btn, end);
+  row.append(btn, again, end);
   card.append(row);
   overlay(card);
 }
@@ -305,6 +309,18 @@ function onEvent(e) {
       break;
     }
   }
+}
+
+/** From the pause card: give up this try (a life lost) and start the level again. */
+function restartLevel() {
+  if (!game || game.phase !== 'paused') return;
+  game.lives -= 1;
+  game.deaths += 1;
+  game.levelDeaths += 1;
+  if (game.lives <= 0) return finish(false);
+  retry();
+  overlay(null);
+  start();
 }
 
 /** A new try at the current level: same road, all its tricks rolled again. */

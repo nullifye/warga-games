@@ -60,8 +60,11 @@ function pickTrick(g, rng) {
   return pick(rng, kinds[0][1]);
 }
 
-/** Ledges up the front of a tunnel's hill (section at a), for climbing over it. */
-const CLIMB = (a) => [[a + 1, 8], [a + 2, 8], [a + 3, 6], [a + 4, 6]];
+/**
+ * Ledges up both sides of a tunnel's hill (section at a), for climbing over it whichever way
+ * you're going: the front for going on, the back for coming back (say, for a key).
+ */
+const CLIMB = (a) => [[a + 1, 8], [a + 2, 8], [a + 3, 6], [a + 4, 6], [a + 12, 6], [a + 13, 6], [a + 14, 8]];
 
 /** Hill heights (tiles above the road) at each offset into a 'bukit' section. */
 const HILL = { 2: 1, 3: 2, 4: 3, 5: 4, 6: 4, 7: 4, 8: 4, 9: 3, 10: 2, 11: 1 };
@@ -256,7 +259,9 @@ export function rollTraps(ground, rng = Math.random) {
       if (touched.has(x)) continue;
       let y = 0;
       while (y < 12 && !'#HB'.includes(ground.map[y][x])) y++;
-      if (y >= 3 && y < 12 && ground.map[y - 1][x] === '.') spots.push([x, y - 1]);
+      // Only where you can always get to: the road, a bridge, a step or a plain hill; never the
+      // top of a tunnel's hill (y 4), which may have no way up.
+      if (y >= 6 && y < 12 && ground.map[y - 1][x] === '.') spots.push([x, y - 1]);
     }
     if (spots.length) traps.push({ type: 'kunci', at: [ground.w - 4.2, ground.w - 3.6], key: pick(rng, spots) });
   }
